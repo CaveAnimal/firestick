@@ -26,7 +26,7 @@
         <javaparser.version>3.26.3</javaparser.version>
         <jgrapht.version>1.5.2</jgrapht.version>
         <lucene.version>9.12.0</lucene.version>
-        <djl.version>0.30.0</djl.version>
+        <djl.version>0.31.1</djl.version>
     </properties>
 
     <dependencies>

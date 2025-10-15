@@ -1,4 +1,4 @@
-package com.caveanimal.firestick.controller;
+package com.codetalker.firestick.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,4 +1,4 @@
-package com.caveanimal.firestick.service;
+package com.codetalker.firestick.service;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;

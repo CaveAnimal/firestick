@@ -1,4 +1,4 @@
-package com.caveanimal.firestick.service;
+package com.codetalker.firestick.service;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
