@@ -16,7 +16,7 @@ A Spring Boot application for code analysis, embeddings, and search capabilities
 
 ### Data & Embeddings
 - **ONNX Runtime 1.20.0** - Machine learning inference for Sentence-Transformers
-- **DJL 0.30.0** - Deep Java Library for ML integration
+- **DJL 0.31.1** - Deep Java Library for ML integration
 - **H2 Database** - Embedded SQL database
 
 ### Vector Store

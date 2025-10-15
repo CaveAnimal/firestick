@@ -1,4 +1,4 @@
-package com.caveanimal.firestick.service;
+package com.codetalker.firestick.service;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;

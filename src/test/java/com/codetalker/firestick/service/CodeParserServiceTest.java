@@ -1,4 +1,4 @@
-package com.caveanimal.firestick.service;
+package com.codetalker.firestick.service;
 
 import com.github.javaparser.ast.CompilationUnit;
 import org.junit.jupiter.api.Test;

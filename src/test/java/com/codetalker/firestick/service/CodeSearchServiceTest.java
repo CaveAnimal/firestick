@@ -1,4 +1,4 @@
-package com.caveanimal.firestick.service;
+package com.codetalker.firestick.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
