@@ -11,14 +11,12 @@
 
 ## Task Summary (DEV1)
 
-**Total Tasks:** 0  
-**Completed/Tested:** 0  
-**In Progress:** 0  
-**Blocked:** 0  
-**Percent Complete:** 0%  
-**Last Updated:** (not yet)
-
----
+**Total Tasks:** 244 tasks (including main tasks and sub-tasks)  
+**Completed/Tested:** 79 tasks  
+**In Progress:** 1 tasks  
+**Blocked:** 1 tasks  
+**Percent Complete:** 32.38%  
+**Last Updated:** October 15, 2025    2:00 PM Central Standard Time
 
 ## Developer 1 Task Summary
 
@@ -155,12 +153,12 @@
 	- `jgrapht-core` version 1.5.2
 - `[V]` Create `DependencyGraphService.java` class
 - `[V]` Implement basic graph creation
-	- `[ ]` Sub-task: Create DirectedGraph instance
-	- `[ ]` Sub-task: Add vertices (nodes)
-	- `[ ]` Sub-task: Add edges (connections)
+	- `[V]` Sub-task: Create DirectedGraph instance
+	- `[V]` Sub-task: Add vertices (nodes)
+	- `[V]` Sub-task: Add edges (connections)
 - `[V]` Implement method to find dependencies
-	- `[ ]` Sub-task: Get outgoing edges from a vertex
-	- `[ ]` Sub-task: Return list of dependent classes
+	- `[V]` Sub-task: Get outgoing edges from a vertex
+	- `[V]` Sub-task: Return list of dependent classes
 - `[V]` Create `DependencyGraphServiceTest.java`
 - `[V]` Test: Create graph and find dependencies
 
@@ -173,10 +171,10 @@
 	- `h2` database
 	- `spring-boot-starter-data-jpa`
 - `[V]` Configure H2 in `application.properties`
-	- `[ ]` Sub-task: Set H2 console enabled = true
-	- `[ ]` Sub-task: Set datasource URL to file-based H2
-	- `[ ]` Sub-task: Set JPA DDL auto to `update`
-	- `[ ]` Sub-task: Add logging for SQL statements (optional)
+	- `[V]` Sub-task: Set H2 console enabled = true
+	- `[V]` Sub-task: Set datasource URL to file-based H2
+	- `[V]` Sub-task: Set JPA DDL auto to `update`
+	- `[V]` Sub-task: Add logging for SQL statements (optional)
 - `[V]` Test: Run application and access H2 console at `/h2-console`
 - `[V]` Verify database file is created
 
@@ -195,20 +193,20 @@ Password: (leave empty)
 
 - `[V]` Create `model` package under `com.codetalker.firestick`
 - `[V]` Create `CodeFile` entity
-	- `[ ]` Sub-task: Add fields: id, filePath, lastModified, hash
-	- `[ ]` Sub-task: Add JPA annotations (@Entity, @Id, @GeneratedValue)
-	- `[ ]` Sub-task: Add constructors, getters, setters
+	- `[V]` Sub-task: Add fields: id, filePath, lastModified, hash
+	- `[V]` Sub-task: Add JPA annotations (@Entity, @Id, @GeneratedValue)
+	- `[V]` Sub-task: Add constructors, getters, setters
 - `[V]` Create `CodeChunk` entity
-	- `[ ]` Sub-task: Add fields: id, fileId, content, startLine, endLine, type
-	- `[ ]` Sub-task: Add @ManyToOne relationship to CodeFile
-	- `[ ]` Sub-task: Add JPA annotations
+	- `[V]` Sub-task: Add fields: id, fileId, content, startLine, endLine, type
+	- `[V]` Sub-task: Add @ManyToOne relationship to CodeFile
+	- `[V]` Sub-task: Add JPA annotations
 - `[V]` Create `Symbol` entity (class, method, field)
-	- `[ ]` Sub-task: Add fields: id, name, type, signature, fileId, lineNumber
-	- `[ ]` Sub-task: Add JPA annotations
+	- `[V]` Sub-task: Add fields: id, name, type, signature, fileId, lineNumber
+	- `[V]` Sub-task: Add JPA annotations
 - `[V]` Create repository interfaces
-	- `[ ]` Sub-task: `CodeFileRepository extends JpaRepository`
-	- `[ ]` Sub-task: `CodeChunkRepository extends JpaRepository`
-	- `[ ]` Sub-task: `SymbolRepository extends JpaRepository`
+	- `[V]` Sub-task: `CodeFileRepository extends JpaRepository`
+	- `[V]` Sub-task: `CodeChunkRepository extends JpaRepository`
+	- `[V]` Sub-task: `SymbolRepository extends JpaRepository`
 - `[V]` Test: Run application and verify tables are created in H2
 
 ---
@@ -227,10 +225,10 @@ Password: (leave empty)
 	- `[ ]` Sub-task: Download `tokenizer.json` file
 	- `[ ]` Sub-task: Save both files to `models/` directory
 - `[V]` Create `EmbeddingService.java` class
-	- `[ ]` Sub-task: Add method to load ONNX model
-	- `[ ]` Sub-task: Add method to load tokenizer
-	- `[ ]` Sub-task: Add method `getEmbedding(String text)` that returns float[]
-	- `[ ]` Sub-task: Handle model loading errors
+	- `[>]` Sub-task: Add method to load ONNX model
+	- `[>]` Sub-task: Add method to load tokenizer
+	- `[V]` Sub-task: Add method `getEmbedding(String text)` that returns float[] (mock mode)
+	- `[V]` Sub-task: Handle model loading errors (ONNX deferred)
 - `[V]` Create `EmbeddingServiceTest.java`
 - `[V]` Test: Generate embedding for sample text
 - `[V]` Verify embedding is 384-dimensional vector (for all-MiniLM-L6-v2)
@@ -255,17 +253,17 @@ Use Case: Semantic search, text similarity
 	- `[ ]` Sub-task: Navigate to Chroma directory
 	- `[ ]` Sub-task: Run `chroma run --host localhost --port 8000`
 	- `[ ]` Sub-task: Test with browser: `http://localhost:8000/api/v1/heartbeat`
-- `[ ]` Create `ChromaService.java` to interact with Chroma HTTP API
-	- `[ ]` Sub-task: Create `config` package
-	- `[ ]` Sub-task: Create `RestTemplateConfig.java`
+- `[V]` Create `ChromaService.java` to interact with Chroma HTTP API
+	- `[V]` Sub-task: Create `config` package
+	- `[V]` Sub-task: Create `RestTemplateConfig.java`
 	- `[ ]` Sub-task: Create `@Bean` for RestTemplate
-	- `[ ]` Sub-task: Add method `createCollection(String name)`
-	- `[ ]` Sub-task: Add method `addEmbeddings(String collection, List<float[]> embeddings, List<String> documents)`
-	- `[ ]` Sub-task: Add method `query(String collection, float[] queryEmbedding, int topK)`
-	- `[ ]` Sub-task: Build HTTP requests manually using RestTemplate
-	- `[ ]` Sub-task: Parse JSON responses
-- `[ ]` Create `ChromaServiceTest.java`
-- `[ ]` Test: Create collection, add embedding, query by similarity
+	- `[V]` Sub-task: Add method `createCollection(String name)`
+	- `[V]` Sub-task: Add method `addEmbeddings(String collection, List<float[]> embeddings, List<String> documents)`
+	- `[V]` Sub-task: Add method `query(String collection, float[] queryEmbedding, int topK)`
+	- `[V]` Sub-task: Build HTTP requests manually using RestTemplate
+	- `[V]` Sub-task: Parse JSON responses
+`[V]` Create `ChromaServiceTest.java`
+`[V]` Test: Create collection, add embedding, query by similarity
 
 **Chroma API Endpoints:**
 ```

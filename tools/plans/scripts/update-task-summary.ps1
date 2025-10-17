@@ -1,3 +1,8 @@
+param(
+    [string]$TasksFilePath,
+    [string]$SummaryHeader = '## Task Summary'
+)
+
 # update-task-summary.ps1
 # Updates the task summary in firestickTASKS.md with current completion statistics
 
@@ -23,11 +28,6 @@
 # Set strict mode for better error handling
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
-
-param(
-    [string]$TasksFilePath,
-    [string]$SummaryHeader = '## Task Summary'
-)
 
 # Define file paths
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
