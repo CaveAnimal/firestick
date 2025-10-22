@@ -6,6 +6,7 @@
 ## Single-Task Workflow (read only what you need)
 - Tasks: personal first (`tools/work/dev1/tasksDEV1.md` or `tools/work/dev2/tasksDEV2.md`), then master (`tools/plans/firestickTASKS.md`).
 - Examples: open only relevant sections in `tools/plans/firestickEXAMPLES.md`.
+- Read `tools/experiences/LESSONS_LEARNED.md` (Lessons Learned) for recent incidents and remediation before starting work.
 - PRD: read only the FRs your task touches (Section 5) + key use cases.
 - Planning: current sprint in `tools/plans/firestickPLANNING.md` for prerequisites/blockers.
 - Stop reading when you can state: inputs, outputs, done criteria, and 2–3 tests.
@@ -59,4 +60,3 @@
 ## Environment & Tools (brief)
 - Build: Java 21, Maven 3.9+, Spring Boot 3.5.x.
 - PowerShell: test complex commands interactively; use the `check`/`update` scripts to manage task summaries.
-
