@@ -46,6 +46,15 @@ buildNumber.properties
 .classpath
 .factorypath
 
+# Python virtual environment
+.venv/
+
+# Do not commit backup plans
+/tools/plans/backups/
+
+# Do not commit Chroma vector database files
+chroma_data/
+
 # OS
 .DS_Store
 Thumbs.db
