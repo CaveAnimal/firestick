@@ -54,7 +54,8 @@ buildNumber.properties
 
 # Do not commit Chroma vector database files
 chroma_data/
-
+# Do not commit H2 database files
+data/
 # OS
 .DS_Store
 Thumbs.db

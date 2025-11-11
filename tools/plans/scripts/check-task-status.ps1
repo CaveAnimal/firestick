@@ -39,23 +39,23 @@ if (-not (Test-Path $tasksFile)) {
 $content = Get-Content $tasksFile -Raw
 
 # Count tasks using regex patterns
-$allTasksPattern = '^\s*-\s*`\[[^\]]*\]`'
+$allTasksPattern = '^\s*-\s*`?\[[^\]]*\]`?'
 $allTasksMatches = [regex]::Matches($content, $allTasksPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $totalTasks = $allTasksMatches.Count
 
-$completedPattern = '^\s*-\s*`\[[VX]\]`'
+$completedPattern = '^\s*-\s*`?\[[VX]\]`?'
 $completedMatches = [regex]::Matches($content, $completedPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $completedTasks = $completedMatches.Count
 
-$inProgressPattern = '^\s*-\s*`\[-\]`'
+$inProgressPattern = '^\s*-\s*`?\[-\]`?'
 $inProgressMatches = [regex]::Matches($content, $inProgressPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $inProgressTasks = $inProgressMatches.Count
 
-$blockedPattern = '^\s*-\s*`\[!\]`'
+$blockedPattern = '^\s*-\s*`?\[!\]`?'
 $blockedMatches = [regex]::Matches($content, $blockedPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $blockedTasks = $blockedMatches.Count
 
-$deferredPattern = '^\s*-\s*`\[>\]`'
+$deferredPattern = '^\s*-\s*`?\[>\]`?'
 $deferredMatches = [regex]::Matches($content, $deferredPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $deferredTasks = $deferredMatches.Count
 

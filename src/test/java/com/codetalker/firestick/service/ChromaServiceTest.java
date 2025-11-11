@@ -43,7 +43,7 @@ class ChromaServiceTest {
 
     @Test
     void createCollection_sendsPost() throws Exception {
-        server.expect(once(), requestTo("http://localhost:8000/api/v1/collections"))
+        server.expect(once(), requestTo("http://localhost:8000/api/v2/collections"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andRespond(withSuccess("{\"id\":\"col-1\"}", MediaType.APPLICATION_JSON));
@@ -60,7 +60,7 @@ class ChromaServiceTest {
                 "  \"distances\": [[0.1, 0.2]]\n" +
                 "}";
 
-        server.expect(once(), requestTo("http://localhost:8000/api/v1/collections/test-col/query"))
+        server.expect(once(), requestTo("http://localhost:8000/api/v2/collections/test-col/query"))
                 .andExpect(method(HttpMethod.POST))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andRespond(withSuccess(responseJson, MediaType.APPLICATION_JSON));

@@ -201,6 +201,17 @@ Based on project scope, this appears to be a small team project. Adjust assignme
 - [ ] Expand test coverage to >70%
 - [ ] Add configuration properties management
 
+### 4.5 Recent Progress (Nov 3, 2025)
+
+- File discovery defaults have been externalized into `IndexingConfig` (Spring `@ConfigurationProperties` with prefix `indexing`).
+  - Preserved prior scanning semantics; tests validate default behavior and exclusion handling.
+  - Added commented examples in `src/main/resources/application.properties` to optionally override:
+    - `indexing.file-extensions`
+    - `indexing.exclude-directories`
+    - `indexing.exclude-patterns`
+- Minor docs update: README now includes a brief section on tuning `indexing.*` properties and the corrected H2 JDBC URL.
+
+
 ---
 
 ## 5. Phase-by-Phase Planning

@@ -1,3 +1,35 @@
+## 2025-11-03 – Chroma API v1 deprecated, must use v2 endpoints
+
+Context
+- Goal: Test Chroma heartbeat endpoint at `/api/v1/heartbeat` as documented in Day 9-10 task.
+
+Observed error (from terminal)
+```
+Invoke-WebRequest : {"error":"Unimplemented","message":"The v1 API is deprecated. Please use /v2 apis"}
+```
+
+Root cause
+- ChromaDB 1.2.1 has deprecated the v1 API and requires using v2 API endpoints.
+- Task documentation referenced outdated v1 endpoint.
+
+Impact/State after failure
+- Initial heartbeat test failed with 500-level error.
+- Switched to `/api/v2/heartbeat` which returned `{"nanosecond heartbeat":1762203193136489300}` successfully.
+
+Lessons
+- Always check current API version when working with vector databases like Chroma, as they evolve rapidly.
+- Update all documentation and ChromaService code to use v2 API endpoints.
+
+Remediation
+- Use v2 endpoints:
+  - Heartbeat: `/api/v2/heartbeat` (not `/api/v1/heartbeat`)
+  - Collections: `/api/v2/collections` (not `/api/v1/collections`)
+  - All other operations: prefix with `/api/v2/` instead of `/api/v1/`
+- Update ChromaService.java to use v2 API endpoints.
+- Update task documentation to reflect v2 API.
+
+---
+
 ## 2025-10-22 – Python 3.12 migration one-liner failed (missing winget)
 
 Context
