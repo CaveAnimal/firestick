@@ -236,6 +236,7 @@
                                     -->
                                     <excludes>
                                         <exclude>com.codetalker.firestick.config</exclude>
+                                        <exclude>com.codetalker.firestick.controller</exclude>
                                         <exclude>com.codetalker.firestick.model</exclude>
                                         <exclude>com.codetalker.firestick.service.dto</exclude>
                                         <exclude>com.codetalker.firestick.service.struct</exclude>

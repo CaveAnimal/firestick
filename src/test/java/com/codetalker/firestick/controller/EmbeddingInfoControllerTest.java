@@ -12,29 +12,31 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Tests for DashboardController endpoint.
+ * Tests for EmbeddingInfoController endpoint.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-class DashboardControllerTest {
+class EmbeddingInfoControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+
     @Test
-    @DisplayName("GET /api/dashboard/summary returns dashboard data")
-    void summaryReturnsOkAndHasStats() throws Exception {
-        mockMvc.perform(get("/api/dashboard/summary"))
+    @DisplayName("GET /api/embedding/info returns current embedding configuration")
+    void testEmbeddingInfoEndpoint() throws Exception {
+        // Act & Assert - test with whatever mode is configured (likely MOCK in default profile)
+        mockMvc.perform(get("/api/embedding/info"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$").isMap())
-                .andExpect(jsonPath("$.stats").exists())
-                .andExpect(jsonPath("$.stats.totalFiles").exists())
-                .andExpect(jsonPath("$.stats.totalClasses").exists())
-                .andExpect(jsonPath("$.stats.totalMethods").exists())
-                .andExpect(jsonPath("$.stats.hotspotCount").exists())
-                .andExpect(jsonPath("$.chart").exists())
-                .andExpect(jsonPath("$.hotspots").exists())
-                .andExpect(jsonPath("$.recentJobs").exists());
+                .andExpect(jsonPath("$.mode").exists())
+                .andExpect(jsonPath("$.dimension").exists())
+                .andExpect(jsonPath("$.modelPath").exists())
+                .andExpect(jsonPath("$.tokenizerPath").exists())
+                .andExpect(jsonPath("$.maxSeqLen").exists())
+                .andExpect(jsonPath("$.activeProfiles").exists())
+                .andExpect(jsonPath("$.activeProfiles").isArray());
     }
 }
+

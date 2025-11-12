@@ -83,6 +83,30 @@
 - Build: Java 21, Maven 3.9+, Spring Boot 3.5.x.
 - PowerShell: test complex commands interactively; use the `check`/`update` scripts to manage task summaries.
 
+## Windows Shell Syntax (CRITICAL - read environment info)
+- **ALWAYS check environment info** for user's OS and shell before generating terminal commands.
+- **This project uses PowerShell** (even if environment reports "cmd.exe" as default shell).
+- **`&&` does NOT work in Windows PowerShell or cmd.exe** - this is a Unix/bash operator only.
+- **`&` does NOT work in PowerShell** - PowerShell reserves `&` for the call operator and will error with "AmpersandNotAllowed".
+
+### Correct syntax by shell:
+- For **PowerShell** (this project): Use semicolon `;` to chain commands:
+  ```powershell
+  cd some-directory ; mvn test
+  ```
+- For **cmd.exe** (legacy/batch files only): Use single ampersand `&` to chain commands:
+  ```cmd
+  cd some-directory & mvn test
+  ```
+
+### Best practice
+- **Avoid unnecessary command chaining**. If already in the project directory, just run the command:
+  ```powershell
+  mvn test -Dtest=SomeTest
+  ```
+- When in doubt, use semicolon `;` for PowerShell (the default for this project).
+- See `tools/experiences/LESSONS_LEARNED.md` (2025-11-12 entries) for detailed incident reports.
+
 ## Bookmarks (resume quickly)
 - Purpose: Jump back to the most relevant spot in your task file without scrolling.
 - Dev2 bookmarks:

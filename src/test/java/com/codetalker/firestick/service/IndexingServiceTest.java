@@ -1,6 +1,7 @@
 package com.codetalker.firestick.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -29,6 +30,14 @@ class IndexingServiceTest {
 
     @Autowired
     private CodeParserService codeParserService;
+
+    @BeforeEach
+    void setUp() {
+        // Clean up database to ensure fresh state for incremental indexing logic
+        codeChunkRepository.deleteAll();
+        codeFileRepository.deleteAll();
+        jobRepository.deleteAll();
+    }
 
     @Test
     void indexesSampleDirectory() {
