@@ -1,0 +1,7 @@
+/* Print-friendly styles */
+@media print {
+  /* Hide navigation and footer to focus on main content */
+  aside[role="navigation"], header, footer { display: none !important; }
+  main, [role="main"] { padding: 0 !important; }
+  body { color: #000; background: #fff; }
+}

@@ -1,5 +1,12 @@
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$toolsDir = Split-Path -Parent (Split-Path -Parent $scriptDir)
-$tasks = Join-Path $toolsDir 'work\dev1\tasksDEV1.md'
-$check = Join-Path $toolsDir 'plans\scripts\check-task-status.ps1'
+# Resolve directories relative to this script location
+$devDir = Split-Path -Parent $scriptDir              # tools\work\dev1
+$workDir = Split-Path -Parent $devDir                # tools\work
+$toolsRoot = Split-Path -Parent $workDir             # tools
+
+# Paths
+$tasks = Join-Path $devDir 'tasksDEV1.md'
+$check = Join-Path $toolsRoot 'plans\scripts\check-task-status.ps1'
+
+# Execute
 & $check -TasksFilePath $tasks

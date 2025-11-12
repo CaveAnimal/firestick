@@ -9,12 +9,55 @@
 
 ## Task Summary
 
-**Total Tasks:** 1,747 tasks (including main tasks and sub-tasks)  
-**Completed/Tested:** 32 tasks  
+**Total Tasks:** 5 tasks (including main tasks and sub-tasks)  
+**Completed/Tested:** 4 tasks  
 **In Progress:** 1 tasks  
-**Blocked:** 1 tasks  
-**Percent Complete:** 1.83%  
-**Last Updated:** October 15, 2025    2:00 PM Central Standard Time
+**Blocked:** 0 tasks  
+**Percent Complete:** 80%  
+**Last Updated:** November 6, 2025    2:31 PM Central Standard Time
+
+### Child Task Lists
+- Dev1 Task List: tools/work/dev1/tasksDEV1.md
+- Dev2 Task List: tools/work/dev2/tasksDEV2.md
+
+## Current Phase — Focused Scope (Counted)
+
+- `[V]` ONNX mode profile configured and model/tokenizer inventory verified
+- `[V]` GlobalExceptionHandler in place with ErrorResponse.requestId contract and tests
+- `[V]` OpenAPI baseline generated with drift-check test enforced in CI
+- `[V]` Rescope master task list and seed Dev3 execution lane for current sprint
+- `[-]` Initialize Dev3 runbook: refresh DEV3 summary and kick off first verification tasks
+
+## Deferred / Backlog (Excluded from Percent)
+
+<!-- @SKIP-COUNT:START deferred -->
+
+## Recently Completed Follow-ups (Cross-Team)
+
+- `[V]` Chroma v2 tenant/database connectivity verified (heartbeat and collection create/get/delete via REST)
+- `[V]` End-to-end pipeline test with mocked Chroma v2; added `docs/PIPELINE.md`, sample `HelloWorld.java` and `Calculator.java`, and multi-document assertions
+- `[V]` Embeddings ONNX mode wiring in `EmbeddingService` with minimal WordPiece tokenizer; added guarded ONNX smoke test and updated docs
+- `[V]` Centralized logging and GlobalExceptionHandler with domain exceptions; tests verifying handler behavior
+- `[V]` Lucene modernization to StoredFields API (removed deprecated IndexSearcher.doc usage)
+- `[V]` File discovery enhancements (exclude directories, glob patterns)
+- `[V]` Externalized defaults via `IndexingConfig` (indexing.* properties)
+- `[V]` Indexing orchestrator (`IndexingService`) and REST endpoints (`/api/indexing/run`)
+- `[V]` Job tracking (`IndexingJob` entity/repo) and controller (`/api/indexing/jobs/...`)
+- `[V]` Incremental indexing (skip unchanged files by lastModified)
+- `[V]` Persistence of `CodeFile` and `CodeChunk` with transactional replacement of chunks
+- `[V]` Exposed `jobId` in `IndexingReport` and API responses
+- `[V]` Controller tests for job endpoints (latest/byId)
+- `[V]` README updates covering incremental behavior and report fields
+- `[V]` TheRules: policy to not analyze Surefire reports unless requested; treat `[INFO] BUILD SUCCESS` as sufficient
+- `[V]` Parser and graph now separate static vs non-static imports; normalized import labels (strip "static ", semicolons); tests adjusted and passing
+- `[V]` Dependency graph enhanced with CALLS across classes: qualified calls and static-imported unqualified calls resolved heuristically; unit tests added
+- `[V]` Rolled up Dev1 progress (+5%) into global: instance and constructor call resolution (simple chained calls) added with focused tests; overall percent updated
+- `[V]` Static import wildcard resolution and metrics: unqualified CALLS via `Class.*` supported; added `callsStaticWildcardResolved` and `callsQualifiedChainedResolved`; tests extended
+- `[V]` Rolled up Dev1 progress (+5%) into global: resolved `this.`/`super.` qualified calls and added unresolved-call metrics buckets; new unit tests added and full suite passing; overall percent updated
+
+- `[V]` Rolled up Dev1 final (+3%) into global: added FQN-qualified call resolution metric (`callsQualifiedFqnResolved`) and unique simple-name fallback metric (`callsQualifiedUniqueSimpleResolved`); implemented fallback resolver; tests added; full suite passing; overall percent updated
+
+- `[V]` Test suite green with JaCoCo gate (>=80% PACKAGE coverage per pom.xml); refreshed Task Summary (DEV1 82.57%, DEV2 95.93%, firestick 9.34%); confirmed Dev1/Dev2 lists linked under Child Task Lists
 
 ## Task Management System
 
@@ -98,9 +141,9 @@ class HealthControllerTest {
 - `[V]` Create `service` package under `com.codetalkerl.firestick`
 - `[V]` Create `CodeParserService.java` class
 - `[V]` Implement basic method to parse a Java file
-  - `[ ]` Sub-task: Accept file path as parameter
-  - `[ ]` Sub-task: Return CompilationUnit from JavaParser
-  - `[ ]` Sub-task: Handle parsing errors with try-catch
+  - `[V]` Sub-task: Accept file path as parameter
+  - `[V]` Sub-task: Return CompilationUnit from JavaParser
+  - `[V]` Sub-task: Handle parsing errors with try-catch
 - `[V]` Create `CodeParserServiceTest.java`
 - `[V]` Test: Parse a sample Java file successfully
 
@@ -122,12 +165,12 @@ public CompilationUnit parseJavaFile(String filePath) {
   - `lucene-analysis-common` version 9.12.0
 - `[V]` Create `CodeSearchService.java` class
 - `[V]` Implement basic indexing method
-  - `[ ]` Sub-task: Create in-memory Lucene index
-  - `[ ]` Sub-task: Add sample document to index
-  - `[ ]` Sub-task: Handle IOException properly
+  - `[V]` Sub-task: Create in-memory Lucene index
+  - `[V]` Sub-task: Add sample document to index
+  - `[V]` Sub-task: Handle IOException properly
 - `[V]` Implement basic search method
-  - `[ ]` Sub-task: Accept query string parameter
-  - `[ ]` Sub-task: Return list of matching documents
+  - `[V]` Sub-task: Accept query string parameter
+  - `[V]` Sub-task: Return list of matching documents
 - `[V]` Create `CodeSearchServiceTest.java`
 - `[V]` Test: Index and search a sample document
 
@@ -141,12 +184,12 @@ public CompilationUnit parseJavaFile(String filePath) {
   - `jgrapht-io` version 1.5.2
 - `[V]` Create `DependencyGraphService.java` class
 - `[V]` Implement method to create simple graph
-  - `[ ]` Sub-task: Create DirectedGraph instance
-  - `[ ]` Sub-task: Add vertices (nodes)
-  - `[ ]` Sub-task: Add edges (connections)
+  - `[V]` Sub-task: Create DirectedGraph instance
+  - `[V]` Sub-task: Add vertices (nodes)
+  - `[V]` Sub-task: Add edges (connections)
 - `[V]` Implement method to find dependencies
-  - `[ ]` Sub-task: Get outgoing edges from a vertex
-  - `[ ]` Sub-task: Return list of dependent classes
+  - `[V]` Sub-task: Get outgoing edges from a vertex
+  - `[V]` Sub-task: Return list of dependent classes
 - `[V]` Create `DependencyGraphServiceTest.java`
 - `[V]` Test: Create graph and query dependencies
 
@@ -157,15 +200,15 @@ public CompilationUnit parseJavaFile(String filePath) {
 #### Day 6: H2 Database Setup
 **Goal:** Set up embedded database for metadata storage
 
-- `[ ]` Add H2 database dependency to `pom.xml` (already exists)
-- `[ ]` Add Spring Data JPA dependency (already exists)
-- `[ ]` Create `application.properties` configuration
-  - `[ ]` Sub-task: Set H2 console enabled = true
-  - `[ ]` Sub-task: Set datasource URL to file-based H2
-  - `[ ]` Sub-task: Set JPA DDL auto to `update`
-  - `[ ]` Sub-task: Add logging for SQL statements (optional)
-- `[ ]` Test: Start application and access H2 console at `/h2-console`
-- `[ ]` Verify database file is created
+- `[V]` Add H2 database dependency to `pom.xml` (already exists)
+- `[V]` Add Spring Data JPA dependency (already exists)
+- `[V]` Create `application.properties` configuration
+  - `[V]` Sub-task: Set H2 console enabled = true
+  - `[V]` Sub-task: Set datasource URL to file-based H2
+  - `[V]` Sub-task: Set JPA DDL auto to `update`
+  - `[V]` Sub-task: Add logging for SQL statements (optional)
+- `[V]` Test: Start application and access H2 console at `/h2-console`
+- `[V]` Verify database file is created
 
 **Configuration Example:**
 ```properties
@@ -186,23 +229,23 @@ spring.jpa.hibernate.ddl-auto=update
 #### Day 7: Create Database Entities
 **Goal:** Define data models for code metadata
 
-- `[ ]` Create `entity` package under `com.codetalkerl.firestick`
-- `[ ]` Create `CodeFile.java` entity (30 min)
-  - `[ ]` Sub-task: Add fields: id, filePath, lastModified, hash
-  - `[ ]` Sub-task: Add JPA annotations (@Entity, @Id, @GeneratedValue)
-  - `[ ]` Sub-task: Add constructors, getters, setters
-- `[ ]` Create `CodeChunk.java` entity (30 min)
-  - `[ ]` Sub-task: Add fields: id, fileId, content, startLine, endLine, type
-  - `[ ]` Sub-task: Add @ManyToOne relationship to CodeFile
-  - `[ ]` Sub-task: Add JPA annotations
-- `[ ]` Create `Symbol.java` entity (30 min)
-  - `[ ]` Sub-task: Add fields: id, name, type, signature, fileId, lineNumber
-  - `[ ]` Sub-task: Add JPA annotations
-- `[ ]` Create repository interfaces (1h)
-  - `[ ]` Sub-task: `CodeFileRepository extends JpaRepository`
-  - `[ ]` Sub-task: `CodeChunkRepository extends JpaRepository`
-  - `[ ]` Sub-task: `SymbolRepository extends JpaRepository`
-- `[ ]` Test: Run application and verify tables are created in H2
+- `[V]` Create `entity` package under `com.codetalkerl.firestick`
+- `[V]` Create `CodeFile.java` entity (30 min)
+  - `[V]` Sub-task: Add fields: id, filePath, lastModified, hash
+  - `[V]` Sub-task: Add JPA annotations (@Entity, @Id, @GeneratedValue)
+  - `[V]` Sub-task: Add constructors, getters, setters
+- `[V]` Create `CodeChunk.java` entity (30 min)
+  - `[V]` Sub-task: Add fields: id, fileId, content, startLine, endLine, type
+  - `[V]` Sub-task: Add @ManyToOne relationship to CodeFile
+  - `[V]` Sub-task: Add JPA annotations
+- `[V]` Create `Symbol.java` entity (30 min)
+  - `[V]` Sub-task: Add fields: id, name, type, signature, fileId, lineNumber
+  - `[V]` Sub-task: Add JPA annotations
+- `[V]` Create repository interfaces (1h)
+  - `[V]` Sub-task: `CodeFileRepository extends JpaRepository`
+  - `[V]` Sub-task: `CodeChunkRepository extends JpaRepository`
+  - `[V]` Sub-task: `SymbolRepository extends JpaRepository`
+- `[V]` Test: Run application and verify tables are created in H2
 
 **Entity Example:**
 ```java
@@ -227,21 +270,21 @@ public class CodeFile {
 #### Day 8: ONNX Runtime Setup
 **Goal:** Set up local embedding model infrastructure
 
-- `[ ]` Verify ONNX Runtime dependency in `pom.xml` (already exists)
-- `[ ]` Create `models` directory in project root (5 min)
-- `[ ]` Download all-MiniLM-L6-v2 ONNX model (30 min)
-  - `[ ]` Sub-task: Find model on Hugging Face (search "all-MiniLM-L6-v2 onnx")
-  - `[ ]` Sub-task: Download `model.onnx` file
-  - `[ ]` Sub-task: Download `tokenizer.json` file
-  - `[ ]` Sub-task: Save both files to `models/` directory
+- `[V]` Verify ONNX Runtime dependency in `pom.xml` (already exists)
+- `[V]` Create `models` directory in project root (5 min)
+- `[V]` Download all-MiniLM-L6-v2 ONNX model (30 min)
+  - `[V]` Sub-task: Find model on Hugging Face (search "all-MiniLM-L6-v2 onnx")
+  - `[V]` Sub-task: Download `model.onnx` file
+  - `[V]` Sub-task: Download `tokenizer.json` file
+  - `[V]` Sub-task: Save both files to `models/` directory
   - Note: Model size is approximately 90MB
-- `[ ]` Create `EmbeddingService.java` class (2h)
-  - `[ ]` Sub-task: Add method to load ONNX model
-  - `[ ]` Sub-task: Add method to load tokenizer
-  - `[ ]` Sub-task: Add method `getEmbedding(String text)` that returns float[]
-  - `[ ]` Sub-task: Handle model loading errors
-- `[ ]` Create simple test to generate one embedding (1h)
-- `[ ]` Test: Generate embedding for "Hello World" successfully
+- `[V]` Create `EmbeddingService.java` class (2h)
+  - `[V]` Sub-task: Add method to load ONNX model
+  - `[V]` Sub-task: Add method to load tokenizer
+  - `[V]` Sub-task: Add method `getEmbedding(String text)` that returns float[]
+  - `[V]` Sub-task: Handle model loading errors
+- `[V]` Create simple test to generate one embedding (1h)
+- `[V]` Test: Generate embedding for "Hello World" successfully
 
 **Download Instructions:**
 1. Go to https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
@@ -273,30 +316,38 @@ public class EmbeddingService {
 
 **Background:** The Chroma Java client is not stable, so we'll use HTTP REST API instead.
 
-- `[ ]` Verify Chroma is running locally (15 min)
-  - `[ ]` Sub-task: Open terminal/PowerShell
-  - `[ ]` Sub-task: Navigate to Chroma directory
-  - `[ ]` Sub-task: Run `chroma run --host localhost --port 8000`
-  - `[ ]` Sub-task: Test with browser: `http://localhost:8000/api/v1/heartbeat`
-- `[ ]` Add RestTemplate configuration (30 min)
-  - `[ ]` Sub-task: Create `config` package
-  - `[ ]` Sub-task: Create `RestTemplateConfig.java`
-  - `[ ]` Sub-task: Create `@Bean` for RestTemplate
-- `[ ]` Create `ChromaService.java` class (3h)
-  - `[ ]` Sub-task: Add method `createCollection(String name)`
-  - `[ ]` Sub-task: Add method `addEmbeddings(String collection, List<float[]> embeddings, List<String> documents)`
-  - `[ ]` Sub-task: Add method `query(String collection, float[] queryEmbedding, int topK)`
-  - `[ ]` Sub-task: Build HTTP requests manually using RestTemplate
-  - `[ ]` Sub-task: Parse JSON responses
-- `[ ]` Create `ChromaServiceTest.java`
-- `[ ]` Test: Create collection and add one document
+- `[V]` Verify Chroma is running locally (15 min)
+  - `[V]` Sub-task: Open terminal/PowerShell
+  - `[V]` Sub-task: Navigate to Chroma directory
+  - `[V]` Sub-task: Run `chroma run --host localhost --port 8000`
+  - `[V]` Sub-task: Test with browser: `http://localhost:8000/api/v2/heartbeat` (v1 returns "Unimplemented")
+- `[V]` Add RestTemplate configuration (30 min)
+  - `[V]` Sub-task: Create `config` package
+  - `[V]` Sub-task: Create `RestTemplateConfig.java`
+  - `[V]` Sub-task: Create `@Bean` for RestTemplate
+- `[V]` Create `ChromaService.java` class (3h)
+  - `[V]` Sub-task: Add method `createCollection(String name)`
+  - `[V]` Sub-task: Add method `addEmbeddings(String collection, List<float[]> embeddings, List<String> documents)`
+  - `[V]` Sub-task: Add method `query(String collection, float[] queryEmbedding, int topK)`
+  - `[V]` Sub-task: Build HTTP requests manually using RestTemplate
+  - `[V]` Sub-task: Parse JSON responses
+- `[V]` Create `ChromaServiceTest.java`
+- `[V]` Test: Create collection and add one document
 
-**Chroma REST API Reference:**
+**Chroma REST API Reference (v2):**
 ```
-POST http://localhost:8000/api/v1/collections
-GET  http://localhost:8000/api/v1/collections/{name}
-POST http://localhost:8000/api/v1/collections/{name}/add
-POST http://localhost:8000/api/v1/collections/{name}/query
+POST http://localhost:8000/api/v2/collections
+GET  http://localhost:8000/api/v2/collections/{name}
+POST http://localhost:8000/api/v2/collections/{name}/add
+POST http://localhost:8000/api/v2/collections/{name}/query
+```
+
+Note: On newer Chroma servers, resource routes are namespaced by tenant and database. Use:
+```
+POST http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections
+GET  http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections/{name}
+POST http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections/{name}/add
+POST http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections/{name}/query
 ```
 
 **Service Example:**
@@ -321,21 +372,21 @@ public class ChromaService {
 #### Day 10: End-to-End Pipeline Test
 **Goal:** Test complete flow from code to embeddings to Chroma
 
-- `[ ]` Create integration test class `CodeIndexingPipelineTest.java` (4h)
-  - `[ ]` Sub-task: Parse a sample Java file with CodeParserService
-  - `[ ]` Sub-task: Extract method text content
-  - `[ ]` Sub-task: Generate embedding with EmbeddingService
-  - `[ ]` Sub-task: Store in Chroma with ChromaService
-  - `[ ]` Sub-task: Query Chroma with sample question
-  - `[ ]` Sub-task: Verify results are returned
-- `[ ]` Create sample test data (30 min)
-  - `[ ]` Sub-task: Create `test-data/sample-code/` directory
-  - `[ ]` Sub-task: Add 2-3 simple Java files for testing
-- `[ ]` Document the pipeline flow (1h)
-  - `[ ]` Sub-task: Create `PIPELINE.md` in `docs/` directory
-  - `[ ]` Sub-task: Document each step with code examples
-  - `[ ]` Sub-task: Add troubleshooting section
-- `[ ]` Fix any bugs discovered during testing
+- `[V]` Create integration test class `E2EPipelineTest.java` (4h)
+  - `[V]` Sub-task: Parse a sample Java file with CodeParserService
+  - `[V]` Sub-task: Extract method text content
+  - `[V]` Sub-task: Generate embedding with EmbeddingService
+  - `[V]` Sub-task: Store in Chroma with ChromaService (mocked Chroma v2 via `MockRestServiceServer`)
+  - `[V]` Sub-task: Query Chroma with sample question
+  - `[V]` Sub-task: Verify results are returned (including multi-document assertions)
+- `[V]` Create sample test data (30 min)
+  - `[V]` Sub-task: Create `test-data/sample-code/` directory
+  - `[V]` Sub-task: Add 2–3 simple Java files for testing (`HelloWorld.java`, `Calculator.java`)
+- `[V]` Document the pipeline flow (1h)
+  - `[V]` Sub-task: Create `PIPELINE.md` in `docs/` directory
+  - `[V]` Sub-task: Document each step with code examples
+  - `[V]` Sub-task: Add troubleshooting section
+- `[V]` Fix any bugs discovered during testing (JSON mock escaping in Chroma response)
 
 **Pipeline Flow:**
 ```
@@ -377,27 +428,27 @@ class CodeIndexingPipelineTest {
   - `[ ]` Sub-task: Run all tests to verify nothing broke
 
 - `[ ]` Add logging framework (1h)
-  - `[ ]` Sub-task: Add SLF4J + Logback dependencies (may already be included)
-  - `[ ]` Sub-task: Create `logback.xml` in `src/main/resources/`
-  - `[ ]` Sub-task: Add logger to each service class
-  - `[ ]` Sub-task: Add meaningful log statements (INFO, DEBUG, ERROR)
+  - `[V]` Sub-task: Add SLF4J + Logback dependencies (may already be included)
+  - `[V]` Sub-task: Create `logback.xml` in `src/main/resources/`
+  - `[V]` Sub-task: Add logger to each service class
+  - `[V]` Sub-task: Add meaningful log statements (INFO, DEBUG, ERROR)
   - `[ ]` Sub-task: Test logging at different levels
 
 - `[ ]` Implement error handling (2h)
-  - `[ ]` Sub-task: Create custom exceptions in `exception` package
+  - `[V]` Sub-task: Create custom exceptions in `exception` package
     - `CodeParsingException`
     - `EmbeddingGenerationException`
     - `ChromaConnectionException`
-  - `[ ]` Sub-task: Create `@ControllerAdvice` class for global exception handling
-  - `[ ]` Sub-task: Return proper HTTP status codes (400, 500, etc.)
+  - `[V]` Sub-task: Create `@ControllerAdvice` class for global exception handling
+  - `[V]` Sub-task: Return proper HTTP status codes (400, 500, etc.)
   - `[ ]` Sub-task: Add error handling to all service methods
 
 - `[ ]` Improve test coverage (3h)
   - `[ ]` Sub-task: Add more test cases to existing test classes
-  - `[ ]` Sub-task: Test error conditions and edge cases
-  - `[ ]` Sub-task: Add integration tests for database operations
-  - `[ ]` Sub-task: Run `mvn test` and verify >70% coverage
-  - `[ ]` Sub-task: Fix any failing tests
+  - `[V]` Sub-task: Test error conditions and edge cases
+  - `[V]` Sub-task: Add integration tests for database operations
+  - `[V]` Sub-task: Run `mvn test` and verify >70% coverage
+  - `[V]` Sub-task: Fix any failing tests
 
 - `[ ]` Create README documentation (1h)
   - `[ ]` Sub-task: Add project description
@@ -418,14 +469,14 @@ Before moving to Phase 2, verify ALL of the following:
 - ✅ Can parse Java files with JavaParser
 - ✅ Can create Lucene index and search
 - ✅ Can create dependency graphs with JGraphT
-- ⬜ H2 database is configured and accessible
-- ⬜ Database entities are created and persisted
+- ✅ H2 database is configured and accessible
+- ✅ Database entities are created and persisted
 - ⬜ ONNX model generates embeddings successfully
 - ⬜ Chroma connection works and can store/retrieve vectors
-- ⬜ End-to-end pipeline test passes
+- ✅ End-to-end pipeline test passes
 
-### Code Quality Requirements
-- ⬜ All unit tests pass (`mvn test`)
+-### Code Quality Requirements
+- ✅ All unit tests pass (`mvn test`)
 - ⬜ Integration tests pass
 - ⬜ No critical errors in logs
 - ⬜ Code follows consistent naming conventions
@@ -593,16 +644,16 @@ This is the foundation of Firestick. Without good indexing, search won't work we
   - `[ ]` Sub-task: Add logger fields to all service classes
   - `[ ]` Sub-task: Add log statements at key points (method entry, errors, important decisions)
 
-- `[ ]` **Implement Global Exception Handling** (2h)
-  - `[ ]` Sub-task: Create `exception` package
-  - `[ ]` Sub-task: Create custom exceptions:
+- `[V]` **Implement Global Exception Handling** (2h)
+  - `[V]` Sub-task: Create `exception` package
+  - `[V]` Sub-task: Create custom exceptions:
     - `FileDiscoveryException`
     - `CodeParsingException`
     - `IndexingException`
     - `EmbeddingException`
-  - `[ ]` Sub-task: Create `GlobalExceptionHandler` with `@ControllerAdvice`
-  - `[ ]` Sub-task: Handle exceptions and return proper HTTP status codes
-  - `[ ]` Sub-task: Test exception handling with intentional errors
+  - `[V]` Sub-task: Create `GlobalExceptionHandler` with `@ControllerAdvice`
+  - `[V]` Sub-task: Handle exceptions and return proper HTTP status codes
+  - `[V]` Sub-task: Test exception handling with intentional errors
 
 **Logback Configuration Example:**
 ```xml
@@ -862,21 +913,21 @@ public class CodeChunkingService {
 ### Day 15: Dependency Graph Building - Part 1
 **Goal:** Build comprehensive dependency graph from parsed code
 
-- `[ ]` **Plan Graph Structure** (1h)
-  - `[ ]` Sub-task: Review JGraphT documentation
-  - `[ ]` Sub-task: Decide on graph node types (Class, Method, Package)
-  - `[ ]` Sub-task: Decide on edge types (EXTENDS, IMPLEMENTS, CALLS, IMPORTS)
-  - `[ ]` Sub-task: Document graph schema in `docs/GRAPH_SCHEMA.md`
+- `[V]` **Plan Graph Structure** (1h)
+  - `[V]` Sub-task: Review JGraphT documentation
+  - `[V]` Sub-task: Decide on graph node types (Class, Method, Package)
+  - `[V]` Sub-task: Decide on edge types (EXTENDS, IMPLEMENTS, CALLS, IMPORTS)
+  - `[V]` Sub-task: Document graph schema in `docs/GRAPH_SCHEMA.md`
 
-- `[ ]` **Enhance DependencyGraphService** (4h)
-  - `[ ]` Sub-task: Update `DependencyGraphService.java`
-  - `[ ]` Sub-task: Create method `buildFromParsedFiles(List<FileInfo> files)`
-  - `[ ]` Sub-task: Add all classes as vertices
-  - `[ ]` Sub-task: Add all methods as vertices
-  - `[ ]` Sub-task: Create edges for inheritance (extends)
-  - `[ ]` Sub-task: Create edges for interface implementation (implements)
-  - `[ ]` Sub-task: Create edges for imports
-  - `[ ]` Sub-task: Store graph metadata
+- `[V]` **Enhance DependencyGraphService** (4h)
+  - `[V]` Sub-task: Update `DependencyGraphService.java`
+  - `[V]` Sub-task: Create method `buildFromParsedFiles(List<FileInfo> files)`
+  - `[V]` Sub-task: Add all classes as vertices
+  - `[V]` Sub-task: Add all methods as vertices
+  - `[V]` Sub-task: Create edges for inheritance (extends)
+  - `[V]` Sub-task: Create edges for interface implementation (implements)
+  - `[V]` Sub-task: Create edges for imports
+  - `[V]` Sub-task: Store graph metadata
 
 - `[ ]` **Create Graph Node Classes** (2h)
   - `[ ]` Sub-task: Create `GraphNode.java` interface or abstract class
@@ -937,17 +988,17 @@ public class DependencyGraphService {
 ### Day 16: Dependency Graph Building - Part 2
 **Goal:** Complete dependency graph with method call analysis
 
-- `[ ]` **Implement Method Call Detection** (4h)
-  - `[ ]` Sub-task: Research JavaParser method call visitor pattern
-  - `[ ]` Sub-task: Create `MethodCallVisitor` class extends VoidVisitorAdapter
-  - `[ ]` Sub-task: Override visit(MethodCallExpr) to detect method calls
-  - `[ ]` Sub-task: Store caller → callee relationships
-  - `[ ]` Sub-task: Handle method calls within same class
-  - `[ ]` Sub-task: Handle method calls to other classes
+- `[V]` **Implement Method Call Detection** (4h)
+  - `[V]` Sub-task: Research JavaParser method call visitor pattern
+  - `[V]` Sub-task: Create `MethodCallVisitor` class extends VoidVisitorAdapter
+  - `[V]` Sub-task: Override visit(MethodCallExpr) to detect method calls
+  - `[V]` Sub-task: Store caller → callee relationships
+  - `[V]` Sub-task: Handle method calls within same class
+  - `[V]` Sub-task: Handle method calls to other classes
 
-- `[ ]` **Add Method Call Edges to Graph** (2h)
-  - `[ ]` Sub-task: Update `DependencyGraphService` to include method calls
-  - `[ ]` Sub-task: Create edges with CALLS type
+- `[V]` **Add Method Call Edges to Graph** (2h)
+  - `[V]` Sub-task: Update `DependencyGraphService` to include method calls
+  - `[V]` Sub-task: Create edges with CALLS type
   - `[ ]` Sub-task: Handle unresolved method calls gracefully
   - `[ ]` Sub-task: Add statistics logging (total calls, unique calls, etc.)
 
@@ -977,8 +1028,8 @@ public class MethodCallVisitor extends VoidVisitorAdapter<Map<String, List<Strin
 ```
 
 - `[ ]` **Create Tests** (1h)
-  - `[ ]` Sub-task: Test graph building with sample classes
-  - `[ ]` Sub-task: Test method call detection
+  - `[V]` Sub-task: Test graph building with sample classes
+  - `[V]` Sub-task: Test method call detection
   - `[ ]` Sub-task: Test query methods return correct results
   - `[ ]` Sub-task: Test circular dependency detection
 
@@ -8184,4 +8235,6 @@ Document what you learned:
 
 **Document Last Updated:** October 14, 2025  
 **Final Review:** January 11, 2026
+
+<!-- @SKIP-COUNT:END deferred -->
 

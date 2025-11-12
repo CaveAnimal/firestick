@@ -1,0 +1,53 @@
+{
+  "name": "assistant-proceed-extension",
+  "displayName": "Assistant Proceed Button",
+  "description": "Adds a chat participant that always suggests a 'Proceed' follow-up to trigger the next step.",
+  "version": "0.0.3",
+  "publisher": "caveanimal",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CaveAnimal/firestick"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "main": "./dist/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.2",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.5",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "vscode-uri": "^3.0.8"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "assistantProceed.insertProceed",
+        "title": "Assistant Proceed: Insert Proceed Prompt"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "assistantProceed.participant",
+        "name": "proceed",
+        "fullName": "Proceed Assistant",
+        "description": "Presents a Proceed action after each response to continue the next recommended step.",
+        "isSticky": true
+      }
+    ]
+  },
+  "activationEvents": [
+    "onChatParticipant:assistantProceed.participant",
+    "onStartupFinished"
+  ]
+}

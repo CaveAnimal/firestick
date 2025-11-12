@@ -1,0 +1,21 @@
+{
+  "source": "tools/work/dev2/tasksDEV2.md",
+  "measuredAt": "2025-11-05T20:05:00Z",
+  "markers": [
+    {
+      "id": "recommendations-backlog-heading",
+      "pattern": "^## Recommendations Backlog (ttask)$"
+    },
+    {
+      "id": "ci-artifacts-ttask",
+      "pattern": "Publish JaCoCo coverage and Surefire reports in CI"
+    },
+    {
+      "id": "openapi-swagger-ui-subtask",
+      "pattern": "Sub-task: Add Swagger UI availability test"
+    }
+  ],
+  "resume": {
+    "preferredStartLine": 818
+  }
+}

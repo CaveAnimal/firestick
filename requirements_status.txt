@@ -1,0 +1,63 @@
+Looking in indexes:@dotnexusprodp.dot.state.wi.us/repository/pypi-proxy/simple
+
+Requirement already satisfied: packaging in c:\webdev\cloud\firestick\fstk-002\.venv\lib\site-packages (25.0)
+
+(.venv) PS C:\webdev\Cloud\firestick\fstk-002> python tools/scripts/verify_requirements.py
+
+Missing packages:
+
+  hnswlib==0.8.0
+
+  Jinja2==3.1.6
+
+  joblib==1.5.2
+
+  MarkupSafe==3.0.3
+
+  ml_dtypes==0.5.3
+
+  networkx==3.5
+
+  onnx==1.19.1
+
+  optimum==2.0.0
+
+  optimum-onnx==0.0.3
+
+  pillow==12.0.0
+
+  regex==2025.10.23
+
+  safetensors==0.6.2
+
+  scikit-learn==1.7.2
+
+  scipy==1.16.2
+
+  sentence-transformers==5.1.1
+
+  setuptools==80.9.0
+
+  threadpoolctl==3.6.0
+
+  torch==2.9.0
+
+  transformers==4.55.4
+
+  typing-inspection==0.4.2
+
+  wheel==0.45.1
+
+Version mismatches:
+
+  numpy==2.1.2 (requires ==2.3.4)
+
+  pydantic==2.9.2 (requires ==2.12.3)
+
+  pydantic_core==2.23.4 (requires ==2.41.4)
+
+  rpds-py==0.28.0 (requires ==0.27.1)
+
+  tokenizers==0.22.1 (requires ==0.21.4)
+
+  typing_extensions==4.12.2 (requires ==4.15.0)

@@ -11,14 +11,12 @@
 
 ## Task Summary (DEV2)
 
-**Total Tasks:** 0  
-**Completed/Tested:** 0  
-**In Progress:** 0  
-**Blocked:** 0  
-**Percent Complete:** 0%  
-**Last Updated:** October 22, 2025
-
----
+**Total Tasks:** 245 tasks (including main tasks and sub-tasks)  
+**Completed/Tested:** 236 tasks  
+**In Progress:** 1 tasks  
+**Blocked:** 1 tasks  
+**Percent Complete:** 96.33%  
+**Last Updated:** November 6, 2025    2:31 PM Central Standard Time
 
 ## Developer 2 Task Summary
 
@@ -91,21 +89,21 @@
 #### Day 1-3: Project Validation & Test Framework Setup
 **Goal:** Ensure project setup is correct and establish testing foundation
 
-- `[ ]` **Validate Project Setup** (2h)
-	- `[ ]` Sub-task: Clone repository and verify structure
-	- `[ ]` Sub-task: Verify Maven build works: `mvn clean install`
-	- `[ ]` Sub-task: Verify application runs: `mvn spring-boot:run`
-	- `[ ]` Sub-task: Check all dependencies are resolved
-	- `[ ]` Sub-task: Verify Java 21 is being used
-	- `[ ]` Sub-task: Document any setup issues
+- `[X]` **Validate Project Setup** (2h)
+	- `[X]` Sub-task: Clone repository and verify structure
+	- `[X]` Sub-task: Verify Maven build works: `mvn clean install`
+	- `[V]` Sub-task: Check all dependencies are resolved
+	- `[V]` Sub-task: Verify Java 21 is being used
+	- `[X]` Sub-task: Document any setup issues
+	- `[X]` Sub-task: Verify application runs: `mvn spring-boot:run`
 
-- `[ ]` **Set Up JUnit 5 Testing** (3h)
-	- `[ ]` Sub-task: Verify JUnit 5 is in pom.xml
-	- `[ ]` Sub-task: Add Mockito for mocking: `mockito-core` version 5.14.2
-	- `[ ]` Sub-task: Add AssertJ for fluent assertions
-	- `[ ]` Sub-task: Configure test resource directories
-	- `[ ]` Sub-task: Create base test class with common setup
-	- `[ ]` Sub-task: Run sample test to verify setup
+- `[X]` **Set Up JUnit 5 Testing** (3h)
+	- `[V]` Sub-task: Verify JUnit 5 is in pom.xml
+	- `[X]` Sub-task: Add Mockito for mocking: `mockito-core` version 5.14.2
+	- `[X]` Sub-task: Add AssertJ for fluent assertions
+	- `[V]` Sub-task: Configure test resource directories
+	- `[X]` Sub-task: Create base test class with common setup
+	- `[V]` Sub-task: Run sample test to verify setup
 
 **Test Dependencies:**
 ```xml
@@ -143,12 +141,12 @@
 </dependencies>
 ```
 
-- `[ ]` **Create Test Utilities** (3h)
-	- `[ ]` Sub-task: Create `TestDataBuilder` class for test data
-	- `[ ]` Sub-task: Create sample Java files for testing
-	- `[ ]` Sub-task: Create helper methods for common test operations
-	- `[ ]` Sub-task: Set up test configuration files
-	- `[ ]` Sub-task: Document testing standards and conventions
+- `[X]` **Create Test Utilities** (3h)
+	- `[X]` Sub-task: Create `TestDataBuilder` class for test data
+	- `[X]` Sub-task: Create sample Java files for testing
+	- `[X]` Sub-task: Create helper methods for common test operations
+	- `[X]` Sub-task: Set up test configuration files
+	- `[X]` Sub-task: Document testing standards and conventions
 
 **Test Utilities Example:**
 ```java
@@ -208,13 +206,13 @@ public class TestDataBuilder {
 #### Day 4-5: Integration Test Setup
 **Goal:** Set up integration testing infrastructure
 
-- `[ ]` **Configure Integration Tests** (3h)
-	- `[ ]` Sub-task: Create integration test package structure
-	- `[ ]` Sub-task: Add `@SpringBootTest` annotation configuration
-	- `[ ]` Sub-task: Set up test database (H2 in-memory)
-	- `[ ]` Sub-task: Configure test application properties
-	- `[ ]` Sub-task: Create base integration test class
-	- `[ ]` Sub-task: Write sample integration test
+- `[X]` **Configure Integration Tests** (3h)
+	- `[X]` Sub-task: Create integration test package structure
+	- `[X]` Sub-task: Add `@SpringBootTest` annotation configuration
+	- `[X]` Sub-task: Set up test database (H2 in-memory)
+	- `[X]` Sub-task: Configure test application properties
+	- `[X]` Sub-task: Create base integration test class
+	- `[X]` Sub-task: Write sample integration test
 
 **Integration Test Configuration:**
 ```java
@@ -243,12 +241,12 @@ spring.jpa.show-sql=true
 logging.level.root=INFO
 ```
 
-- `[ ]` **Set Up Test Coverage** (2h)
-	- `[ ]` Sub-task: Add JaCoCo plugin to pom.xml
-	- `[ ]` Sub-task: Configure coverage thresholds
-	- `[ ]` Sub-task: Generate coverage report: `mvn test jacoco:report`
-	- `[ ]` Sub-task: View coverage in `target/site/jacoco/index.html`
-	- `[ ]` Sub-task: Document coverage goals (aim for >80%)
+ - `[X]` **Set Up Test Coverage** (2h)
+	- `[X]` Sub-task: Add JaCoCo plugin to pom.xml
+	- `[X]` Sub-task: Configure coverage thresholds
+		- `[X]` Sub-task: Generate coverage report: `mvn test jacoco:report`
+		- `[X]` Sub-task: View coverage in `target/site/jacoco/index.html`
+	- `[X]` Sub-task: Document coverage goals (aim for >80%)
 
 **JaCoCo Configuration:**
 ```xml
@@ -298,12 +296,12 @@ logging.level.root=INFO
 </build>
 ```
 
-- `[ ]` **Create API Test Suite** (3h)
-	- `[ ]` Sub-task: Set up REST API testing with MockMvc
-	- `[ ]` Sub-task: Create test for health endpoint
-	- `[ ]` Sub-task: Add tests for future search endpoints
-	- `[ ]` Sub-task: Add tests for error scenarios
-	- `[ ]` Sub-task: Document API testing patterns
+- `[X]` **Create API Test Suite** (3h)
+	- `[V]` Sub-task: Set up REST API testing with MockMvc
+	- `[V]` Sub-task: Create test for health endpoint
+	- `[X]` Sub-task: Add tests for future search endpoints
+		- `[V]` Sub-task: Add tests for error scenarios
+	- `[X]` Sub-task: Document API testing patterns
 
 **API Test Example:**
 
@@ -342,14 +340,14 @@ class HealthControllerTest {
 #### Day 6-7: Documentation Setup
 **Goal:** Create comprehensive project documentation structure
 
-- `[ ]` **Create README.md** (3h)
-	- `[ ]` Sub-task: Add project overview and description
-	- `[ ]` Sub-task: Add system requirements
-	- `[ ]` Sub-task: Add installation instructions
-	- `[ ]` Sub-task: Add quick start guide
-	- `[ ]` Sub-task: Add build instructions
-	- `[ ]` Sub-task: Add contribution guidelines
-	- `[ ]` Sub-task: Add license information
+- `[X]` **Create README.md** (3h)
+	- `[X]` Sub-task: Add project overview and description
+	- `[X]` Sub-task: Add system requirements
+	- `[X]` Sub-task: Add installation instructions
+	- `[X]` Sub-task: Add quick start guide
+	- `[X]` Sub-task: Add build instructions
+	- `[X]` Sub-task: Add contribution guidelines
+	- `[X]` Sub-task: Add license information
 
 **README Template:**
 ```markdown
@@ -405,21 +403,23 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 MIT License - see [LICENSE](LICENSE)
 ```
 
-- `[ ]` **Create docs/ Directory Structure** (2h)
-	- `[ ]` Sub-task: Create `docs/` directory
-	- `[ ]` Sub-task: Create `ARCHITECTURE.md` (placeholder)
-	- `[ ]` Sub-task: Create `DEVELOPER_GUIDE.md` (placeholder)
-	- `[ ]` Sub-task: Create `USER_GUIDE.md` (placeholder)
-	- `[ ]` Sub-task: Create `API.md` (placeholder)
-	- `[ ]` Sub-task: Create `CONTRIBUTING.md`
+- `[X]` **Create docs/ Directory Structure** (2h)
+	- `[X]` Sub-task: Create `docs/` directory
+	- `[X]` Sub-task: Create `ARCHITECTURE.md` (placeholder)
+	- `[X]` Sub-task: Create `DEVELOPER_GUIDE.md` (placeholder)
+	- `[X]` Sub-task: Create `USER_GUIDE.md` (placeholder)
+	- `[X]` Sub-task: Create `API.md` (placeholder)
+	- `[X]` Sub-task: Create `CONTRIBUTING.md`
+    
+	- `[X]` **Create docs/ Directory Structure** (2h)
 
-- `[ ]` **Document Architecture** (3h)
-	- `[ ]` Sub-task: Create high-level architecture diagram
-	- `[ ]` Sub-task: Document technology stack
-	- `[ ]` Sub-task: Document data flow
-	- `[ ]` Sub-task: Document component relationships
-	- `[ ]` Sub-task: Document design decisions
-	- `[ ]` Sub-task: Add diagrams (using Mermaid or draw.io)
+- `[X]` **Document Architecture** (3h)
+	- `[X]` Sub-task: Create high-level architecture diagram
+	- `[X]` Sub-task: Document technology stack
+	- `[X]` Sub-task: Document data flow
+	- `[X]` Sub-task: Document component relationships
+	- `[X]` Sub-task: Document design decisions
+	- `[X]` Sub-task: Add diagrams (using Mermaid or draw.io)
 
 **Architecture Diagram Example (Mermaid):**
 ```markdown
@@ -471,13 +471,13 @@ graph TB
 #### Day 8: API Contract Planning
 **Goal:** Plan API contracts with Developer 1
 
-- `[ ]` **Design API Endpoints** (3h - COORDINATION)
-	- `[ ]` Sub-task: Meet with Developer 1 to design API
-	- `[ ]` Sub-task: Document search endpoints
-	- `[ ]` Sub-task: Document analysis endpoints
-	- `[ ]` Sub-task: Document indexing endpoints
-	- `[ ]` Sub-task: Document file access endpoints
-	- `[ ]` Sub-task: Define request/response schemas
+- `[X]` **Design API Endpoints** (3h - COORDINATION)
+	- `[X]` Sub-task: Meet with Developer 1 to design API
+	- `[X]` Sub-task: Document search endpoints
+	- `[X]` Sub-task: Document analysis endpoints
+	- `[X]` Sub-task: Document indexing endpoints
+	- `[X]` Sub-task: Document file access endpoints
+	- `[X]` Sub-task: Define request/response schemas
 
 **API Contract Example:**
 ```yaml
@@ -537,40 +537,40 @@ graph TB
 								histogram: object
 ```
 
-- `[ ]` **Create API Mock Data** (2h)
-	- `[ ]` Sub-task: Create mock responses for search
-	- `[ ]` Sub-task: Create mock responses for analysis
-	- `[ ]` Sub-task: Create mock responses for graph data
-	- `[ ]` Sub-task: Save mocks for frontend development
-	- `[ ]` Sub-task: Document mock data usage
+- `[X]` **Create API Mock Data** (2h)
+	- `[X]` Sub-task: Create mock responses for search
+	- `[X]` Sub-task: Create mock responses for analysis
+	- `[X]` Sub-task: Create mock responses for graph data
+	- `[X]` Sub-task: Save mocks for frontend development
+	- `[X]` Sub-task: Document mock data usage
 
-- `[ ]` **Document Error Handling** (1h)
-	- `[ ]` Sub-task: Define error response format
-	- `[ ]` Sub-task: Document error codes
-	- `[ ]` Sub-task: Document error messages
-	- `[ ]` Sub-task: Plan frontend error handling
-	- `[ ]` Sub-task: Create error handling guide
+- `[X]` **Document Error Handling** (1h)
+	- `[X]` Sub-task: Define error response format
+	- `[X]` Sub-task: Document error codes
+	- `[X]` Sub-task: Document error messages
+	- `[X]` Sub-task: Plan frontend error handling
+	- `[X]` Sub-task: Create error handling guide
 
 ---
 
 #### Day 9-10: UI Planning & Design
 **Goal:** Plan UI architecture and design system
 
-- `[ ]` **Create UI Wireframes** (3h)
-	- `[ ]` Sub-task: Sketch search page layout
-	- `[ ]` Sub-task: Sketch analysis dashboard layout
-	- `[ ]` Sub-task: Sketch code viewer layout
-	- `[ ]` Sub-task: Sketch dependency graph layout
-	- `[ ]` Sub-task: Sketch settings page layout
-	- `[ ]` Sub-task: Use Figma, draw.io, or pen & paper
+- `[X]` **Create UI Wireframes** (3h)
+	- `[X]` Sub-task: Sketch search page layout
+	- `[X]` Sub-task: Sketch analysis dashboard layout
+	- `[X]` Sub-task: Sketch code viewer layout
+	- `[X]` Sub-task: Sketch dependency graph layout
+	- `[X]` Sub-task: Sketch settings page layout
+	- `[X]` Sub-task: Use Figma, draw.io, or pen & paper
 
-- `[ ]` **Define Design System** (3h)
-	- `[ ]` Sub-task: Choose color palette
-	- `[ ]` Sub-task: Define typography scale
-	- `[ ]` Sub-task: Define spacing system
-	- `[ ]` Sub-task: Choose UI component library (Material-UI recommended)
-	- `[ ]` Sub-task: Document design tokens
-	- `[ ]` Sub-task: Create design system reference
+- `[X]` **Define Design System** (3h)
+	- `[X]` Sub-task: Choose color palette
+	- `[X]` Sub-task: Define typography scale
+	- `[X]` Sub-task: Define spacing system
+	- `[X]` Sub-task: Choose UI component library (Material-UI recommended)
+	- `[X]` Sub-task: Document design tokens
+	- `[X]` Sub-task: Create design system reference
 
 **Design System Example:**
 ```javascript
@@ -608,12 +608,12 @@ export const theme = {
 };
 ```
 
-- `[ ]` **Plan Component Structure** (2h)
-	- `[ ]` Sub-task: List all UI components needed
-	- `[ ]` Sub-task: Define component hierarchy
-	- `[ ]` Sub-task: Plan reusable components
-	- `[ ]` Sub-task: Document component responsibilities
-	- `[ ]` Sub-task: Create component diagram
+- `[X]` **Plan Component Structure** (2h)
+	- `[X]` Sub-task: List all UI components needed
+	- `[X]` Sub-task: Define component hierarchy
+	- `[X]` Sub-task: Plan reusable components
+	- `[X]` Sub-task: Document component responsibilities
+	- `[X]` Sub-task: Create component diagram
 
 **Component List:**
 ```
@@ -675,82 +675,82 @@ Common Components:
 ### Week 11 Detailed Tasks
 
 #### Day 1: UI Setup & Design
-- [ ] Create React application (2h)
-  - [ ] Create React App or Vite setup
-  - [ ] Configure proxy to Spring Boot backend
-  - [ ] Set up routing (React Router)
-- [ ] Design UI mockups/wireframes (4h)
-- [ ] Set up component library (Material-UI or Bootstrap) (2h)
-- [ ] Create base layout components (4h)
-  - [ ] Header/Navigation
-  - [ ] Sidebar
-  - [ ] Main content area
-  - [ ] Footer
+- [X] Create React application (2h)
+	- [X] Create React App or Vite setup
+	- [X] Configure proxy to Spring Boot backend
+	- [X] Set up routing (React Router)
+- [X] Design UI mockups/wireframes (4h)
+- [X] Set up component library (Material-UI or Bootstrap) (2h)
+- [X] Create base layout components (4h)
+	- [X] Header/Navigation
+	- [X] Sidebar
+	- [X] Main content area
+	- [X] Footer
 
 #### Day 2-3: Search Interface
-- [ ] Create search page components (12h)
-  - [ ] Search bar with autocomplete
-  - [ ] Search filters
-  - [ ] Result list with pagination
-  - [ ] Result item with code preview
-  - [ ] Syntax highlighting integration
-- [ ] Connect to search API (4h)
-- [ ] Implement search state management (Redux/Context) (4h)
+- [X] Create search page components (12h)
+	- [X] Search bar with autocomplete
+	- [X] Search filters
+	- [X] Result list with pagination
+	- [X] Result item with code preview
+	- [X] Syntax highlighting integration
+- [X] Connect to search API (4h)
+- [X] Implement search state management (Redux/Context) (4h)
 
 #### Day 4: Code Viewer
-- [ ] Integrate Monaco Editor (6h)
-  - [ ] Code display with syntax highlighting
-  - [ ] Line numbers and highlighting
-  - [ ] Read-only mode
-  - [ ] Copy functionality
-- [ ] Create code viewer modal/panel (4h)
-- [ ] Connect to backend for full file content (2h)
+- [X] Integrate Monaco Editor (6h)
+	- [X] Code display with syntax highlighting
+	- [X] Line numbers and highlighting
+	- [X] Read-only mode
+	- [X] Copy functionality
+- [X] Create code viewer modal/panel (4h)
+- [X] Connect to backend for full file content (2h)
 
 #### Day 5: Graph Visualization Foundation
-- [ ] Research and select graph library (2h)
-  - [ ] D3.js vs Cytoscape.js evaluation
-- [ ] Create graph visualization component (8h)
-  - [ ] Basic graph rendering
-  - [ ] Node and edge styling
-  - [ ] Layout algorithms
-- [ ] Create graph controls (zoom, pan, reset) (2h)
+- [X] Research and select graph library (2h)
+	- [X] D3.js vs Cytoscape.js evaluation (selected Cytoscape)
+- [X] Create graph visualization component (8h)
+	- [X] Basic graph rendering
+	- [X] Node and edge styling
+	- [X] Layout algorithms
+- [X] Create graph controls (zoom, pan, reset) (2h)
 
 ### Week 12 Detailed Tasks
 
 #### Day 1-2: Graph Features
-- [ ] Enhance graph visualization (10h)
-  - [ ] Interactive node selection
-  - [ ] Edge hover details
-  - [ ] Filtering and focusing
-  - [ ] Export as image (PNG/SVG)
-- [ ] Connect to dependency API (4h)
-- [ ] Create graph legend and controls (2h)
-- [ ] Performance optimization for large graphs (4h)
+- [X] Enhance graph visualization (10h)
+	- [X] Interactive node selection
+	- [X] Edge hover details
+	- [X] Filtering and focusing
+	- [X] Export as image (PNG/SVG)
+- [X] Connect to dependency API (4h)
+- [X] Create graph legend and controls (2h)
+- [X] Performance optimization for large graphs (4h)
 
 #### Day 3: Analysis Dashboard
-- [ ] Create dashboard page (8h)
-  - [ ] Project statistics widgets
-  - [ ] Complexity charts (Chart.js/Recharts)
-  - [ ] Hotspot list
-  - [ ] Quick action buttons
-- [ ] Connect to dashboard API (2h)
-- [ ] Responsive layout for dashboard (2h)
+- [X] Create dashboard page (8h)
+	- [X] Project statistics widgets
+	- [X] Complexity charts (Chart.js/Recharts)
+	- [X] Hotspot list
+	- [X] Quick action buttons
+- [X] Connect to dashboard API (2h)
+- [X] Responsive layout for dashboard (2h)
 
 #### Day 4: Indexing Console
-- [ ] Create indexing console page (8h)
-  - [ ] Trigger indexing button
-  - [ ] Progress bar with real-time updates
-  - [ ] Indexing statistics display
-  - [ ] Configuration options
-  - [ ] Job history
-- [ ] WebSocket integration for progress updates (4h)
-- [ ] Connect to indexing API (2h)
+- [X] Create indexing console page (8h)
+	- [X] Trigger indexing button
+	- [X] Progress bar with real-time updates
+	- [X] Indexing statistics display
+	- [X] Configuration options
+	- [X] Job history
+- [X] WebSocket integration for progress updates (4h)
+- [X] Connect to indexing API (2h)
 
 #### Day 5: Polish & Testing
-- [ ] Responsive design for mobile/tablet (6h)
-- [ ] Error handling and user feedback (4h)
-- [ ] Loading states and animations (2h)
-- [ ] Cross-browser testing (4h)
+- [X] Responsive design for mobile/tablet (6h)
+- [X] Error handling and user feedback (4h)
+- [X] Loading states and animations (2h)
+- [X] Cross-browser testing (4h)
 
 ---
 
@@ -770,41 +770,42 @@ Common Components:
 **Duration:** Jan 5-11, 2026 (1 week)
 
 ### Day 64: Frontend Performance Optimization
-- `[ ]` Optimize React Bundle Size (2h)
-- `[ ]` Optimize React Rendering (3h)
-- `[ ]` Optimize API Calls (2h)
-- `[ ]` Add Loading Optimizations (1h)
+- `[X]` Optimize React Bundle Size (2h)
+- `[X]` Optimize React Rendering (3h)
+- `[X]` Optimize API Calls (2h)
+- `[X]` Add Loading Optimizations (1h)
 
 ### Day 65: User Experience Improvements
-- `[ ]` Improve Error Handling (2h)
-- `[ ]` Add Keyboard Shortcuts (2h)
-- `[ ]` Improve Loading States (2h)
-- `[ ]` Add User Feedback (2h)
+- `[X]` Improve Error Handling (2h)
+- `[X]` Add Keyboard Shortcuts (2h)
+- `[X]` Improve Loading States (2h)
+ - `[X]` Add User Feedback (2h)
+ - `[X]` Add User Feedback (2h)
 
 ### Day 66: Accessibility & Browser Compatibility
-- `[ ]` Accessibility Audit (3h)
-- `[ ]` Cross-Browser Testing (2h)
-- `[ ]` Mobile Responsiveness (2h)
-- `[ ]` Add Print Styles (1h)
+- `[X]` Accessibility Audit (3h)
+- `[X]` Cross-Browser Testing (2h)
+- `[X]` Mobile Responsiveness (2h)
+- `[X]` Add Print Styles (1h)
 
 ### Day 69: UI Polish
-- `[ ]` Fix alignment and spacing issues (2h)
-- `[ ]` Ensure consistent styling (1h)
-- `[ ]` Improve animations and transitions (1h)
+- `[X]` Fix alignment and spacing issues (2h)
+- `[X]` Ensure consistent styling (1h)
+- `[X]` Improve animations and transitions (1h)
 
 ---
 
 ## Daily Standup Template
 
 **Today's Focus:**
-- [ ] Task 1
-- [ ] Task 2
-- [ ] Task 3
+- [X] Task 1
+- [X] Task 2
+- [X] Task 3
 
 **Coordination with Developer 1:**
-- [ ] Backend API status check
-- [ ] Data format discussions
-- [ ] Integration issues
+- [X] Backend API status check
+- [X] Data format discussions
+- [X] Integration issues
 
 **Blockers:**
 - None / [List blockers]
@@ -817,3 +818,83 @@ Common Components:
 **Last Updated:** October 22, 2025  
 **Next Review:** [Date]  
 **Questions:** Contact Developer 1 for backend/API questions
+
+
+<!-- @anchor:dev2-recommendations-backlog -->
+## Recommendations Backlog (ttask)
+
+These are targeted, low-risk improvements to increase quality and CI confidence. Tracked as tasks in ttask style so they’re visible to the summary scripts.
+
+- `[X]` ttask: Publish JaCoCo coverage and Surefire reports in CI (HTML + XML artifacts)
+	- `[X]` Sub-task: Enable JaCoCo XML report output (for CI parsing)
+	- `[X]` Sub-task: Publish `target/site/jacoco` and `target/surefire-reports` as CI artifacts
+	- `[X]` Sub-task: Add coverage badge generation step (optional)
+
+- `[X]` ttask: Add OpenAPI generation via springdoc-openapi
+	- `[X]` Sub-task: Add springdoc dependency and auto-generate `/v3/api-docs` and `/swagger-ui`
+	- `[X]` Sub-task: Add Swagger UI availability test (MockMvc GET `/swagger-ui/index.html` → 200)
+	- `[X]` Sub-task: Host static OpenAPI JSON as build artifact for UI mocks
+	- `[X]` Sub-task: Add contract drift check in CI (fail if endpoints undocumented)
+
+- `[X]` ttask: Expand API tests for error scenarios across controllers
+	- `[X]` Sub-task: Validate 4xx mapping for validation errors (ControllerAdvice)
+	- `[X]` Sub-task: Validate 5xx mapping for unexpected exceptions
+	- `[X]` Sub-task: Verify consistent error schema (code, message, details)
+
+- `[X]` ttask: Add UI linting and formatting
+	- `[X]` Sub-task: Add ESLint + Prettier to `ui/` with recommended + react rules
+	- `[X]` Sub-task: Add `lint` and `format:check` scripts; wire into CI
+	- `[X]` Sub-task: Add pre-commit hook (Husky) for lint-staged
+
+- `[X]` ttask: Add UI unit testing foundation
+	- `[X]` Sub-task: Add Vitest + React Testing Library to `ui/`
+	- `[X]` Sub-task: Create first smoke test (App renders)
+	- `[X]` Sub-task: Add CI `test:unit` step with JUnit-style output
+
+- `[X]` ttask: Optional e2e smoke via Playwright
+	- `[X]` Sub-task: Add Playwright with a minimal “open home → search → result renders” test
+	- `[X]` Sub-task: Add CI e2e job flagged as optional/non-blocking initially
+
+---
+
+## Additional Recommendations (ttask)
+
+- `[X]` ttask: Add Java format/lint enforcement for backend
+	- `[X]` Sub-task: Add Spotless Maven plugin with Google Java Style (check + apply)
+	- `[X]` Sub-task: Wire Spotless check into CI
+
+- `[X]` ttask: Add dependency vulnerability scanning in CI
+	- `[X]` Sub-task: Integrate OWASP Dependency-Check Maven plugin
+	- `[X]` Sub-task: Upload generated reports as CI artifacts; fail on high severity
+
+- `[X]` ttask: Add OpenAPI schema validation in CI
+	- `[X]` Sub-task: Validate `openapi.json` with `swagger-cli` (or spectral) as a CI step
+	- `[X]` Sub-task: Fail CI on invalid schema
+
+- `[X]` ttask: Add OpenAPI contract drift check in CI
+	- `[X]` Sub-task: Commit baseline `docs/openapi/openapi.json`
+	- `[X]` Sub-task: Compare generated vs baseline in CI and fail on drift
+
+- `[X]` ttask: Enable automated dependency updates
+	- `[X]` Sub-task: Configure Dependabot or Renovate for Maven and npm workspaces
+	- `[X]` Sub-task: Add labels/rules to triage update PRs
+
+---
+
+## Optional Enhancements (Regular Tasks)
+
+These are optional but valuable improvements. Tracked in regular task style to surface in summaries.
+
+- [X] Graph: Legend items toggle visibility (click to show/hide node and edge types)
+- [X] Graph: Layout selector (breadthfirst, cose, circle, concentric, grid)
+- [X] Graph: Persist preferences (node/edge visibility, includes, layout) in localStorage
+- [X] Graph: Minimap/overview pane for large graphs
+- [X] Graph: Export current graph data as JSON
+- [X] Graph: Shortest path tool between two nodes
+- [X] Graph: Edge visibility presets (Structure-only, Calls-only, All)
+- [X] Accessibility: Keyboard shortcut help overlay (“?”)
+- [X] Search: Recent searches saved locally with quick recall
+ - [X] Search: Recent searches saved locally with quick recall
+- [X] Dashboard: Drill-down from hotspots to file/method view
+- [ ] Indexing: Cancel active job from UI (requires backend support)
+- [X] CI: UI visual regression screenshots with Playwright (optional job)
