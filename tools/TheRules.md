@@ -1,4 +1,4 @@
-# Agent Development Rules (Firestick) — Concise
+# Agent Development Rules (Firestick)
 
 ## Priority (do in this order)
 1) Core logic 2) UI 3) Data/models 4) Errors/validation 5) Unit tests 6) Docs 7) Perf 8) Integration tests 9) Cleanup/refactor 10) Build 11) CI/CD 12) Deploy
@@ -10,6 +10,7 @@
 - PRD: read only the FRs your task touches (Section 5) + key use cases.
 - Planning: current sprint in `tools/plans/firestickPLANNING.md` for prerequisites/blockers.
 - Stop reading when you can state: inputs, outputs, done criteria, and 2–3 tests.
+- Advice: Start by reading `tools/plans/firestickADVICE.md` for tips on efficiently finding where to start in your task list.
 
 ## Per-Developer Task Lists & Scripts
 - Status markers: `[ ]` Not Started, `[-]` In Progress, `[X]` Completed, `[V]` Tested, `[!]` Blocked, `[>]` Deferred.

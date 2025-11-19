@@ -91,21 +91,21 @@
 #### Day 1-3: Project Validation & Test Framework Setup
 **Goal:** Ensure project setup is correct and establish testing foundation
 
-- `[ ]` **Validate Project Setup** (2h)
-	- `[ ]` Sub-task: Clone repository and verify structure
-	- `[ ]` Sub-task: Verify Maven build works: `mvn clean install`
-	- `[ ]` Sub-task: Verify application runs: `mvn spring-boot:run`
-	- `[ ]` Sub-task: Check all dependencies are resolved
-	- `[ ]` Sub-task: Verify Java 21 is being used
-	- `[ ]` Sub-task: Document any setup issues
+ - `[X]` **Validate Project Setup** (2h)
+	- `[X]` Sub-task: Clone repository and verify structure
+	- `[X]` Sub-task: Verify Maven build works: `mvn clean install`
+	- `[X]` Sub-task: Verify application runs: `mvn spring-boot:run`
+	- `[X]` Sub-task: Check all dependencies are resolved
+	- `[X]` Sub-task: Verify Java 21 is being used
+	- `[X]` Sub-task: Document any setup issues
 
-- `[ ]` **Set Up JUnit 5 Testing** (3h)
-	- `[ ]` Sub-task: Verify JUnit 5 is in pom.xml
-	- `[ ]` Sub-task: Add Mockito for mocking: `mockito-core` version 5.14.2
-	- `[ ]` Sub-task: Add AssertJ for fluent assertions
-	- `[ ]` Sub-task: Configure test resource directories
-	- `[ ]` Sub-task: Create base test class with common setup
-	- `[ ]` Sub-task: Run sample test to verify setup
+ - `[X]` **Set Up JUnit 5 Testing** (3h)
+	- `[X]` Sub-task: Verify JUnit 5 is in pom.xml
+	- `[X]` Sub-task: Add Mockito for mocking: `mockito-core` version 5.14.2
+	- `[X]` Sub-task: Add AssertJ for fluent assertions
+	- `[X]` Sub-task: Configure test resource directories
+	- `[X]` Sub-task: Create base test class with common setup
+	- `[X]` Sub-task: Run sample test to verify setup
 
 **Test Dependencies:**
 ```xml
@@ -143,12 +143,12 @@
 </dependencies>
 ```
 
-- `[ ]` **Create Test Utilities** (3h)
-	- `[ ]` Sub-task: Create `TestDataBuilder` class for test data
-	- `[ ]` Sub-task: Create sample Java files for testing
-	- `[ ]` Sub-task: Create helper methods for common test operations
-	- `[ ]` Sub-task: Set up test configuration files
-	- `[ ]` Sub-task: Document testing standards and conventions
+ - `[X]` **Create Test Utilities** (3h)
+	- `[X]` Sub-task: Create `TestDataBuilder` class for test data
+	- `[X]` Sub-task: Create sample Java files for testing
+	- `[X]` Sub-task: Create helper methods for common test operations
+	- `[X]` Sub-task: Set up test configuration files
+	- `[X]` Sub-task: Document testing standards and conventions
 
 **Test Utilities Example:**
 ```java
@@ -208,13 +208,13 @@ public class TestDataBuilder {
 #### Day 4-5: Integration Test Setup
 **Goal:** Set up integration testing infrastructure
 
-- `[ ]` **Configure Integration Tests** (3h)
-	- `[ ]` Sub-task: Create integration test package structure
-	- `[ ]` Sub-task: Add `@SpringBootTest` annotation configuration
-	- `[ ]` Sub-task: Set up test database (H2 in-memory)
-	- `[ ]` Sub-task: Configure test application properties
-	- `[ ]` Sub-task: Create base integration test class
-	- `[ ]` Sub-task: Write sample integration test
+ - `[X]` **Configure Integration Tests** (3h)
+	- `[X]` Sub-task: Create integration test package structure
+	- `[X]` Sub-task: Add `@SpringBootTest` annotation configuration
+	- `[X]` Sub-task: Set up test database (H2 in-memory)
+	- `[X]` Sub-task: Configure test application properties
+	- `[X]` Sub-task: Create base integration test class
+	- `[X]` Sub-task: Write sample integration test
 
 **Integration Test Configuration:**
 ```java
@@ -243,12 +243,12 @@ spring.jpa.show-sql=true
 logging.level.root=INFO
 ```
 
-- `[ ]` **Set Up Test Coverage** (2h)
-	- `[ ]` Sub-task: Add JaCoCo plugin to pom.xml
-	- `[ ]` Sub-task: Configure coverage thresholds
-	- `[ ]` Sub-task: Generate coverage report: `mvn test jacoco:report`
-	- `[ ]` Sub-task: View coverage in `target/site/jacoco/index.html`
-	- `[ ]` Sub-task: Document coverage goals (aim for >80%)
+ - `[X]` **Set Up Test Coverage** (2h)
+	- `[X]` Sub-task: Add JaCoCo plugin to pom.xml
+	- `[X]` Sub-task: Configure coverage thresholds
+	- `[X]` Sub-task: Generate coverage report: `mvn test jacoco:report`
+	- `[X]` Sub-task: View coverage in `target/site/jacoco/index.html`
+	- `[X]` Sub-task: Document coverage goals (aim for >80%)
 
 **JaCoCo Configuration:**
 ```xml
@@ -298,12 +298,12 @@ logging.level.root=INFO
 </build>
 ```
 
-- `[ ]` **Create API Test Suite** (3h)
-	- `[ ]` Sub-task: Set up REST API testing with MockMvc
-	- `[ ]` Sub-task: Create test for health endpoint
-	- `[ ]` Sub-task: Add tests for future search endpoints
-	- `[ ]` Sub-task: Add tests for error scenarios
-	- `[ ]` Sub-task: Document API testing patterns
+ - `[X]` **Create API Test Suite** (3h)
+	- `[X]` Sub-task: Set up REST API testing with MockMvc
+	- `[X]` Sub-task: Create test for health endpoint
+	- `[X]` Sub-task: Add tests for future search endpoints
+	- `[X]` Sub-task: Add tests for error scenarios
+	- `[X]` Sub-task: Document API testing patterns
 
 **API Test Example:**
 
@@ -342,14 +342,14 @@ class HealthControllerTest {
 #### Day 6-7: Documentation Setup
 **Goal:** Create comprehensive project documentation structure
 
-- `[ ]` **Create README.md** (3h)
-	- `[ ]` Sub-task: Add project overview and description
-	- `[ ]` Sub-task: Add system requirements
-	- `[ ]` Sub-task: Add installation instructions
-	- `[ ]` Sub-task: Add quick start guide
-	- `[ ]` Sub-task: Add build instructions
-	- `[ ]` Sub-task: Add contribution guidelines
-	- `[ ]` Sub-task: Add license information
+ - `[X]` **Create README.md** (3h)
+	- `[X]` Sub-task: Add project overview and description
+	- `[X]` Sub-task: Add system requirements
+	- `[X]` Sub-task: Add installation instructions
+	- `[X]` Sub-task: Add quick start guide
+	- `[X]` Sub-task: Add build instructions
+	- `[X]` Sub-task: Add contribution guidelines
+	- `[X]` Sub-task: Add license information
 
 **README Template:**
 ```markdown
@@ -405,21 +405,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md)
 MIT License - see [LICENSE](LICENSE)
 ```
 
-- `[ ]` **Create docs/ Directory Structure** (2h)
-	- `[ ]` Sub-task: Create `docs/` directory
-	- `[ ]` Sub-task: Create `ARCHITECTURE.md` (placeholder)
-	- `[ ]` Sub-task: Create `DEVELOPER_GUIDE.md` (placeholder)
-	- `[ ]` Sub-task: Create `USER_GUIDE.md` (placeholder)
-	- `[ ]` Sub-task: Create `API.md` (placeholder)
+ - `[X]` **Create docs/ Directory Structure** (2h)
+	- `[X]` Sub-task: Create `docs/` directory
+	- `[X]` Sub-task: Create `ARCHITECTURE.md` (placeholder)
+	- `[X]` Sub-task: Create `DEVELOPER_GUIDE.md` (placeholder)
+	- `[X]` Sub-task: Create `USER_GUIDE.md` (placeholder)
+	- `[X]` Sub-task: Create `API.md` (placeholder)
 	- `[ ]` Sub-task: Create `CONTRIBUTING.md`
 
-- `[ ]` **Document Architecture** (3h)
-	- `[ ]` Sub-task: Create high-level architecture diagram
-	- `[ ]` Sub-task: Document technology stack
-	- `[ ]` Sub-task: Document data flow
-	- `[ ]` Sub-task: Document component relationships
-	- `[ ]` Sub-task: Document design decisions
-	- `[ ]` Sub-task: Add diagrams (using Mermaid or draw.io)
+ - `[X]` **Document Architecture** (3h)
+	- `[X]` Sub-task: Create high-level architecture diagram
+	- `[X]` Sub-task: Document technology stack
+	- `[X]` Sub-task: Document data flow
+	- `[X]` Sub-task: Document component relationships
+	- `[X]` Sub-task: Document design decisions
+	- `[X]` Sub-task: Add diagrams (using Mermaid or draw.io)
 
 **Architecture Diagram Example (Mermaid):**
 ```markdown
@@ -471,13 +471,13 @@ graph TB
 #### Day 8: API Contract Planning
 **Goal:** Plan API contracts with Developer 1
 
-- `[ ]` **Design API Endpoints** (3h - COORDINATION)
-	- `[ ]` Sub-task: Meet with Developer 1 to design API
-	- `[ ]` Sub-task: Document search endpoints
-	- `[ ]` Sub-task: Document analysis endpoints
-	- `[ ]` Sub-task: Document indexing endpoints
-	- `[ ]` Sub-task: Document file access endpoints
-	- `[ ]` Sub-task: Define request/response schemas
+ - `[X]` **Design API Endpoints** (3h - COORDINATION)
+	- `[X]` Sub-task: Meet with Developer 1 to design API
+	- `[X]` Sub-task: Document search endpoints
+	- `[X]` Sub-task: Document analysis endpoints
+	- `[X]` Sub-task: Document indexing endpoints
+	- `[X]` Sub-task: Document file access endpoints
+	- `[X]` Sub-task: Define request/response schemas
 
 **API Contract Example:**
 ```yaml
@@ -537,40 +537,40 @@ graph TB
 								histogram: object
 ```
 
-- `[ ]` **Create API Mock Data** (2h)
-	- `[ ]` Sub-task: Create mock responses for search
-	- `[ ]` Sub-task: Create mock responses for analysis
-	- `[ ]` Sub-task: Create mock responses for graph data
-	- `[ ]` Sub-task: Save mocks for frontend development
-	- `[ ]` Sub-task: Document mock data usage
+ - `[X]` **Create API Mock Data** (2h)
+	- `[X]` Sub-task: Create mock responses for search
+	- `[X]` Sub-task: Create mock responses for analysis
+	- `[X]` Sub-task: Create mock responses for graph data
+	- `[X]` Sub-task: Save mocks for frontend development
+	- `[X]` Sub-task: Document mock data usage
 
-- `[ ]` **Document Error Handling** (1h)
-	- `[ ]` Sub-task: Define error response format
-	- `[ ]` Sub-task: Document error codes
-	- `[ ]` Sub-task: Document error messages
-	- `[ ]` Sub-task: Plan frontend error handling
-	- `[ ]` Sub-task: Create error handling guide
+ - `[X]` **Document Error Handling** (1h)
+	- `[X]` Sub-task: Define error response format
+	- `[X]` Sub-task: Document error codes
+	- `[X]` Sub-task: Document error messages
+	- `[X]` Sub-task: Plan frontend error handling
+	- `[X]` Sub-task: Create error handling guide
 
 ---
 
 #### Day 9-10: UI Planning & Design
 **Goal:** Plan UI architecture and design system
 
-- `[ ]` **Create UI Wireframes** (3h)
-	- `[ ]` Sub-task: Sketch search page layout
-	- `[ ]` Sub-task: Sketch analysis dashboard layout
-	- `[ ]` Sub-task: Sketch code viewer layout
-	- `[ ]` Sub-task: Sketch dependency graph layout
-	- `[ ]` Sub-task: Sketch settings page layout
-	- `[ ]` Sub-task: Use Figma, draw.io, or pen & paper
+ - `[X]` **Create UI Wireframes** (3h)
+	- `[X]` Sub-task: Sketch search page layout
+	- `[X]` Sub-task: Sketch analysis dashboard layout
+	- `[X]` Sub-task: Sketch code viewer layout
+	- `[X]` Sub-task: Sketch dependency graph layout
+	- `[X]` Sub-task: Sketch settings page layout
+	- `[X]` Sub-task: Use Figma, draw.io, or pen & paper
 
-- `[ ]` **Define Design System** (3h)
-	- `[ ]` Sub-task: Choose color palette
-	- `[ ]` Sub-task: Define typography scale
-	- `[ ]` Sub-task: Define spacing system
-	- `[ ]` Sub-task: Choose UI component library (Material-UI recommended)
-	- `[ ]` Sub-task: Document design tokens
-	- `[ ]` Sub-task: Create design system reference
+ - `[X]` **Define Design System** (3h)
+	- `[X]` Sub-task: Choose color palette
+	- `[X]` Sub-task: Define typography scale
+	- `[X]` Sub-task: Define spacing system
+	- `[X]` Sub-task: Choose UI component library (Material-UI recommended)
+	- `[X]` Sub-task: Document design tokens
+	- `[X]` Sub-task: Create design system reference
 
 **Design System Example:**
 ```javascript
@@ -672,85 +672,7 @@ Common Components:
 **Duration:** Dec 9 - Dec 22, 2025 (2 weeks)  
 **Dependencies:** Backend APIs from Phase 3 and Phase 4 must be ready
 
-### Week 11 Detailed Tasks
-
-#### Day 1: UI Setup & Design
-- [ ] Create React application (2h)
-  - [ ] Create React App or Vite setup
-  - [ ] Configure proxy to Spring Boot backend
-  - [ ] Set up routing (React Router)
-- [ ] Design UI mockups/wireframes (4h)
-- [ ] Set up component library (Material-UI or Bootstrap) (2h)
-- [ ] Create base layout components (4h)
-  - [ ] Header/Navigation
-  - [ ] Sidebar
-  - [ ] Main content area
-  - [ ] Footer
-
-#### Day 2-3: Search Interface
-- [ ] Create search page components (12h)
-  - [ ] Search bar with autocomplete
-  - [ ] Search filters
-  - [ ] Result list with pagination
-  - [ ] Result item with code preview
-  - [ ] Syntax highlighting integration
-- [ ] Connect to search API (4h)
-- [ ] Implement search state management (Redux/Context) (4h)
-
-#### Day 4: Code Viewer
-- [ ] Integrate Monaco Editor (6h)
-  - [ ] Code display with syntax highlighting
-  - [ ] Line numbers and highlighting
-  - [ ] Read-only mode
-  - [ ] Copy functionality
-- [ ] Create code viewer modal/panel (4h)
-- [ ] Connect to backend for full file content (2h)
-
-#### Day 5: Graph Visualization Foundation
-- [ ] Research and select graph library (2h)
-  - [ ] D3.js vs Cytoscape.js evaluation
-- [ ] Create graph visualization component (8h)
-  - [ ] Basic graph rendering
-  - [ ] Node and edge styling
-  - [ ] Layout algorithms
-- [ ] Create graph controls (zoom, pan, reset) (2h)
-
-### Week 12 Detailed Tasks
-
-#### Day 1-2: Graph Features
-- [ ] Enhance graph visualization (10h)
-  - [ ] Interactive node selection
-  - [ ] Edge hover details
-  - [ ] Filtering and focusing
-  - [ ] Export as image (PNG/SVG)
-- [ ] Connect to dependency API (4h)
-- [ ] Create graph legend and controls (2h)
-- [ ] Performance optimization for large graphs (4h)
-
-#### Day 3: Analysis Dashboard
-- [ ] Create dashboard page (8h)
-  - [ ] Project statistics widgets
-  - [ ] Complexity charts (Chart.js/Recharts)
-  - [ ] Hotspot list
-  - [ ] Quick action buttons
-- [ ] Connect to dashboard API (2h)
-- [ ] Responsive layout for dashboard (2h)
-
-#### Day 4: Indexing Console
-- [ ] Create indexing console page (8h)
-  - [ ] Trigger indexing button
-  - [ ] Progress bar with real-time updates
-  - [ ] Indexing statistics display
-  - [ ] Configuration options
-  - [ ] Job history
-- [ ] WebSocket integration for progress updates (4h)
-- [ ] Connect to indexing API (2h)
-
-#### Day 5: Polish & Testing
-- [ ] Responsive design for mobile/tablet (6h)
-- [ ] Error handling and user feedback (4h)
-- [ ] Loading states and animations (2h)
-- [ ] Cross-browser testing (4h)
+(Include all UI tasks from original firestickTASKS.md Phase 5 - Days 43-54)
 
 ---
 
@@ -814,6 +736,6 @@ Common Components:
 
 ---
 
-**Last Updated:** October 22, 2025  
+**Last Updated:** October 14, 2025  
 **Next Review:** [Date]  
 **Questions:** Contact Developer 1 for backend/API questions

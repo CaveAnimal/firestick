@@ -1,114 +1,50 @@
-# firestick
+# Firestick - Legacy Code Analysis and Search Tool
 
-A Spring Boot application for code analysis, embeddings, and search capabilities.
-
-## Technologies
-
-### Backend
-- **Java 21** - Latest LTS version of Java
-- **Spring Boot 3.5.6** - Spring Boot framework with embedded Tomcat
-- **Maven** - Build and dependency management
-
-### Code Analysis
-- **JavaParser 3.26.3** - Java source code parsing and AST analysis
-- **JGraphT 1.5.2** - Graph library for dependency analysis
-- **Apache Lucene 9.12.0** - Full-text search and indexing
-
-### Data & Embeddings
-- **ONNX Runtime 1.20.0** - Machine learning inference for Sentence-Transformers
-- **DJL 0.31.1** - Deep Java Library for ML integration
-- **H2 Database** - Embedded SQL database
-
-### Vector Store
-- **Chroma** - Vector database (manual installation required)
-
-## Getting Started
-
-### Prerequisites
-- Java 21 or higher
-- Maven 3.6+
-
-### Build
-
-```bash
-mvn clean package
-```
-
-### Run
-
-```bash
-java -jar target/firestick-1.0.0-SNAPSHOT.jar
-```
-
-Or use Maven:
-
-```bash
-mvn spring-boot:run
-```
-
-### Access the Application
-
-- **API Health Check**: http://localhost:8080/api/health
-- **H2 Console**: http://localhost:8080/h2-console
-  - JDBC URL: `jdbc:h2:mem:firestickdb`
-  - Username: `sa`
-  - Password: (empty)
+## Overview
+Firestick is a powerful desktop application for analyzing and searching legacy codebases using semantic search, code metrics, and dependency analysis.
 
 ## Features
+- 🔍 Semantic code search with AI embeddings
+- 📊 Code complexity analysis
+- 🕸️ Dependency graph visualization
+- 💡 Code smell detection
+- 🎯 Dead code identification
+- 🖥️ Modern web-based UI
 
-### Code Parser Service
-Parse Java source code and analyze AST using JavaParser.
+## System Requirements
+- Java 21+
+- Maven 3.8+
+- Node.js 18+ (for UI development)
+- 4GB RAM recommended
 
-### Dependency Graph Service
-Create and analyze dependency graphs using JGraphT.
+## Quick Start
 
-### Code Search Service
-Index and search code using Apache Lucene.
-
-## Project Structure
-
-```
-firestick/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/caveanimal/firestick/
-│   │   │       ├── FirestickApplication.java
-│   │   │       ├── controller/
-│   │   │       │   └── HealthController.java
-│   │   │       └── service/
-│   │   │           ├── CodeParserService.java
-│   │   │           ├── CodeSearchService.java
-│   │   │           └── DependencyGraphService.java
-│   │   └── resources/
-│   │       └── application.properties
-│   └── test/
-│       └── java/
-│           └── com/caveanimal/firestick/
-│               └── FirestickApplicationTests.java
-└── pom.xml
-```
-
-## Configuration
-
-The application can be configured via `application.properties`:
-
-- Server port: `server.port=8080`
-- H2 Database settings
-- JPA/Hibernate settings
-
-## Testing
-
+### Build and Run
 ```bash
-mvn test
+# Clone repository
+git clone https://github.com/CaveAnimal/firestick.git
+cd firestick
+
+# Build backend
+mvn clean package
+
+# Run application
+mvn spring-boot:run
+
+# Access UI at http://localhost:8080
 ```
 
-## Notes
+### Development Setup
+See [DEVELOPMENT.md](docs/DEVELOPMENT.md) for detailed setup instructions.
 
-- The Chroma Java client requires manual installation as it's not available in Maven Central
-- ONNX Runtime is configured for embeddings support via Sentence-Transformers
-- DJL provides additional ML capabilities
+## Documentation
+- [User Guide](docs/USER_GUIDE.md)
+- [Developer Guide](docs/DEVELOPER_GUIDE.md)
+- [API Documentation](docs/API.md)
+- [Architecture](docs/ARCHITECTURE.md)
+
+## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## License
-
-This project is for demonstration purposes.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.

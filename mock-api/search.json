@@ -1,0 +1,6 @@
+{
+  "results": [
+    {"id": "1", "content": "public class Example {}", "filePath": "src/main/java/com/example/Example.java", "lineNumber": 1, "score": 0.98},
+    {"id": "2", "content": "public void doSomething() {}", "filePath": "src/main/java/com/example/Example.java", "lineNumber": 10, "score": 0.87}
+  ]
+}
