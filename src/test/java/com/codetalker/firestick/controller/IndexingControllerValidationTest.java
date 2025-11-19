@@ -15,7 +15,7 @@ import com.codetalker.firestick.service.IndexingJobControl;
 import com.codetalker.firestick.service.IndexingService;
 
 @WebMvcTest(IndexingController.class)
-@SuppressWarnings({"removal", "deprecation", "unused"})
+@SuppressWarnings({"removal", "unused"})
 class IndexingControllerValidationTest {
 
     @Autowired
@@ -30,6 +30,9 @@ class IndexingControllerValidationTest {
 
     @MockBean
     private IndexingJobControl jobControl;
+
+    @MockBean
+    private com.codetalker.firestick.service.AppRenameService appRenameService;
 
     @Test
     void missingRootParam_OnGetRun_ShouldReturnBadRequest() throws Exception {

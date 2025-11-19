@@ -41,6 +41,7 @@ export type IndexingRunResponse = {
 
 export type IndexingOptions = {
   root?: string
+  appName?: string
   excludeDirs?: string[]
   excludeGlobs?: string[]
 }
@@ -49,6 +50,7 @@ export async function startIndexing(opts: IndexingOptions = {}, app?: string): P
   // backend uses GET /api/indexing/run with optional query params
   const params = new URLSearchParams()
   if (opts.root && opts.root.trim()) params.set('root', opts.root.trim())
+  if (opts.appName && opts.appName.trim()) params.set('appName', opts.appName.trim())
   if (opts.excludeDirs && opts.excludeDirs.length > 0) params.set('excludeDirs', opts.excludeDirs.join(','))
   if (opts.excludeGlobs && opts.excludeGlobs.length > 0) params.set('excludeGlobs', opts.excludeGlobs.join(','))
   if (app && app.trim()) params.set('app', app.trim())
@@ -122,4 +124,22 @@ export type DashboardSummary = {
 export async function getDashboardSummary(app?: string): Promise<DashboardSummary> {
   const url = app ? `/api/dashboard/summary?app=${encodeURIComponent(app)}` : '/api/dashboard/summary'
   return apiGet<DashboardSummary>(url, { dedupe: 'share' })
+}
+
+// Directory browsing API
+export type DirectoryEntry = {
+  name: string
+  path: string
+  isDirectory: boolean
+}
+
+export type DirectoryListing = {
+  currentPath: string
+  entries: DirectoryEntry[]
+  error?: string
+}
+
+export async function browseDirectory(path?: string): Promise<DirectoryListing> {
+  const url = path ? `/api/indexing/browse?path=${encodeURIComponent(path)}` : '/api/indexing/browse'
+  return apiGet<DirectoryListing>(url, { dedupe: 'cancel-previous' })
 }

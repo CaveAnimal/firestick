@@ -37,6 +37,9 @@ class IndexingControllerHappyPathTest {
     @MockBean
     private IndexingJobControl jobControl;
 
+    @MockBean
+    private com.codetalker.firestick.service.AppRenameService appRenameService;
+
     private static IndexingReport sampleReport() {
         return new IndexingReport(1L, "C:/repo", 3, 3, 0, 7, 7, 7,
                 1000L, 2000L, List.of());

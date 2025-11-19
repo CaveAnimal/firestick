@@ -47,6 +47,7 @@ public class CodeChunk {
     private String signature;
     private String modifiers;
     private String annotations;
+    @Lob
     private String javaDoc;
     @Column(length = 128)
     private String chunkType;

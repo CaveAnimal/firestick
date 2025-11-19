@@ -1,5 +1,6 @@
 package com.codetalker.firestick.exception;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -72,6 +73,22 @@ public class GlobalExceptionHandler {
         .map(fe -> new ErrorResponse.ErrorDetail(fe.getField(), fe.getDefaultMessage()))
                 .toList();
         return build(HttpStatus.BAD_REQUEST, "Bad Request", "Validation failed", request.getRequestURI(), "VALIDATION_ERROR", details);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ErrorResponse> handleIOException(IOException ex, HttpServletRequest request) {
+        // Suppress logging for common SSE connection errors (client disconnect, abort, etc.)
+        if (ex.getMessage() != null && (
+            ex.getMessage().contains("aborted") ||
+            ex.getMessage().contains("broken pipe") ||
+            ex.getMessage().contains("Connection reset") ||
+            ex.getMessage().contains("Stream closed"))) {
+            log.debug("SSE connection closed: {}", ex.getMessage());
+        } else {
+            log.error("IO error: {}", ex.getMessage(), ex);
+        }
+        // Don't return error response for IO exceptions (connection is already broken)
+        return null;
     }
 
     @ExceptionHandler(Exception.class)

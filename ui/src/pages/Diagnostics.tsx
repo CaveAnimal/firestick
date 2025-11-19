@@ -11,6 +11,7 @@ type CheckResult<T = any> = {
 export default function Diagnostics() {
   const [health, setHealth] = useState<CheckResult>({ ok: false })
   const [embed, setEmbed] = useState<CheckResult>({ ok: false })
+  const [llm, setLlm] = useState<CheckResult>({ ok: false })
   const [running, setRunning] = useState(false)
 
   const runChecks = useCallback(async () => {
@@ -57,6 +58,27 @@ export default function Diagnostics() {
           setEmbed({ ok: false, ms, error: e?.name === 'AbortError' ? 'Timed out' : (e?.message || 'Fetch failed') })
         }
       }
+
+      // LLM health
+      {
+        const t0 = performance.now()
+        try {
+          const controller = new AbortController()
+          const id = window.setTimeout(() => controller.abort(), 5000)
+          const res = await fetch('/api/llm/health', { signal: controller.signal })
+          window.clearTimeout(id)
+          const ms = Math.max(0, Math.round(performance.now() - t0))
+          if (res.ok) {
+            const json = await res.json().catch(() => ({}))
+            setLlm({ ok: true, status: res.status, ms, data: json })
+          } else {
+            setLlm({ ok: false, status: res.status, ms, error: `HTTP ${res.status}` })
+          }
+        } catch (e: any) {
+          const ms = Math.max(0, Math.round(performance.now() - t0))
+          setLlm({ ok: false, ms, error: e?.name === 'AbortError' ? 'Timed out' : (e?.message || 'Fetch failed') })
+        }
+      }
     } finally {
       setRunning(false)
     }
@@ -95,6 +117,16 @@ export default function Diagnostics() {
             <button onClick={runChecks} disabled={running} aria-busy={running}>{running ? 'Checking…' : 'Re-run checks'}</button>
           </div>
           <pre style={{ background: '#f9f9f9', padding: 8, marginTop: 8 }}>{JSON.stringify(health.data ?? (health.error ? { error: health.error } : {}), null, 2)}</pre>
+        </section>
+
+        <section style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>
+          <h3 style={{ marginTop: 0 }}>LLM</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            {pill(llm.data?.status ? `Status: ${String(llm.data.status)}` : (llm.ok ? 'Connected' : 'No connection'), llm.ok ? '#2ecc71' : '#e74c3c', llm.error)}
+            <span title="Round-trip time">{typeof llm.ms === 'number' ? `${llm.ms} ms` : ''}</span>
+            <button onClick={runChecks} disabled={running} aria-busy={running}>{running ? 'Checking…' : 'Re-run checks'}</button>
+          </div>
+          <pre style={{ background: '#f9f9f9', padding: 8, marginTop: 8 }}>{JSON.stringify(llm.data ?? (llm.error ? { error: llm.error } : {}), null, 2)}</pre>
         </section>
 
         <section style={{ border: '1px solid #eee', borderRadius: 8, padding: 12 }}>

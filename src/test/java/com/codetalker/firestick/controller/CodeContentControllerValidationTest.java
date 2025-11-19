@@ -12,7 +12,7 @@ import com.codetalker.firestick.repository.CodeChunkRepository;
 import com.codetalker.firestick.repository.CodeFileRepository;
 
 @WebMvcTest(CodeContentController.class)
-@SuppressWarnings({"removal", "deprecation", "unused"})
+@SuppressWarnings({"removal", "unused"})
 class CodeContentControllerValidationTest {
 
     @Autowired

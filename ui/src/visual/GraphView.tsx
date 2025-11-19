@@ -7,6 +7,7 @@ import navigator from 'cytoscape-navigator'
 cytoscape.use(navigator)
 import type { EventObject, NodeSingular, EdgeSingular } from 'cytoscape'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useSearch } from '../state/SearchContext'
 import { getEnrichedGraph, type GraphNode, type GraphEdge } from '../api'
 
 export default function GraphView() {
@@ -37,6 +38,7 @@ export default function GraphView() {
   const [showHelp, setShowHelp] = useState<boolean>(false)
   // Minimap
   const [showMinimap, setShowMinimap] = useState<boolean>(true)
+  const { app } = useSearch()
   // Shortest path tool
   const [pathMode, setPathMode] = useState<boolean>(false)
   const [pathStart, setPathStart] = useState<string>('')
@@ -142,7 +144,11 @@ export default function GraphView() {
     // initialize minimap if enabled
     if (showMinimap && minimapRef.current) {
       try {
-        navigatorRef.current = (cyInstance as any).navigator({
+        // Only initialize navigator plugin if available and the renderer is present
+        const navFn = (cyInstance as any).navigator
+        const hasRenderer = !!((cyInstance as any)._private && (cyInstance as any)._private.renderer)
+        if (typeof navFn === 'function' && hasRenderer) {
+          navigatorRef.current = navFn({
           container: minimapRef.current,
           // Keep it light to avoid perf issues
           viewLiveFramerate: 0, // render on demand
@@ -150,8 +156,11 @@ export default function GraphView() {
           dblClickDelay: 200,
           removeCustomContainer: false,
           rerenderDelay: 100,
-        })
-      } catch { /* ignore runtime plugin errors */ }
+  })
+  }
+      } catch (err) {
+        console.warn('[Graph] Failed to initialize minimap navigator', err)
+      }
     }
     // Edge hover details (throttled for perf)
     cyInstance.on('mouseover', 'edge', (evt: EventObject) => {
@@ -219,10 +228,10 @@ export default function GraphView() {
 
     setCy(cyInstance)
     return () => {
-      try { if (navigatorRef.current && navigatorRef.current.destroy) navigatorRef.current.destroy() } catch { /* ignore */ }
-      cyInstance.destroy()
+      try { if (navigatorRef.current && navigatorRef.current.destroy) navigatorRef.current.destroy() } catch (e) { console.warn('[Graph] Error destroying navigator during unmount', e) }
+      try { cyInstance.destroy() } catch (e) { console.warn('[Graph] Error destroying cytoscape instance during unmount', e) }
     }
-  }, [])
+  }, [app])
 
   const zoom = (delta: number) => {
     if (!cy) return
@@ -274,13 +283,19 @@ export default function GraphView() {
       try {
         if (navigatorRef.current && navigatorRef.current.destroy) navigatorRef.current.destroy()
         if (showMinimap && minimapRef.current) {
-          navigatorRef.current = (cy as any).navigator({
+          const navFn = (cy as any).navigator
+          const hasRenderer = !!((cy as any)._private && (cy as any)._private.renderer)
+          if (typeof navFn === 'function' && hasRenderer) {
+            try {
+              navigatorRef.current = navFn({
             container: minimapRef.current,
             viewLiveFramerate: 0,
             thumbnailEventFramerate: 30,
             removeCustomContainer: false,
             rerenderDelay: 100,
-          })
+            })
+            } catch (e) { console.warn('[Graph] Failed to initialize navigator on reload', e) }
+          }
         }
       } catch { /* ignore */ }
     } catch (err) {

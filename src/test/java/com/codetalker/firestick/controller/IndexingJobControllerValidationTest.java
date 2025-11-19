@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.codetalker.firestick.repository.IndexingJobRepository;
 
 @WebMvcTest(IndexingJobController.class)
-@SuppressWarnings({"removal", "deprecation", "unused"})
+@SuppressWarnings({"removal", "unused"})
 class IndexingJobControllerValidationTest {
 
     @Autowired

@@ -2,21 +2,14 @@ import { Routes, Route, Link } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import Layout from './components/layout/Layout'
 import Health from './pages/Health'
+const Home = lazy(() => import('./pages/Home'))
 const GraphPage = lazy(() => import('./pages/Graph'))
 const SearchPage = lazy(() => import('./pages/Search'))
 const DashboardPage = lazy(() => import('./pages/Dashboard'))
 const IndexingPage = lazy(() => import('./pages/Indexing'))
 const DiagnosticsPage = lazy(() => import('./pages/Diagnostics'))
 
-function Home() {
-  return (
-    <div>
-      <h2>Welcome to Firestick UI</h2>
-      <p>Use the navigation to explore.</p>
-      <p><Link to="/health">Health Check</Link></p>
-    </div>
-  )
-}
+// Home component moved to `ui/src/pages/Home.tsx` and lazy loaded above
 
 export default function App() {
   return (

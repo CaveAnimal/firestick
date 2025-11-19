@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,11 +50,12 @@ public class GraphController {
     private final DependencyGraphService dependencyGraphService;
 
     public GraphController(CodeFileRepository codeFileRepository, CodeChunkRepository codeChunkRepository,
-                           CodeStructureService codeStructureService, DependencyGraphService dependencyGraphService) {
+                           CodeStructureService codeStructureService,
+                           @Autowired(required = false) DependencyGraphService dependencyGraphService) {
         this.codeFileRepository = codeFileRepository;
         this.codeChunkRepository = codeChunkRepository;
         this.codeStructureService = codeStructureService;
-        this.dependencyGraphService = dependencyGraphService;
+        this.dependencyGraphService = dependencyGraphService != null ? dependencyGraphService : new DependencyGraphService();
     }
 
     /**
@@ -230,8 +232,10 @@ public class GraphController {
             try {
                 var fi = codeStructureService.buildFileInfoFromPath(f.getFilePath());
                 if (fi != null) parsedFiles.add(fi);
-            } catch (Exception e) {
-                log.warn("[Graph] Failed to parse file for enriched graph: {}", f.getFilePath(), e);
+            } catch (java.io.IOException e) {
+                log.warn("[Graph] IO error while parsing file for enriched graph: {}", f.getFilePath(), e);
+            } catch (com.codetalker.firestick.exception.CodeParsingException e) {
+                log.warn("[Graph] Parsing error while parsing file for enriched graph: {}", f.getFilePath(), e);
             }
         }
 

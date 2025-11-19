@@ -63,7 +63,13 @@ public class IndexingService {
     long startedAt = System.currentTimeMillis();
     IndexingJob job = new IndexingJob();
     job.setRootPath(request.rootPath());
-    job.setAppName(request.appName());
+    
+    // Auto-derive app name from folder name if not explicitly provided
+    String appName = request.appName();
+    if (appName == null || appName.isBlank() || "default".equals(appName)) {
+        appName = deriveAppNameFromPath(request.rootPath());
+    }
+    job.setAppName(appName);
     job.setStatus(IndexingJob.Status.RUNNING);
     job.setStartedAt(java.time.Instant.ofEpochMilli(startedAt));
     job = jobRepository.save(job);
@@ -156,8 +162,16 @@ public class IndexingService {
                         codeChunkRepository.save(c);
                     }
                 }
-            } catch (Exception e) {
-                String msg = "Failed indexing file: " + p + " -> " + e.getMessage();
+            } catch (java.io.IOException e) {
+                String msg = "IO error indexing file: " + p + " -> " + e.getMessage();
+                log.warn("[Indexing] {}", msg, e);
+                errors.add(msg);
+            } catch (com.codetalker.firestick.exception.CodeParsingException e) {
+                String msg = "Parsing error indexing file: " + p + " -> " + e.getMessage();
+                log.warn("[Indexing] {}", msg, e);
+                errors.add(msg);
+            } catch (org.springframework.dao.DataAccessException e) {
+                String msg = "Database error while indexing file: " + p + " -> " + e.getMessage();
                 log.warn("[Indexing] {}", msg, e);
                 errors.add(msg);
             }
@@ -207,6 +221,52 @@ public class IndexingService {
         endedAt,
         errors
     );
+    }
+
+    private String deriveAppNameFromPath(String rootPath) {
+        if (rootPath == null || rootPath.isBlank()) {
+            return "default";
+        }
+        
+        // Extract the last directory component from the path
+        // Handle both Windows (C:\path\to\folder) and Unix (/path/to/folder) paths
+        String[] pathParts = rootPath.replaceAll("\\\\", "/").split("/");
+        String folderName = "";
+        
+        // Get the last non-empty component
+        for (int i = pathParts.length - 1; i >= 0; i--) {
+            if (!pathParts[i].isBlank()) {
+                folderName = pathParts[i];
+                break;
+            }
+        }
+        
+        if (folderName.isBlank()) {
+            return "default";
+        }
+        
+        // Sanitize: lowercase, replace non-alphanumeric with underscore, collapse repeats, trim underscores
+        String sanitized = folderName.toLowerCase()
+                .replaceAll("[^a-z0-9_]", "_")
+                .replaceAll("_{2,}", "_")
+                .replaceAll("^_+|_+$", "");
+        
+        return sanitized.isBlank() ? "default" : sanitized;
+    }
+
+    public List<String> getAvailableApps() {
+        // Combine distinct app names observed in indexing jobs and code files
+        try {
+            List<String> jobs = jobRepository.findDistinctAppNames();
+            List<String> files = codeFileRepository.findDistinctAppNames();
+            java.util.Set<String> union = new java.util.TreeSet<>(); // TreeSet keeps natural order (alphabetical)
+            if (jobs != null) union.addAll(jobs);
+            if (files != null) union.addAll(files);
+            return new ArrayList<>(union);
+        } catch (Exception e) {
+            log.warn("Failed to retrieve apps from both jobs and code files, falling back to jobs only", e);
+            return jobRepository.findDistinctAppNames();
+        }
     }
 
     private static String buildDocId(CodeFile file, CodeChunk chunk) {

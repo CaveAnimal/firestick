@@ -4,7 +4,7 @@ This is the frontend UI for Firestick, built with React 18, Vite, and TypeScript
 
 ## Prerequisites
 - Node.js 18+ and npm 9+
-- Backend Spring Boot app running on http://localhost:8080
+- Backend Spring Boot app running on http://localhost:8081 (ONNX profile is now the default; use `-NoOnnx` to start without it)
 
 ## Quick Start
 ```powershell

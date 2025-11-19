@@ -4453,6 +4453,627 @@ Before moving to Phase 5, verify ALL of the following:
 - How can we improve result presentation?
 
 ---
+
+# Phase 4b: CodeLlama 7B LLM Integration ⭐ **NEW** (Weeks 7-8)
+
+**Status:** Not Started  
+**Goal:** Integrate CodeLlama 7B for code explanation, summarization, and documentation generation  
+**Team:** Backend Developer + DevOps (Python setup)  
+**Duration:** Dec 2 - Dec 8, 2025 (1 week, Sprint 4b)  
+**Dependencies:** Phase 3 (Search API must be working), Phase 4 (Analysis API for context)
+
+---
+
+## Phase 4b Overview: Why CodeLlama?
+
+### What We're Building
+A Python microservice running CodeLlama 7B that provides:
+1. **Code Summarization** - 2-3 sentence explanations of methods/classes
+2. **Dependency Explanation** - Natural language descriptions of why classes are related
+3. **Documentation Generation** - Auto-generate Javadoc-style comments
+4. **Pattern Detection** - Identify code patterns and anti-patterns
+5. **Dead Code Analysis** - Assist in identifying unused/unreachable code
+
+### Why CodeLlama 7B Specifically
+- **Code-trained:** Built specifically for code understanding (vs. general-purpose Mistral)
+- **Efficient:** 7B parameters run on CPU in ~3-5GB RAM
+- **Offline:** No internet required (matches Firestick philosophy)
+- **License:** MIT (fully open-source)
+- **Performance:** 2-5 second response times on consumer hardware
+
+### Architecture Pattern
+```
+┌─────────────────────────────────────────────────────────┐
+│               Firestick Desktop App                     │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │      Spring Boot Backend (Java 21)                │  │
+│  │  - SearchController                               │  │
+│  │  - AnalysisController                             │  │
+│  │  - LLMServiceClient (REST calls to Python)        │  │
+│  └──────────────────┬───────────────────────────────┘  │
+│                     │ REST (http://localhost:8001)      │
+│  ┌──────────────────▼───────────────────────────────┐  │
+│  │   Python FastAPI Service (Microservice)           │  │
+│  │  - CodeLlama 7B model (ONNX optimized)           │  │
+│  │  - Explanation generation                        │  │
+│  │  - Pattern detection                             │  │
+│  │  - Rate limiting & caching                       │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                          │
+│  Storage Layer (shared)                                 │
+│  - H2 Database (metadata)                               │
+│  - Chroma (vector embeddings)                           │
+│  - Lucene (keyword index)                               │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Phase 4b Detailed Tasks
+
+### Day 1-2: Python Microservice Setup
+
+#### Task 4b.1: Python FastAPI Project Initialization
+- [ ] Create `/llm-service` directory structure (0.5h)
+  ```
+  llm-service/
+  ├── main.py              # FastAPI app entry point
+  ├── requirements.txt     # Pinned dependencies
+  ├── models/              # Model-related code
+  │   ├── llama.py        # CodeLlama wrapper
+  │   └── cache.py        # Model caching
+  ├── endpoints/           # API endpoints
+  │   ├── summarize.py
+  │   ├── analyze.py
+  │   └── health.py
+  ├── tests/               # Unit tests
+  │   └── test_llama.py
+  └── README.md
+  ```
+- [ ] Initialize Python 3.12 venv in llm-service (0.5h)
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
+  ```
+- [ ] Create base requirements.txt with versions (1h)
+  ```
+  fastapi==0.115.0
+  uvicorn==0.38.0
+  torch==2.9.0
+  transformers==4.55.4
+  pydantic==2.9.2
+  python-dotenv==1.1.1
+  pydantic-settings==2.5.0
+  ```
+- [ ] Create .env.example (0.5h)
+  ```
+  MODEL_NAME=codellama/CodeLlama-7b-Instruct-hf
+  MODEL_CACHE_DIR=./models
+  TORCH_HOME=./models
+  LLM_SERVICE_PORT=8001
+  LLM_SERVICE_HOST=127.0.0.1
+  MAX_TOKENS=512
+  TIMEOUT_SECONDS=30
+  ```
+- [ ] Unit test: Verify Python 3.12 environment (0.5h)
+
+**Subtasks & Success Criteria:**
+- [ ] `requirement.txt` created and pinned
+- [ ] venv activates without errors
+- [ ] Python version verified as 3.12+
+- [ ] pip install -r requirements.txt succeeds
+
+#### Task 4b.2: Download & Cache CodeLlama Model
+- [ ] Download CodeLlama 7B Instruct model (2h)
+  - Model source: `codellama/CodeLlama-7b-Instruct-hf` from Hugging Face
+  - Expected size: ~13GB (full precision), ~4-5GB (4-bit quantized)
+  - Recommendation: Use 4-bit quantized version for consumer hardware
+  - Command: `huggingface-hub download codellama/CodeLlama-7b-Instruct-hf --cache-dir ./models`
+- [ ] Verify model integrity (checksums) (0.5h)
+- [ ] Create model loader with error handling (1h)
+  ```python
+  class CodeLlamaLoader:
+      def __init__(self, model_name, cache_dir):
+          self.model_name = model_name
+          self.cache_dir = cache_dir
+          self.model = None
+          self.tokenizer = None
+      
+      def load(self):
+          # Load with error handling, retries
+          pass
+      
+      def get_device(self):
+          # Auto-detect CUDA/CPU
+          pass
+  ```
+- [ ] Test model loading time (should be < 30s) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] Model downloaded and cached
+- [ ] Model loads in < 30 seconds
+- [ ] Memory usage < 6GB
+- [ ] Tokenizer initialized successfully
+
+#### Task 4b.3: FastAPI Application Skeleton
+- [ ] Create main.py with FastAPI app (1h)
+  ```python
+  from fastapi import FastAPI
+  from fastapi.middleware.cors import CORSMiddleware
+  import logging
+  
+  app = FastAPI(
+      title="Firestick LLM Service",
+      description="CodeLlama 7B for code explanation",
+      version="1.0.0"
+  )
+  
+  # CORS for Java backend calls
+  app.add_middleware(
+      CORSMiddleware,
+      allow_origins=["http://localhost:8080"],
+      allow_credentials=True,
+      allow_methods=["*"],
+      allow_headers=["*"],
+  )
+  
+  @app.get("/health")
+  async def health():
+      return {"status": "ok"}
+  ```
+- [ ] Create startup/shutdown lifecycle (1h)
+  - Load model on startup
+  - Release resources on shutdown
+  - Signal readiness to Java backend
+- [ ] Configure logging (0.5h)
+- [ ] Add request/response logging (0.5h)
+
+**Subtasks & Success Criteria:**
+- [ ] FastAPI app starts on port 8001
+- [ ] `/health` endpoint returns {"status": "ok"}
+- [ ] CORS configured correctly
+- [ ] Model loads on startup
+
+---
+
+### Day 3: CodeLlama Wrapper & Endpoints
+
+#### Task 4b.4: CodeLlama Model Wrapper Class
+- [ ] Create CodeLlamaProcessor class (4h)
+  ```python
+  class CodeLlamaProcessor:
+      def __init__(self, model, tokenizer):
+          self.model = model
+          self.tokenizer = tokenizer
+          self.context_window = 4096  # CodeLlama's context
+          self.max_new_tokens = 512
+      
+      def generate_explanation(self, code_snippet: str, max_tokens: int = 256) -> str:
+          # Generate brief explanation (2-3 sentences)
+          pass
+      
+      def analyze_relationship(self, from_class: str, to_class: str, context: str) -> str:
+          # Explain why these classes are related
+          pass
+      
+      def generate_documentation(self, code_snippet: str) -> str:
+          # Generate Javadoc-style documentation
+          pass
+      
+      def detect_patterns(self, code_snippet: str) -> list[str]:
+          # Identify code patterns and issues
+          pass
+      
+      def _build_prompt(self, instruction: str, code: str) -> str:
+          # Build properly formatted prompt for CodeLlama
+          pass
+      
+      def _tokenize_and_truncate(self, text: str) -> str:
+          # Respect context window limits
+          pass
+  ```
+- [ ] Implement token counting/truncation (1h)
+- [ ] Add temperature and sampling controls (0.5h)
+- [ ] Error handling (invalid inputs, OOM, timeouts) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] Class compiles without errors
+- [ ] Methods handle edge cases (empty input, too long input)
+- [ ] Inference completes within 5 seconds
+- [ ] Output quality is acceptable (human readable, relevant)
+
+#### Task 4b.5: API Endpoints Implementation
+- [ ] Endpoint 1: POST /api/llm/summarize (2h)
+  - Input: `{"code": "...", "language": "java"}`
+  - Output: `{"summary": "...", "confidence": 0.95, "tokens_used": 47}`
+  - Response time: < 5s
+- [ ] Endpoint 2: POST /api/llm/analyze-relationship (2h)
+  - Input: `{"from_class": "ClassA", "to_class": "ClassB", "context": "..."}`
+  - Output: `{"explanation": "...", "relationship_type": "dependency|inheritance|..."`
+  - Response time: < 5s
+- [ ] Endpoint 3: POST /api/llm/generate-docs (2h)
+  - Input: `{"code": "..."}`
+  - Output: `{"documentation": "...", "format": "javadoc"}`
+- [ ] Endpoint 4: POST /api/llm/detect-patterns (2h)
+  - Input: `{"code": "..."}`
+  - Output: `{"patterns": ["singleton", "factory"], "issues": ["missing_null_check", "TODO_comment"]}`
+- [ ] Add request validation with Pydantic (1h)
+- [ ] Add response models (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] All 4 endpoints return 200 status
+- [ ] Responses match documented schema
+- [ ] Input validation rejects invalid data with 400
+- [ ] Response times < 5 seconds for all endpoints
+
+#### Task 4b.6: Rate Limiting & Caching
+- [ ] Implement in-memory response cache (2h)
+  ```python
+  from functools import lru_cache
+  import hashlib
+  
+  class ResponseCache:
+      def __init__(self, max_size: int = 1000):
+          self.cache = {}  # {hash(input): output}
+          self.max_size = max_size
+      
+      def get(self, key: str):
+          return self.cache.get(hashlib.md5(key.encode()).hexdigest())
+      
+      def set(self, key: str, value):
+          # Simple LRU eviction
+          pass
+  ```
+- [ ] Add rate limiting middleware (1h)
+  - Max 10 requests/second per IP
+  - Max 1000 requests/hour per IP
+- [ ] Test cache hit rate (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] Repeated identical requests hit cache
+- [ ] Rate limit returns 429 when exceeded
+- [ ] Cache reduces response time from 4s to <100ms
+
+#### Task 4b.7: Unit Tests for LLM Service
+- [ ] Test CodeLlamaProcessor.generate_explanation() (2h)
+  - Valid code input → non-empty explanation
+  - Empty input → error message
+  - Very long input → truncated gracefully
+- [ ] Test API endpoints with mock model (2h)
+  - POST /api/llm/summarize → 200 with valid response
+  - Invalid JSON → 422
+- [ ] Test timeout handling (1h)
+  - Request takes too long → 504 after 30s
+- [ ] Test error recovery (1h)
+  - Model OOM → graceful error response
+  - Model uninitialized → 503 Service Unavailable
+- [ ] Achieve > 80% code coverage (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] All tests pass (pytest)
+- [ ] Coverage > 80%
+- [ ] No warnings or linting errors
+
+---
+
+### Day 4-5: Java Integration & Testing
+
+#### Task 4b.8: Java RestTemplate Client for LLM Service
+- [ ] Create LLMServiceClient interface (1h)
+  ```java
+  public interface LLMServiceClient {
+      String explainCode(String code) throws LLMServiceException;
+      String analyzeRelationship(String fromClass, String toClass) throws LLMServiceException;
+      String generateDocumentation(String code) throws LLMServiceException;
+      List<String> detectPatterns(String code) throws LLMServiceException;
+      boolean isHealthy();
+  }
+  ```
+- [ ] Implement RestTemplateLLMServiceClient (2h)
+  - HTTP client with timeout (30s)
+  - Retry logic (3 retries with exponential backoff)
+  - Fallback behavior (return null or empty result if LLM service down)
+  - Circuit breaker pattern
+  ```java
+  @Component
+  @Slf4j
+  public class RestTemplateLLMServiceClient implements LLMServiceClient {
+      private final RestTemplate restTemplate;
+      private final String llmServiceUrl;
+      private volatile boolean healthy = true;
+      
+      public String explainCode(String code) {
+          if (!healthy) return null;  // Graceful degradation
+          try {
+              // POST to http://localhost:8001/api/llm/summarize
+              // Parse response
+          } catch (Exception e) {
+              healthy = false;
+              log.warn("LLM service unavailable", e);
+              return null;
+          }
+      }
+      
+      @Scheduled(fixedRate = 30000)
+      public void healthCheck() {
+          // Periodically check if LLM service is up
+      }
+  }
+  ```
+- [ ] Create request/response DTOs (1h)
+  ```java
+  @Data
+  class SummarizeRequest {
+      String code;
+      String language;
+  }
+  
+  @Data
+  class SummarizeResponse {
+      String summary;
+      double confidence;
+      int tokensUsed;
+  }
+  ```
+- [ ] Unit tests for client (2h)
+  - Mock RestTemplate
+  - Test successful call
+  - Test timeout retry
+  - Test LLM service down (graceful degradation)
+
+**Subtasks & Success Criteria:**
+- [ ] Client compiles without errors
+- [ ] Successfully calls mock Python service
+- [ ] Retries on timeout
+- [ ] Returns null when service unavailable (no error thrown)
+
+#### Task 4b.9: Spring Boot Controller Integration
+- [ ] Create LLMController with endpoints (2h)
+  ```java
+  @RestController
+  @RequestMapping("/api/explain")
+  @Slf4j
+  public class LLMController {
+      
+      @GetMapping("/search/{searchId}")
+      public ResponseEntity<CodeExplanationResponse> explainSearchResult(
+          @PathVariable String searchId) {
+          // Get search result from cache
+          // Call LLMServiceClient.explainCode()
+          // Return response
+      }
+      
+      @GetMapping("/dependencies/{fromClass}/{toClass}")
+      public ResponseEntity<DependencyExplanationResponse> explainDependency(
+          @PathVariable String fromClass,
+          @PathVariable String toClass) {
+          // Get context from dependency graph
+          // Call LLMServiceClient.analyzeRelationship()
+          // Return response
+      }
+      
+      @PostMapping("/methods/{methodId}/docs")
+      public ResponseEntity<DocumentationResponse> generateDocs(
+          @PathVariable String methodId) {
+          // Get method code from database
+          // Call LLMServiceClient.generateDocumentation()
+          // Return response
+      }
+  }
+  ```
+- [ ] Create response DTOs (1h)
+  ```java
+  @Data
+  class CodeExplanationResponse {
+      String codeId;
+      String explanation;
+      long generatedAt;
+      boolean fromCache;
+  }
+  ```
+- [ ] Add caching strategy (1h)
+  - Cache explanations in H2 (Code_Explanation table)
+  - 24-hour TTL
+  - Reuse if same code has been explained before
+- [ ] OpenAPI/Swagger documentation (1h)
+  - @Operation annotations
+  - Request/response examples
+- [ ] Controller tests (2h)
+  - Mock LLMServiceClient
+  - Test successful explanation
+  - Test LLM service down (should not throw, return empty/cached)
+  - Test error handling
+
+**Subtasks & Success Criteria:**
+- [ ] Controller compiles
+- [ ] Endpoints return 200 with valid responses
+- [ ] LLM service down → graceful response (cached or empty)
+- [ ] Swagger docs generated correctly
+
+#### Task 4b.10: Integration Tests (Java + Python)
+- [ ] Start Python LLM service (mocked) (1h)
+- [ ] Make HTTP calls from Java test (2h)
+  ```java
+  @SpringBootTest
+  class LLMIntegrationTest {
+      @Test
+      void testExplainCodeEndpoint() throws Exception {
+          // Mock Python service responses
+          mockServer.expect(requestTo("http://localhost:8001/api/llm/summarize"))
+              .andRespond(withSuccess(...));
+          
+          mockMvc.perform(get("/api/explain/search/1"))
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.explanation").exists());
+      }
+  }
+  ```
+- [ ] Test graceful degradation (Python service down) (1h)
+- [ ] Test caching behavior (1h)
+- [ ] Performance test (response times) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] All integration tests pass
+- [ ] Code coverage > 85%
+- [ ] Response time < 6 seconds (4s model + 2s overhead)
+- [ ] Graceful degradation verified
+
+---
+
+### Day 5: Documentation & Final Testing
+
+#### Task 4b.11: Python Service Documentation
+- [ ] Create llm-service/README.md (2h)
+  - Setup instructions
+  - Model download & caching
+  - Running the service
+  - API endpoint reference
+  - Configuration options
+  - Troubleshooting
+- [ ] Create API documentation (Swagger/OpenAPI) (1h)
+  - Generate from Python endpoints
+  - Include examples
+- [ ] Create developer guide (1h)
+  - How to add new explanation type
+  - How to tune model parameters
+  - How to implement custom prompts
+
+#### Task 4b.12: Performance Benchmarking
+- [ ] Measure inference latency (1h)
+  - Test with various code sizes (100 chars, 1KB, 10KB)
+  - Record min/max/avg latencies
+  - Target: < 5 seconds per explanation
+- [ ] Measure memory usage under load (1h)
+  - Single concurrent request
+  - 5 concurrent requests
+  - Target: < 6GB total
+- [ ] Measure cache effectiveness (1h)
+  - Cache hit rate for repeated queries
+  - Impact on response time
+- [ ] Document results (0.5h)
+
+**Subtasks & Success Criteria:**
+- [ ] 95% of requests complete in < 5 seconds
+- [ ] Memory stays < 6GB under normal load
+- [ ] Cache hit rate > 60% for typical workload
+- [ ] Performance report created
+
+#### Task 4b.13: Graceful Degradation Tests
+- [ ] Test LLM service starting late (0.5h)
+- [ ] Test LLM service crashing mid-request (0.5h)
+- [ ] Test network timeout (0.5h)
+- [ ] Test invalid responses from LLM (0.5h)
+- [ ] Verify Java backend continues working (no cascade failure) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] No cascade failures
+- [ ] Search still works when LLM down
+- [ ] User sees sensible messages (not error codes)
+- [ ] Application logs include recovery details
+
+#### Task 4b.14: Complete OpenAPI/Swagger Docs
+- [ ] Java backend: Update SpringDoc (1h)
+  - New endpoints documented
+  - Examples provided
+  - Error responses documented
+- [ ] Python service: Generate OpenAPI schema (0.5h)
+  - Export as JSON
+  - Include in project documentation
+- [ ] Create integration guide (1h)
+  - How Java calls Python
+  - How to run both services
+  - How to verify integration
+
+**Subtasks & Success Criteria:**
+- [ ] Swagger UI includes all new endpoints
+- [ ] Examples show realistic requests/responses
+- [ ] Documentation generation is automated
+
+---
+
+## Phase 4b Success Criteria
+
+### Functional Requirements
+- [ ] Python LLM service starts in < 30 seconds
+- [ ] All 4 explanation endpoints return 200 status
+- [ ] Explanations are human-readable and relevant
+- [ ] Java RestTemplate client successfully calls Python service
+- [ ] Caching reduces response time for repeated requests
+- [ ] Cache persistence in H2 working
+
+### Performance Requirements
+- [ ] Model inference time: < 4 seconds per request
+- [ ] Total response time (HTTP overhead): < 5 seconds
+- [ ] Memory footprint: < 6GB
+- [ ] Cache hit rate: > 60% for typical usage
+- [ ] 95% of requests complete within SLA
+
+### Quality Requirements
+- [ ] Unit test coverage > 85% (Java), > 80% (Python)
+- [ ] No warnings in code linting (Python: flake8, Java: checkstyle)
+- [ ] All tests passing (pytest, JUnit 5)
+- [ ] OpenAPI documentation complete
+- [ ] Integration tests passing
+
+### Reliability Requirements
+- [ ] Graceful degradation when LLM service down
+- [ ] No cascade failures (Java continues working)
+- [ ] Proper error messages in logs
+- [ ] Health check endpoint responsive
+- [ ] Circuit breaker pattern implemented
+
+### Documentation Requirements
+- [ ] Python service README complete
+- [ ] Java client Javadoc complete
+- [ ] OpenAPI schema generated and included
+- [ ] Integration guide created
+- [ ] Setup instructions for Windows/macOS/Linux
+
+---
+
+## Phase 4b Completion Checklist
+
+**Code Deliverables:**
+- [ ] `llm-service/` directory with Python FastAPI app
+- [ ] `llm-service/requirements.txt` with pinned versions
+- [ ] `llm-service/main.py` with 4 explanation endpoints
+- [ ] `src/main/java/com/codetalker/firestick/llm/LLMServiceClient.java` interface
+- [ ] `src/main/java/com/codetalker/firestick/llm/RestTemplateLLMServiceClient.java` implementation
+- [ ] `src/main/java/com/codetalker/firestick/controller/LLMController.java`
+- [ ] `src/main/java/com/codetalker/firestick/dto/` - Request/Response DTOs
+
+**Test Deliverables:**
+- [ ] `llm-service/tests/test_llama.py` - Python unit tests
+- [ ] `src/test/java/com/codetalker/firestick/llm/` - Java unit tests
+- [ ] `src/test/java/com/codetalker/firestick/integration/` - Integration tests
+- [ ] Performance benchmark results
+
+**Documentation Deliverables:**
+- [ ] `llm-service/README.md` - Setup and usage guide
+- [ ] `llm-service/API.md` - API endpoint documentation
+- [ ] `docs/LLM_INTEGRATION.md` - Architecture and integration guide
+- [ ] Performance benchmarking report
+- [ ] OpenAPI/Swagger schema updated
+
+**Configuration Deliverables:**
+- [ ] `.env.example` for Python service
+- [ ] `application.properties` updates for Java backend
+- [ ] Docker setup (optional but recommended) for reproducible environment
+
+---
+
+## Phase 4b Risks & Mitigation
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|-----------|
+| Model too slow for UI | Medium | High | Implement caching; use 4-bit quantization |
+| Python/Java integration issues | Low | High | Start with HTTP mock tests; verify early |
+| Memory pressure on consumer hardware | Medium | Medium | Monitor; implement request queue if needed |
+| Model quality (poor explanations) | Low | Medium | Fine-tune prompts; test on real code first |
+| LLM service outages | Low | Medium | Graceful degradation; health checks |
+
+---
+
 ---
 
 # Phase 5: Web UI (Weeks 9-10)
@@ -8238,3 +8859,14 @@ Document what you learned:
 
 <!-- @SKIP-COUNT:END deferred -->
 
+
+ 
+ # #   A u t o - D e r i v e d   A p p   N a m e s   F e a t u r e   ( N o v e m b e r   1 3 ,   2 0 2 5 ) 
+ 
+ 
+ 
+ # # #   F e a t u r e   O v e r v i e w 
+ 
+ A u t o - d e r i v e   a p p   n a m e s   f r o m   f o l d e r   n a m e s   w i t h   o v e r r i d e   c a p a b i l i t y   a n d   r e n a m e   e n d p o i n t . 
+ 
+ 

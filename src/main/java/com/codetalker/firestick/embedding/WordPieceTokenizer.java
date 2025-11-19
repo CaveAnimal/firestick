@@ -90,7 +90,11 @@ public class WordPieceTokenizer {
                     break;
                 } else {
                     ids.add(subId); mask.add(1);
-                    int stepLen = subToken.startsWith("##") ? subToken.length() - 2 : subToken.length();
+                    // subToken is set when subId != null; guard against static analysis warnings
+                    int stepLen = 0;
+                    if (subToken != null) {
+                        stepLen = subToken.startsWith("##") ? subToken.length() - 2 : subToken.length();
+                    }
                     start += stepLen;
                 }
             }

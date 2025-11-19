@@ -92,8 +92,13 @@ public class CodeParserService {
                     log.warn("JavaParser returned empty result for file '{}'", filePath);
                 }
                 return codeFile;
-            } catch (Exception e) {
-                log.error("Failed to parse file: {}", filePath, e);
+            } catch (java.io.IOException e) {
+                log.error("Failed to read file for parsing: {}", filePath, e);
+                throw new CodeParsingException("Failed to parse file", filePath, e);
+            } catch (RuntimeException e) {
+                // JavaParser throws unchecked ParseProblemException on malformed code; wrap it so callers
+                // can handle parsing errors explicitly.
+                log.error("Runtime parsing error for file {}", filePath, e);
                 throw new CodeParsingException("Failed to parse file", filePath, e);
             }
         }

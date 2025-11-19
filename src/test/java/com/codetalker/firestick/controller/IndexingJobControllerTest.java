@@ -16,6 +16,7 @@ import com.codetalker.firestick.service.dto.IndexingReport;
 import com.codetalker.firestick.service.dto.IndexingRequest;
 
 @SpringBootTest
+@org.springframework.test.context.ActiveProfiles("test")
 @AutoConfigureMockMvc
 class IndexingJobControllerTest {
 

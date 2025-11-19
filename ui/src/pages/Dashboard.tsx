@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import AppSelector from '../shared/AppSelector'
+import { useSearch } from '../state/SearchContext'
 import { useNavigate } from 'react-router-dom'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts'
 import { getDashboardSummary, type DashboardSummary } from '../api'
 
 export default function DashboardPage() {
+  const { app } = useSearch()
   const navigate = useNavigate()
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [error, setError] = useState<string>('')
@@ -14,7 +17,7 @@ export default function DashboardPage() {
     ;(async () => {
       try {
         setLoading(true)
-        const s = await getDashboardSummary()
+  const s = await getDashboardSummary(app)
         if (!cancelled) setSummary(s)
       } catch (e: any) {
         if (!cancelled) setError(e?.message || 'Failed to load dashboard')
@@ -23,7 +26,7 @@ export default function DashboardPage() {
       }
     })()
     return () => { cancelled = true }
-  }, [])
+  }, [app])
 
   const data = useMemo(() => (
     summary?.chart || []
@@ -31,6 +34,9 @@ export default function DashboardPage() {
 
   return (
     <div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <AppSelector compact />
+      </div>
       <h2>Analysis Dashboard</h2>
       {loading && <div role="status" aria-live="polite" style={{ marginBottom: 8 }}>Loading dashboard…</div>}
       {error && <div role="alert" style={{ color: '#b00020', marginBottom: 8 }}>{error}</div>}

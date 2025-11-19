@@ -72,6 +72,7 @@ public class OnnxEmbedder implements Closeable {
         try (OrtSession.Result result = session.run(inputs)) {
             // Take first output (commonly last_hidden_state)
             Object out0 = result.get(0).getValue();
+            if (out0 == null) throw new OrtException("ONNX model returned null output");
             if (out0 instanceof float[][][] lastHidden) {
                 return meanPool(lastHidden, tok.attentionMask());
             } else if (out0 instanceof float[][] pooled) {
@@ -123,8 +124,14 @@ public class OnnxEmbedder implements Closeable {
     @Override
     public void close() throws IOException {
         try {
-            session.close();
-        } catch (OrtException ignored) {}
-        env.close();
+            if (session != null) session.close();
+        } catch (Exception ignored) {
+            // swallow close exception
+        }
+        try {
+            if (env != null) env.close();
+        } catch (Exception ignored) {
+            // swallowed
+        }
     }
 }
