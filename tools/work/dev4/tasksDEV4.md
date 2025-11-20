@@ -120,7 +120,7 @@
 
 ## Phase 5b: Method-Level Summarization (Granular Insights) (Week 5)
 
-**Status:** 0% Complete
+**Status:** 100% Complete
 **Goal:** Enhance precision by summarizing individual methods.
 
 - `[X]` **Task 5b.1:** Database Schema Updates
@@ -144,3 +144,12 @@
     - `[X]` Display "Searching for related terms: [List]" to give user feedback (Backend adds this as an Insight)
 - `[X]` **Task 6.2:** Render the LLM-generated answer at the top of the search results (Existing UI handles this via Insights)
 - `[X]` **Task 6.3:** Add "Regenerate" button to try with a different model or prompt (advanced) (Deferred/Optional)
+
+## Phase 7: Maintenance & Cleanup
+
+**Status:** 100% Complete
+**Goal:** Ensure repository hygiene and performance.
+
+- `[X]` **Task 7.1:** Git Repository Cleanup
+    - `[X]` Update `.gitignore` to exclude generated files (indices, models, logs, node_modules)
+    - `[X]` Remove ignored files from git tracking (`git rm --cached`)
