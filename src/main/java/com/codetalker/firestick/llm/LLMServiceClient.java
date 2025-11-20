@@ -27,7 +27,22 @@ public interface LLMServiceClient {
     java.util.List<String> detectPatterns(String code) throws LLMServiceException;
     
     /**
+     * Expand a user query with related technical terms
+     */
+    java.util.List<String> expandQuery(String query) throws LLMServiceException;
+
+    /**
+     * Generate a high-level summary of the file content.
+     */
+    String summarize(String content) throws LLMServiceException;
+
+    /**
      * Check if service is healthy and responsive
      */
     boolean isHealthy();
+
+    /**
+     * Get detailed health info including model name
+     */
+    java.util.Map<String, Object> getHealthInfo();
 }

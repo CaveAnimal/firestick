@@ -59,3 +59,23 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Lucene Search Indices
+lucene-indices/
+
+# LLM Models
+models/
+chroma/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+logs/
+
+# UI / Node
+ui/node_modules/
+ui/dist/
+ui/coverage/

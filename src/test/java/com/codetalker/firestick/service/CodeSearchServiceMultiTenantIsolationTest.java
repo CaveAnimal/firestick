@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Verifies logical multi-tenancy isolation in {@link CodeSearchService}.
@@ -14,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
  * when app is null or "default" (backward compatible behavior).
  */
 @SpringBootTest
-@org.springframework.test.context.ActiveProfiles("test")
+@ActiveProfiles("test")
 class CodeSearchServiceMultiTenantIsolationTest {
 
     @Autowired

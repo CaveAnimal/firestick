@@ -34,6 +34,8 @@ public class IndexingService {
     private final IndexingJobRepository jobRepository;
     private final CodeFileRepository codeFileRepository;
     private final CodeChunkRepository codeChunkRepository;
+    private final com.codetalker.firestick.llm.LLMServiceClient llmServiceClient;
+    private final SummaryAggregationService summaryAggregationService;
     private final ProgressBus progressBus;
     private final IndexingJobControl jobControl;
 
@@ -45,6 +47,8 @@ public class IndexingService {
             IndexingJobRepository jobRepository,
             CodeFileRepository codeFileRepository,
             CodeChunkRepository codeChunkRepository,
+            com.codetalker.firestick.llm.LLMServiceClient llmServiceClient,
+            SummaryAggregationService summaryAggregationService,
             ProgressBus progressBus,
             IndexingJobControl jobControl) {
         this.fileDiscoveryService = fileDiscoveryService;
@@ -54,6 +58,8 @@ public class IndexingService {
         this.jobRepository = jobRepository;
         this.codeFileRepository = codeFileRepository;
         this.codeChunkRepository = codeChunkRepository;
+        this.llmServiceClient = llmServiceClient;
+        this.summaryAggregationService = summaryAggregationService;
         this.progressBus = progressBus;
         this.jobControl = jobControl;
     }
@@ -104,12 +110,32 @@ public class IndexingService {
                 // Incremental check by lastModified timestamp
                 java.time.Instant fsLastModified = java.nio.file.Files.getLastModifiedTime(p).toInstant();
                 var existing = codeFileRepository.findByFilePathAndAppName(p.toString(), request.appName());
-                if (existing.isPresent() && fsLastModified.equals(existing.get().getLastModified())) {
+                
+                // Skip ONLY if file hasn't changed AND we already have a summary
+                // This ensures previously indexed files get re-processed to generate summaries
+                if (existing.isPresent() && 
+                    fsLastModified.equals(existing.get().getLastModified()) && 
+                    existing.get().getSummary() != null && !existing.get().getSummary().isBlank()) {
                     skippedCount.incrementAndGet();
                     continue;
                 }
 
                 CodeFile codeFile = codeParserService.parseFile(p.toString());
+                
+                // Generate Summary using LLM
+                try {
+                    String content = java.nio.file.Files.readString(p);
+                    // Truncate if too large for LLM context (simple safeguard)
+                    if (content.length() > 32000) {
+                        content = content.substring(0, 32000) + "\n... (truncated)";
+                    }
+                    String summary = llmServiceClient.summarize(content);
+                    codeFile.setSummary(summary);
+                } catch (Exception e) {
+                    log.warn("Failed to generate summary for file: {}", p, e);
+                    // Continue without summary
+                }
+
                 codeFile.setAppName(request.appName());
                 parsedCount.incrementAndGet();
                 List<CodeChunk> chunks = codeFile.getChunks();
@@ -117,11 +143,27 @@ public class IndexingService {
                     chunkCount.addAndGet(chunks.size());
                     // 3) Index & 4) Embed (mock)
                     for (CodeChunk c : chunks) {
+                        // Method-Level Summarization
+                        if ("method".equals(c.getType()) && c.getContent().length() > 500) { // Only summarize methods > ~500 chars
+                            try {
+                                String methodSummary = llmServiceClient.summarize(c.getContent());
+                                c.setSummary(methodSummary);
+                            } catch (Exception e) {
+                                log.warn("Failed to summarize method chunk: {}", c.getName(), e);
+                            }
+                        }
+
                         String id = buildDocId(codeFile, c);
                         String content = c.getContent() == null ? "" : c.getContent();
                         // propagate tenant/app name into chunk & index
                         c.setAppName(request.appName());
                         codeSearchService.indexCode(id, request.appName(), content);
+                        
+                        // Index method summary if available
+                        if (c.getSummary() != null && !c.getSummary().isBlank()) {
+                            codeSearchService.indexSummary(id + "_summary", request.appName(), c.getSummary(), "method_summary");
+                        }
+
                         indexedDocs.incrementAndGet();
                         float[] vec = embeddingService.getEmbedding(content);
                         if (vec != null && vec.length > 0) embeddings.incrementAndGet();
@@ -138,6 +180,7 @@ public class IndexingService {
                         managedFile.setLastModified(codeFile.getLastModified());
                         managedFile.setHash(codeFile.getHash());
                         managedFile.setAppName(request.appName());
+                        managedFile.setSummary(codeFile.getSummary());
                         managedFile = codeFileRepository.save(managedFile);
                         // remove old chunks for this file
                         var oldChunks = codeChunkRepository.findByFile(managedFile);
@@ -152,11 +195,20 @@ public class IndexingService {
                             managedFile.setAppName(request.appName());
                             managedFile.setLastModified(codeFile.getLastModified());
                             managedFile.setHash(codeFile.getHash());
+                            managedFile.setSummary(codeFile.getSummary());
                             managedFile = codeFileRepository.save(managedFile);
                         } else {
-                            managedFile = codeFileRepository.save(new CodeFile(codeFile.getAppName(), codeFile.getFilePath(), codeFile.getLastModified(), codeFile.getHash()));
+                            managedFile = new CodeFile(codeFile.getAppName(), codeFile.getFilePath(), codeFile.getLastModified(), codeFile.getHash());
+                            managedFile.setSummary(codeFile.getSummary());
+                            managedFile = codeFileRepository.save(managedFile);
                         }
                     }
+                    
+                    // Index Summary
+                    if (managedFile.getSummary() != null && !managedFile.getSummary().isBlank()) {
+                        codeSearchService.indexSummary("summary_" + managedFile.getId(), request.appName(), managedFile.getSummary(), "file_summary");
+                    }
+
                     for (CodeChunk c : chunks) {
                         c.setFile(managedFile);
                         codeChunkRepository.save(c);
@@ -178,6 +230,17 @@ public class IndexingService {
         }
 
         long endedAt = System.currentTimeMillis();
+
+        // Trigger "Reduce" phase: Aggregate summaries by folder
+        if (errors.isEmpty() && !jobControl.isCancelled(job.getId())) {
+            try {
+                log.info("[Indexing] Starting Map-Reduce aggregation for app: {}", job.getAppName());
+                summaryAggregationService.aggregateSummaries(job.getAppName());
+            } catch (Exception e) {
+                log.error("[Indexing] Failed to aggregate summaries", e);
+                errors.add("Summary aggregation failed: " + e.getMessage());
+            }
+        }
 
         // Update job status and metrics
         try {
@@ -255,17 +318,26 @@ public class IndexingService {
     }
 
     public List<String> getAvailableApps() {
-        // Combine distinct app names observed in indexing jobs and code files
+        // Combine distinct app names observed in indexing jobs, code files, and Lucene indices
         try {
             List<String> jobs = jobRepository.findDistinctAppNames();
             List<String> files = codeFileRepository.findDistinctAppNames();
+            List<String> indices = codeSearchService.getAvailableApps();
+            
             java.util.Set<String> union = new java.util.TreeSet<>(); // TreeSet keeps natural order (alphabetical)
             if (jobs != null) union.addAll(jobs);
             if (files != null) union.addAll(files);
+            if (indices != null) union.addAll(indices);
+            
             return new ArrayList<>(union);
         } catch (Exception e) {
-            log.warn("Failed to retrieve apps from both jobs and code files, falling back to jobs only", e);
-            return jobRepository.findDistinctAppNames();
+            log.warn("Failed to retrieve apps from jobs, code files, and indices", e);
+            // Fallback: try to get at least something
+            try {
+                return jobRepository.findDistinctAppNames();
+            } catch (Exception ex) {
+                return new ArrayList<>();
+            }
         }
     }
 

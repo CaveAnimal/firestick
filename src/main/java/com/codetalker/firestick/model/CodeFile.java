@@ -34,6 +34,9 @@ public class CodeFile {
     @Column(nullable = false, length = 128)
     private String hash;
 
+    @Column(name = "summary", columnDefinition = "CLOB")
+    private String summary;
+
     // Non-persistent field for extracted code chunks
     @jakarta.persistence.Transient
     private java.util.List<com.codetalker.firestick.model.CodeChunk> chunks = new java.util.ArrayList<>();
@@ -65,8 +68,21 @@ public class CodeFile {
     public Instant getLastModified() { return lastModified; }
     public void setLastModified(Instant lastModified) { this.lastModified = lastModified; }
 
-    public String getHash() { return hash; }
-    public void setHash(String hash) { this.hash = hash; }
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
 
     public java.util.List<com.codetalker.firestick.model.CodeChunk> getChunks() { return chunks; }
     public void setChunks(java.util.List<com.codetalker.firestick.model.CodeChunk> chunks) { this.chunks = chunks; }

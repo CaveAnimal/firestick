@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Guarded smoke test for ONNX mode. Skips automatically if model files are missing.
  */
+@ActiveProfiles("test")
 @SpringBootTest(properties = {
         "embedding.mode=onnx",
         "embedding.dimension=384",

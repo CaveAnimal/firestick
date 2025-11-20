@@ -217,6 +217,38 @@ public class CodeSearchService {
         }
     }
 
+    /**
+     * Index a summary (file or folder).
+     *
+     * @param id Unique identifier for the summary
+     * @param app Application/tenant name
+     * @param summary The summary content to index
+     * @param type The type of summary ("file_summary" or "folder_summary")
+     */
+    public void indexSummary(String id, String app, String summary, String type) {
+        if (app == null || app.isBlank()) {
+            app = "default";
+        }
+        
+        try {
+            Directory directory = getIndexDirectory(app);
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
+            try (IndexWriter writer = new IndexWriter(directory, config)) {
+                Document doc = new Document();
+                doc.add(new StringField("id", id, Field.Store.YES));
+                doc.add(new StringField("app", app, Field.Store.YES));
+                doc.add(new StringField("type", type, Field.Store.YES));
+                doc.add(new TextField("content", summary, Field.Store.YES));
+                writer.addDocument(doc);
+                writer.commit();
+            }
+            log.debug("Indexed summary id={} app={} type={}", id, app, type);
+        } catch (IOException e) {
+            log.error("Failed to index summary id={} app={}", id, app, e);
+            throw new IndexingException("Failed to index summary", e);
+        }
+    }
+
     private void resetIndexForApp(String app) throws IOException {
         // Close and remove any existing writer for the app
         var writer = indexWriters.remove(app);
@@ -349,6 +381,24 @@ public class CodeSearchService {
         
     // Preserve insertion order but remove duplicates if any
     return new ArrayList<>(uniqueResults);
+    }
+
+    /**
+     * List all apps that have a Lucene index directory.
+     */
+    public List<String> getAvailableApps() {
+        List<String> apps = new ArrayList<>();
+        if (Files.exists(baseIndexPath) && Files.isDirectory(baseIndexPath)) {
+            try (java.util.stream.Stream<Path> stream = Files.list(baseIndexPath)) {
+                stream.filter(Files::isDirectory)
+                      .map(Path::getFileName)
+                      .map(Path::toString)
+                      .forEach(apps::add);
+            } catch (IOException e) {
+                log.warn("Failed to list Lucene index directories", e);
+            }
+        }
+        return apps;
     }
 
     // Backward compatibility overloads (pre-multi-tenant signature)

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import com.codetalker.firestick.model.IndexingJob;
 import com.codetalker.firestick.repository.CodeChunkRepository;
@@ -14,6 +15,7 @@ import com.codetalker.firestick.service.dto.IndexingReport;
 import com.codetalker.firestick.service.dto.IndexingRequest;
 
 @SpringBootTest
+@ActiveProfiles("test")
 class IndexingServiceTest {
 
     @Autowired

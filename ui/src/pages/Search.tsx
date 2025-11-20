@@ -16,7 +16,7 @@ export default function SearchPage() {
   const [open, setOpen] = useState(false)
   const [viewer, setViewer] = useState<{ path: string, content: string, line?: number } | null>(null)
   const [recent, setRecent] = useState<string[]>([])
-  const [searchMode, setSearchMode] = useState<'lucene'|'llm'|'both'>('lucene')
+  // searchMode removed - we always run combined search
   const [llmInsights, setLlmInsights] = useState<LLMInsight[]>([])
   const [llmSuggestions, setLlmSuggestions] = useState<LLMSuggestedFile[]>([])
   const [llmLoading, setLlmLoading] = useState(false)
@@ -25,6 +25,16 @@ export default function SearchPage() {
   const [indexStatus, setIndexStatus] = useState<{ totalFiles: number, totalChunks: number, hasIndexedData: boolean } | null>(null)
   // App list is provided by AppSelector; Search no longer fetches apps directly
   const [params] = useSearchParams()
+
+  const clearPage = () => {
+    setQuery('')
+    setPage(1)
+    search({ query: '', page: 1 }) // Clears Lucene results
+    setLlmInsights([])
+    setLlmSuggestions([])
+    setLlmError(null)
+    setShowLLMResults(false)
+  }
 
   useEffect(() => {
     // fetch index status on load and when app changes
@@ -37,6 +47,9 @@ export default function SearchPage() {
       } catch (e) { /* ignore */ }
     }
     fetchIndexStatus()
+    // Clear page when app changes
+    clearPage()
+
     try {
       const saved = JSON.parse(localStorage.getItem('search:recent') || '[]')
       if (Array.isArray(saved)) setRecent(saved.slice(0, 10))
@@ -84,9 +97,6 @@ export default function SearchPage() {
     }
     const p = opts?.page ?? 1
     setPage(p)
-    setSearchMode('lucene')
-    setShowLLMResults(false)
-    setLlmError(null)
     search({ page: p })
     const q = (query || '').trim()
     if (q) {
@@ -101,7 +111,6 @@ export default function SearchPage() {
   const runLLMSearch = async () => {
     const q = (query || '').trim()
     if (!q) return
-    setSearchMode('llm')
     setShowLLMResults(true)
     setLlmLoading(true)
     setLlmError(null)
@@ -119,7 +128,6 @@ export default function SearchPage() {
       console.debug("LLM: response body", data)
       setLlmInsights(data.insights || [])
       setLlmSuggestions(data.suggestedFiles || [])
-      setPage(1)
     } catch (e) {
       console.error("LLM: search error", e)
       setLlmInsights([])
@@ -130,19 +138,9 @@ export default function SearchPage() {
     }
   }
 
-  const runBothSearches = async () => {
-    setSearchMode('both')
-    setShowLLMResults(true)
-    runLuceneSearch({ page: 1 })
-    await runLLMSearch()
-  }
-
   const runSearch = (opts?: { page?: number }) => {
-    switch (searchMode) {
-      case 'lucene': return runLuceneSearch(opts)
-      case 'llm': return runLLMSearch()
-      case 'both': return runBothSearches()
-    }
+    runLuceneSearch(opts)
+    runLLMSearch()
   }
 
   return (
@@ -150,21 +148,10 @@ export default function SearchPage() {
       <h2>Search</h2>
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         <SearchBar value={query} onChange={setQuery} onSubmit={() => runSearch({ page: 1 })} />
-        {/* Search mode buttons (always visible) */}
-        <div style={{ display: 'flex', gap: 8, marginLeft: 8 }}>
-          <button
-            onClick={() => runLuceneSearch({ page: 1 })}
-            style={{ padding: '8px 10px', background: searchMode === 'lucene' ? '#4CAF50' : '#f0f0f0', color: searchMode === 'lucene' ? 'white' : 'black', border: '1px solid #ccc', borderRadius: 4 }}
-          >🔍 Lucene</button>
-          <button
-            onClick={() => { console.info('LLM button clicked', { query, app, time: new Date().toISOString() }); runLLMSearch() }}
-            style={{ padding: '8px 10px', background: searchMode === 'llm' ? '#2196F3' : '#f0f0f0', color: searchMode === 'llm' ? 'white' : 'black', border: '1px solid #ccc', borderRadius: 4 }}
-          >🤖 LLM</button>
-          <button
-            onClick={() => runBothSearches()}
-            style={{ padding: '8px 10px', background: searchMode === 'both' ? '#FF9800' : '#f0f0f0', color: searchMode === 'both' ? 'white' : 'black', border: '1px solid #ccc', borderRadius: 4 }}
-          >⚡ Both</button>
-        </div>
+        <button
+          onClick={clearPage}
+          style={{ padding: '8px 12px', marginLeft: 8, background: '#f0f0f0', border: '1px solid #ccc', borderRadius: 4, cursor: 'pointer' }}
+        >Clear</button>
         <div style={{ marginLeft: 8 }}>
           <AppSelector />
         </div>
@@ -207,18 +194,6 @@ export default function SearchPage() {
         </div>
       )}
       <Filters filters={filters} onChange={setFilters} />
-      {error && <div style={{ color: 'red' }}>Error: {error}</div>}
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        <ResultsList results={results} onOpen={handleResultOpen} />
-      )}
-      <Pagination
-        page={page}
-        pageSize={10}
-        total={total}
-        onPageChange={(p: number) => runSearch({ page: p })}
-      />
       {showLLMResults && (
         <LLMResults
           insights={llmInsights}
@@ -232,6 +207,18 @@ export default function SearchPage() {
           }}
         />
       )}
+      {error && <div style={{ color: 'red' }}>Error: {error}</div>}
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <ResultsList results={results} onOpen={handleResultOpen} />
+      )}
+      <Pagination
+        page={page}
+        pageSize={10}
+        total={total}
+        onPageChange={(p: number) => runSearch({ page: p })}
+      />
       <Modal open={open} onClose={() => setOpen(false)} title={viewer?.path ?? 'Code'}>
         {viewer && (
           <div style={{ height: '100%' }}>

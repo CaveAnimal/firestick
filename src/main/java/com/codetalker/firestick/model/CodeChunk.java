@@ -41,6 +41,10 @@ public class CodeChunk {
     @Column(name = "app_name", nullable = true, length = 64)
     private String appName;
 
+    @Lob
+    @Column(name = "summary", columnDefinition = "CLOB")
+    private String summary;
+
     public CodeChunk() {}
 
     private String name;
@@ -136,8 +140,21 @@ public class CodeChunk {
     public String getType() { return type == null ? null : type.trim(); }
     public void setType(String type) { this.type = type; }
 
-    public String getAppName() { return appName; }
-    public void setAppName(String appName) { this.appName = appName; }
+    public String getAppName() {
+        return appName;
+    }
+
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
 
     // Hierarchical relationships (not persisted)
     @Transient

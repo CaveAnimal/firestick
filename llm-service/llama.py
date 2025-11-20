@@ -168,47 +168,43 @@ class CodeLlamaProcessor:
     def _build_explanation_prompt(self, code: str) -> str:
         """Build prompt for code explanation"""
         code = self._truncate_code(code, 1000)
-        return f"""Explain this Java method in 2-3 sentences:
+        return f"""[INST] Explain this Java method in 2-3 sentences:
 
 ```java
 {code}
 ```
-
-Explanation:"""
+[/INST]"""
     
     def _build_relationship_prompt(self, from_class: str, to_class: str, context: str) -> str:
         """Build prompt for dependency analysis"""
         context = self._truncate_code(context, 500)
-        return f"""Explain why {from_class} depends on {to_class}:
+        return f"""[INST] Explain why {from_class} depends on {to_class}:
 
 Context:
 ```java
 {context}
 ```
-
-Explanation:"""
+[/INST]"""
     
     def _build_docs_prompt(self, code: str) -> str:
         """Build prompt for documentation generation"""
         code = self._truncate_code(code, 1000)
-        return f"""Generate Javadoc documentation for this Java method:
+        return f"""[INST] Generate Javadoc documentation for this Java method:
 
 ```java
 {code}
 ```
-
-Documentation:"""
+[/INST]"""
     
     def _build_pattern_prompt(self, code: str) -> str:
         """Build prompt for pattern detection"""
         code = self._truncate_code(code, 1000)
-        return f"""Identify design patterns and anti-patterns in this code (list as comma-separated values):
+        return f"""[INST] Identify design patterns and anti-patterns in this code (list as comma-separated values):
 
 ```java
 {code}
 ```
-
-Patterns: """
+[/INST]"""
     
     def _truncate_code(self, code: str, max_chars: int) -> str:
         """Truncate code to fit in context window"""

@@ -13,6 +13,8 @@ export default function Header() {
   const [embedMode, setEmbedMode] = useState<string>('')
   const [embedMsg, setEmbedMsg] = useState<string>('')
   const [lastEmbedFetch, setLastEmbedFetch] = useState<number>(0)
+  const [llmStatus, setLlmStatus] = useState<'unknown' | 'ok' | 'down'>('unknown')
+  const [llmModel, setLlmModel] = useState<string>('')
 
   useEffect(() => {
     let mounted = true
@@ -47,6 +49,31 @@ export default function Header() {
       }
     }
 
+    async function checkLLM() {
+      try {
+        const controller = new AbortController()
+        const id = window.setTimeout(() => controller.abort(), 4000)
+        const res = await fetch('/api/llm/health', { signal: controller.signal })
+        window.clearTimeout(id)
+        if (!mounted) return
+        if (res.ok) {
+          const json = await res.json().catch(() => ({} as any))
+          if (json && (json.status === 'UP' || json.status === 'healthy')) {
+            setLlmStatus('ok')
+            setLlmModel(json.model || 'Unknown')
+          } else {
+            setLlmStatus('down')
+            setLlmModel('')
+          }
+        } else {
+          setLlmStatus('down')
+        }
+      } catch (e) {
+        if (!mounted) return
+        setLlmStatus('down')
+      }
+    }
+
     async function check() {
       try {
         const controller = new AbortController()
@@ -61,18 +88,22 @@ export default function Header() {
             setMsg('')
             // Only attempt embedding mode fetch when backend healthy
             fetchEmbeddingInfo()
+            checkLLM()
           } else {
             setStatus('down')
             setMsg('Unexpected health payload')
+            setLlmStatus('down')
           }
         } else {
           setStatus('down')
           setMsg(`HTTP ${res.status}`)
+          setLlmStatus('down')
         }
       } catch (e: any) {
         if (!mounted) return
         setStatus('down')
         setMsg(e?.name === 'AbortError' ? 'Timed out' : (e?.message || 'Fetch failed'))
+        setLlmStatus('down')
       }
     }
 
@@ -107,6 +138,10 @@ export default function Header() {
           <span style={{ display: 'flex', alignItems: 'center' }} title={modeTitle}>
             <Dot color={modeColor} />
             <span>{modeLabel}</span>
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center' }} title={llmModel ? `Model: ${llmModel}` : 'LLM Service Disconnected'}>
+            <Dot color={llmStatus === 'ok' ? '#2ecc71' : llmStatus === 'down' ? '#e74c3c' : '#bdc3c7'} />
+            <span>{llmStatus === 'ok' ? `LLM: ${llmModel}` : 'LLM: Disconnected'}</span>
           </span>
         </div>
       </Toolbar>

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import static org.springframework.test.web.client.ExpectedCount.once;
 import org.springframework.test.web.client.MockRestServiceServer;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
@@ -18,6 +19,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import org.springframework.web.client.RestTemplate;
 
+@ActiveProfiles("test")
 @SpringBootTest(properties = {
         "chroma.base-url=http://localhost:8000"
 })

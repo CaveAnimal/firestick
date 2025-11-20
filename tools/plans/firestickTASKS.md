@@ -8860,13 +8860,3 @@ Document what you learned:
 <!-- @SKIP-COUNT:END deferred -->
 
 
- 
- # #   A u t o - D e r i v e d   A p p   N a m e s   F e a t u r e   ( N o v e m b e r   1 3 ,   2 0 2 5 ) 
- 
- 
- 
- # # #   F e a t u r e   O v e r v i e w 
- 
- A u t o - d e r i v e   a p p   n a m e s   f r o m   f o l d e r   n a m e s   w i t h   o v e r r i d e   c a p a b i l i t y   a n d   r e n a m e   e n d p o i n t . 
- 
- 
