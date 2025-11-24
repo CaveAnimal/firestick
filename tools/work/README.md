@@ -37,3 +37,22 @@ tools\work\dev1\scripts\dev1-update.ps1
 tools\work\dev2\scripts\dev2-check.ps1
 tools\work\dev2\scripts\dev2-update.ps1
 ```
+
+## Global helper: compute percent from markdown
+
+A small shared script is available at `tools/scripts/compute_percent.py` that inspects `tools/work/*/tasksDEV*.md`, computes the total vs completed checkboxes, and updates the top-level summary lines (Total Tasks, Completed/Tested, Percent Complete, Last Updated).
+
+Run it (preview mode) from PowerShell:
+
+```powershell
+python tools\scripts\compute_percent.py
+```
+
+To update files in-place (creates .bak backups):
+
+```powershell
+python tools\scripts\compute_percent.py --apply
+# or
+tools\scripts\run-compute-percent.ps1 -Apply
+```
+
