@@ -2,10 +2,10 @@
 
 ## Priority (do in this order)
 1) Work Reports (percent complete required) 2) Core logic 3) UI 4) Data/models 5) Errors/validation 6) Unit tests 7) Docs 8) Perf 9) Integration tests 10) Cleanup/refactor 11) Build 12) CI/CD 13) Deploy
-- Dev2 note: When in doubt or short on time, update your Work Report first; it supersedes all other tasks.
+- Tip: When in doubt or short on time, update your Work Report first; it supersedes other tasks unless your lead instructs otherwise. This guidance applies to every dev role (dev1, dev2, dev3, ...).
 
 ## Single-Task Workflow (read only what you need)
-- Tasks: Each developer reads ONLY the tasks assigned to themselves in their personal file (`tools/work/dev1/tasksDEV1.md` for DEV1, `tools/work/dev2/tasksDEV2.md` for DEV2, `tools/work/dev3/tasksDEV3.md` for DEV3). Only refer to the master task list for status reporting or coordination.
+- Tasks: Each developer reads ONLY the tasks assigned to their role in their personal file (pattern: `tools/work/dev{N}/tasksDEV{N}.md`, e.g., `tools/work/dev1/tasksDEV1.md`). Only refer to the master task list for cross-role status reporting or coordination.
 - Examples: Each developer reads ONLY the example(s) directly relevant to their current task in `tools/plans/firestickEXAMPLES.md`.
 - Read `tools/experiences/LESSONS_LEARNED.md` (Lessons Learned) for recent incidents and remediation before starting work.
 - PRD: read only the FRs your task touches (Section 5) + key use cases.
@@ -13,20 +13,14 @@
 - Stop reading when you can state: inputs, outputs, done criteria, and 2–3 tests.
 
 ## Per-Developer Task Lists & Scripts
-- Status markers: `[ ]` Not Started, `[-]` In Progress, `[X]` Completed, `[V]` Tested, `[!]` Blocked, `[>]` Deferred.
-- Scripts (one-step update):
-  - DEV1: `tools/work/dev1/scripts/dev1-check.ps1`, `tools/work/dev1/scripts/dev1-update.ps1`
-  - DEV2: `tools/work/dev2/scripts/dev2-check.ps1`, `tools/work/dev2/scripts/dev2-update.ps1`
-  - DEV3: `tools/work/dev3/scripts/dev3-check.ps1`, `tools/work/dev3/scripts/dev3-update.ps1`
-  - Note: `dev*-update.ps1` updates BOTH your personal summary and the master `## Task Summary` in `tools/plans/firestickTASKS.md`.
-- After marking a task `[X]` or `[V]`, run your update script:
-  - DEV1: `tools/work/dev1/scripts/dev1-update.ps1`
-  - DEV2: `tools/work/dev2/scripts/dev2-update.ps1`
-  - DEV3: `tools/work/dev3/scripts/dev3-update.ps1`
-- Use `check` scripts for quick, read-only verification anytime.
+ - Scripts (one-step update):
+  - Each role should follow the same convention under `tools/work/dev{N}/scripts/`:
+    - `dev{N}-check.ps1` — quick read-only verification for your personal task file
+    - `dev{N}-update.ps1` — updates BOTH your personal summary and the master `## Task Summary` in `tools/plans/firestickTASKS.md`
+  - Examples: `tools/work/dev1/scripts/dev1-check.ps1`, `tools/work/dev2/scripts/dev2-update.ps1`, or `tools/work/dev7/scripts/dev7-update.ps1`.
 
 ## Captain’s Log (mandatory, 1 line per entry)
-- Files: DEV1 `tools/work/dev1/dev1CAPTAINS_LOG.md`, DEV2 `tools/work/dev2/dev2CAPTAINS_LOG.md`, DEV3 `tools/work/dev3/dev3CAPTAINS_LOG.md`.
+ - Files: per-role captain's logs live at `tools/work/dev{N}/dev{N}CAPTAINS_LOG.md` (e.g., `tools/work/dev2/dev2CAPTAINS_LOG.md`). Create the file for your role if it does not exist.
 - Before coding (after required reading): `[YYYY-MM-DD HH:MM] TASK-ID — What: <plan> | Why: <reason>`
 - After completion (before updating task lists): `[YYYY-MM-DD HH:MM] TASK-ID — Work done: <summary> | Result: <outcome>`
 
@@ -35,17 +29,12 @@
 - Report counts and % by status; reconcile any contradictions immediately.
 
 ## Work Reports (percent complete required)
-- Every work report must end with a Percent Complete section using exactly this format (case and wording):
-  - `Dev1 <number> percent complete`
-  - `Dev2 <number> percent complete`
-  - `Dev3 <number> percent complete`
+ - Every work report must end with a Percent Complete section using exactly this format (case and wording):
+  - `Dev<N> <number> percent complete` (replace `<N>` with your role number; e.g., `Dev1 20 percent complete`)
   - `firestick <number> percent complete`
-- Compute the numbers by running the update scripts before reporting so summaries are current:
-  - DEV1: `tools/work/dev1/scripts/dev1-update.ps1`
-  - DEV2: `tools/work/dev2/scripts/dev2-update.ps1`
-  - DEV3: `tools/work/dev3/scripts/dev3-update.ps1`
-  - Note: Each `dev*-update.ps1` also refreshes the master summary in `tools/plans/firestickTASKS.md` (used for the `firestick` percent).
- - DEV3 Scope: Mirror ONLY the master `## Current Phase — Focused Scope (Counted)` tasks. All Deferred/Backlog content is excluded via skip-count markers to keep DEV3 velocity focused on the active sprint.
+ - Compute the numbers by running your role's update script before reporting so summaries are current (e.g., `tools/work/dev4/scripts/dev4-update.ps1`).
+ - Note: Each `dev{N}-update.ps1` should also refresh the master summary in `tools/plans/firestickTASKS.md` (used for the `firestick` percent).
+ - Role-specific scope guidance (e.g., Dev3-focused scope): Mirror ONLY the master `## Current Phase — Focused Scope (Counted)` tasks if your role's README specifies a limited scope. All Deferred/Backlog content is excluded via skip-count markers to keep velocity focused on the active sprint.
  - Compliance: Missing or malformed percent-complete lines will block task progress and PR approval until corrected.
 
 ## Anti-Patterns (avoid)
@@ -108,24 +97,24 @@
 - See `tools/experiences/LESSONS_LEARNED.md` (2025-11-12 entries) for detailed incident reports.
 
 ## Bookmarks (resume quickly)
-- Purpose: Jump back to the most relevant spot in your task file without scrolling.
-- Dev2 bookmarks:
-  - Config: `tools/work/dev2/tasksDEV2_bookmark.json` (holds `source`, `markers[]`, and `resume.preferredStartLine`).
-  - Resolver: `tools/work/dev2/scripts/dev2-resume.ps1`.
+ - Purpose: Jump back to the most relevant spot in your task file without scrolling.
+ - Per-role bookmarks:
+  - Config: `tools/work/dev{N}/tasksDEV{N}_bookmark.json` (holds `source`, `markers[]`, and `resume.preferredStartLine`).
+  - Resolver: `tools/work/dev{N}/scripts/dev{N}-resume.ps1`.
   - Behavior: Resolves the best line number using patterns in `markers`; prints `path:line`; with `-OpenInVSCode`, opens the file at that line (requires `code` on PATH).
 - Example (PowerShell):
 
 ```powershell
 # Print the location to resume editing
-e:\MyProjects\MyGitHubCopilot\firestick\fstk-001\tools\work\dev2\scripts\dev2-resume.ps1
+e:\MyProjects\MyGitHubCopilot\firestick\fstk-001\tools\work\dev{N}\scripts\dev{N}-resume.ps1
 
 # Or open directly in VS Code at the resolved line
-e:\MyProjects\MyGitHubCopilot\firestick\fstk-001\tools\work\dev2\scripts\dev2-resume.ps1 -OpenInVSCode
+e:\MyProjects\MyGitHubCopilot\firestick\fstk-001\tools\work\dev{N}\scripts\dev{N}-resume.ps1 -OpenInVSCode
 ```
 
-- Notes:
-  - Keep lightweight HTML anchors in the task file to improve resilience, e.g., `<!-- @anchor:dev2-recommendations-backlog -->`.
-  - Update `tasksDEV2_bookmark.json` if section headings or key phrases change significantly.
+ - Notes:
+  - Keep lightweight HTML anchors in your task file to improve resilience, e.g., `<!-- @anchor:dev{N}-recommendations-backlog -->`.
+  - Update `tasksDEV{N}_bookmark.json` if section headings or key phrases change significantly.
 
 ## Working Agreement — Time Awareness & Long-Running Operations
 
