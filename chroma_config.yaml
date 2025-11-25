@@ -1,0 +1,20 @@
+# ChromaDB Configuration
+# See: https://docs.trychroma.com/usage-guide#configuring-chroma
+
+# Server Connection
+host: "0.0.0.0"
+port: 8000
+
+# Persistence
+is_persistent: true
+# path is set via CLI argument in start-chroma.ps1
+
+# OpenTelemetry (OTel) Configuration
+# To see traces, you need an OTel collector running on localhost:4317
+# If you don't have one, you can ignore connection errors or set granularity to "none"
+chroma_otel_collection_endpoint: "http://localhost:4317"
+chroma_otel_service_name: "firestick-chroma"
+chroma_otel_granularity: "all" # Options: none, operation, operation_and_segment, all
+
+# Telemetry
+anonymized_telemetry: false

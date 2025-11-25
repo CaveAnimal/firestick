@@ -30,6 +30,18 @@ class IndexingJobControllerHappyPathTest {
     @MockBean
     private IndexingJobRepository repository;
 
+    @MockBean
+    private com.codetalker.firestick.repository.CodeFileRepository codeFileRepository;
+
+    @MockBean
+    private com.codetalker.firestick.repository.CodeChunkRepository codeChunkRepository;
+
+    @MockBean
+    private com.codetalker.firestick.repository.FolderSummaryRepository folderSummaryRepository;
+
+    @MockBean
+    private com.codetalker.firestick.repository.IndexingObjectRepository indexingObjectRepository;
+
     @Test
     void recent_withValidLimit_ShouldReturn200() throws Exception {
         IndexingJob j1 = new IndexingJob();

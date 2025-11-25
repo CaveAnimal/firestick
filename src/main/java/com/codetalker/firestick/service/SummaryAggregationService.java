@@ -34,10 +34,9 @@ public class SummaryAggregationService {
         this.codeSearchService = codeSearchService;
     }
 
-    public void aggregateSummaries(String appName) {
+    public int aggregateSummaries(String appName) {
         log.info("Starting summary aggregation for app: {}", appName);
         List<CodeFile> files = codeFileRepository.findByAppName(appName);
-        
         // Group files by folder
         Map<String, List<CodeFile>> filesByFolder = files.stream()
             .collect(Collectors.groupingBy(f -> Path.of(f.getFilePath()).getParent().toString()));
@@ -47,9 +46,12 @@ public class SummaryAggregationService {
             .sorted((p1, p2) -> Integer.compare(Path.of(p2).getNameCount(), Path.of(p1).getNameCount()))
             .collect(Collectors.toList());
 
+        int summarizedCount = 0;
         for (String folder : folders) {
             processFolder(folder, appName, filesByFolder.get(folder));
+            summarizedCount++;
         }
+        return summarizedCount;
     }
 
     private void processFolder(String folderPath, String appName, List<CodeFile> files) {
@@ -67,6 +69,11 @@ public class SummaryAggregationService {
 
             String prompt = "Summarize the purpose and architecture of this folder based on the file summaries above.";
             String summary = llmServiceClient.answerQuestion(prompt, context.toString());
+
+            if (summary == null || summary.isBlank()) {
+                log.warn("LLM returned null/empty summary for folder: {}. Skipping indexing of summary.", folderPath);
+                summary = "Summary unavailable (LLM service error)";
+            }
 
             FolderSummary folderSummary = folderSummaryRepository.findByFolderPathAndAppName(folderPath, appName)
                 .orElse(new FolderSummary(appName, folderPath, java.time.Instant.now(), ""));

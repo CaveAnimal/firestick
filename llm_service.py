@@ -9,6 +9,8 @@ import os
 import sys
 import json
 import logging
+import re
+from datetime import datetime
 from typing import List, Dict, Optional
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -139,21 +141,31 @@ def summarize():
         format_type = data.get('format', 'explanation')
         
         if format_type == 'docs':
-            prompt = f"""Generate JSDoc documentation for this code:
+            prompt = f"""[INST] Generate JSDoc documentation for this code:
 ```
 {code}
 ```
 
-Documentation:"""
+Documentation:
+[/INST]"""
         else:  # explanation or summary
-            prompt = f"""Explain what this code does in 2-3 sentences:
+            prompt = f"""[INST] Summarize the purpose and functionality of this code in complete sentences and paragraphs. Do not use bullet points or lists. Provide a high-level overview followed by specific details if necessary.
+
+Code:
 ```
 {code}
 ```
 
-Explanation:"""
+Summary:
+[/INST]"""
         
         explanation = generate_response(prompt, max_tokens=EXPLAIN_MAX_TOKENS)
+        
+        # Clean up potential tags if they appear
+        if explanation:
+             explanation = re.sub(r'\[[^\]]*\]', '', explanation)
+             explanation = re.sub(r'<[^>]*>', '', explanation)
+             explanation = explanation.strip()
         
         return jsonify({
             'code': code,
@@ -294,15 +306,27 @@ def expand_query():
         data = request.get_json()
         query = data.get('query', '')
         
+        # Clean query of potential formatting tags
+        if query:
+            query = re.sub(r'\[/?(TR|TD|TBL|TH|TABLE|tr|td|tbl|th|table).*?\]', '', query)
+            query = re.sub(r'<[^>]+>', '', query)
+            query = query.strip()
+        
         if not query:
             return jsonify({"error": "No query provided"}), 400
             
-        prompt = f"""You are an expert Java developer. Provide 5-10 technical keywords, class names, or concepts related to the following query for a legacy Java application. Do not explain, just list the terms separated by commas.
+        prompt = f"""[INST] Provide 5-10 keywords, concepts, or technical terms related to the following query for a software application. Include both functional terms and technical terms. Do not explain, just list the terms separated by commas.
 
 Query: {query}
-Terms:"""
+[/INST]"""
 
         response_text = generate_response(prompt, max_tokens=128)
+        
+        # Clean response text of tags before parsing
+        if response_text:
+            # Remove [ROW], [INST], [TR], etc. and HTML tags
+            response_text = re.sub(r'\[[^\]]*\]', ' ', response_text)
+            response_text = re.sub(r'<[^>]*>', ' ', response_text)
         
         # Parse response: split by commas or newlines, strip whitespace
         terms = []
@@ -310,8 +334,16 @@ Terms:"""
             # Handle comma-separated or newline-separated lists
             raw_terms = response_text.replace('\n', ',').split(',')
             for term in raw_terms:
-                clean_term = term.strip().strip('- ').strip()
-                if clean_term and len(clean_term) > 2:
+                # Remove leading numbers/bullets (e.g., "1.", "2)", "-")
+                clean_term = re.sub(r'^[\d\-\.\)\s]+', '', term).strip()
+                
+                # Filter out the original query, very long sentences, and repetitive phrases
+                if (clean_term and 
+                    len(clean_term) > 2 and 
+                    len(clean_term) < 40 and 
+                    clean_term.lower() not in query.lower() and 
+                    query.lower() not in clean_term.lower() and
+                    "to help a user" not in clean_term.lower()):
                     terms.append(clean_term)
         
         # Deduplicate
@@ -320,7 +352,8 @@ Terms:"""
         return jsonify({
             "success": True,
             "expanded_terms": terms,
-            "original_query": query
+            "original_query": query,
+            "timestamp": datetime.now().isoformat()
         })
 
     except Exception as e:
@@ -336,6 +369,12 @@ def answer_question():
         query = data.get('query', '')
         context_chunks = data.get('context_chunks', [])
         
+        # Clean query
+        if query:
+            query = re.sub(r'\[/?(TR|TD|TBL|TH|TABLE|tr|td|tbl|th|table).*?\]', '', query)
+            query = re.sub(r'<[^>]+>', '', query)
+            query = query.strip()
+        
         if not query:
             return jsonify({"error": "No query provided"}), 400
             
@@ -344,21 +383,30 @@ def answer_question():
         for i, chunk in enumerate(context_chunks):
             formatted_context += f"\n--- Chunk {i+1} ---\n{chunk}\n"
             
-        prompt = f"""Using the following code snippets, answer the user's original question. Cite specific classes or methods. If the answer is not in the context, state that.
+        prompt = f"""[INST] Using the following code snippets, answer the user's original question. Cite specific classes or methods. If the answer is not in the context, state that.
 
 Question: {query}
 
 Context:
 {formatted_context}
-
-Answer:"""
+[/INST]"""
 
         # Use a larger token limit for the answer
-        answer = generate_response(prompt, max_tokens=512)
+        answer = generate_response(prompt, max_tokens=1024)
+        
+        # Clean answer of tags
+        if answer:
+            # Remove [ROW], [INST], [TR], etc.
+            answer = re.sub(r'\[[^\]]*\]', ' ', answer)
+            # Remove HTML tags
+            answer = re.sub(r'<[^>]*>', ' ', answer)
+            # Remove leading "Answer:" or "Question:" if the model repeats it
+            answer = re.sub(r'^(Answer:|Question:)\s*', '', answer.strip(), flags=re.IGNORECASE)
         
         return jsonify({
             "success": True,
-            "answer": answer
+            "answer": answer,
+            "timestamp": datetime.now().isoformat()
         })
 
     except Exception as e:

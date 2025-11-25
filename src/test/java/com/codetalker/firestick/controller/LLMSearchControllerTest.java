@@ -1,14 +1,10 @@
 package com.codetalker.firestick.controller;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.util.Collections;
-import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.codetalker.firestick.llm.LLMServiceClient;
-import com.codetalker.firestick.model.CodeChunk;
-import com.codetalker.firestick.model.CodeFile;
 import com.codetalker.firestick.repository.CodeChunkRepository;
 import com.codetalker.firestick.repository.CodeFileRepository;
 import com.codetalker.firestick.service.CodeSearchService;
@@ -53,16 +47,13 @@ public class LLMSearchControllerTest {
         when(llmServiceClient.expandQuery(anyString())).thenReturn(java.util.Arrays.asList("expanded"));
 
         // Mock Search
-        when(codeSearchService.searchCode(anyString(), anyString())).thenReturn(java.util.Arrays.asList("file1.java#chunk:10-20"));
-
-        // Mock DB lookups
-        CodeFile mockFile = new CodeFile();
-        mockFile.setFilePath("file1.java");
-        when(codeFileRepository.findByFilePathAndAppName(anyString(), anyString())).thenReturn(Optional.of(mockFile));
-
-        CodeChunk mockChunk = new CodeChunk();
-        mockChunk.setContent("public class Auth {}");
-        when(codeChunkRepository.findByFileAndStartLineAndEndLine(mockFile, 10, 20)).thenReturn(Optional.of(mockChunk));
+        CodeSearchService.IndexDocument mockDoc = new CodeSearchService.IndexDocument(
+            "file1.java#chunk:10-20", 
+            "default", 
+            "public class Auth {}", 
+            "chunk"
+        );
+        when(codeSearchService.searchDocuments(anyString(), anyString())).thenReturn(java.util.Arrays.asList(mockDoc));
 
         LLMSearchController.LLMSearchRequest request = new LLMSearchController.LLMSearchRequest();
         request.setQuery("auth");

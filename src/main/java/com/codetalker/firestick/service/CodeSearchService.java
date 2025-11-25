@@ -17,11 +17,13 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.WildcardQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.slf4j.Logger;
@@ -48,7 +50,6 @@ public class CodeSearchService {
 
     private final StandardAnalyzer analyzer;
     private final Map<String, Directory> indexDirectories;
-    private final Map<String, IndexWriter> indexWriters;
     private final Path baseIndexPath;
     private static final Logger log = LoggerFactory.getLogger(CodeSearchService.class);
     // lucene.index.base property allows overriding the base index path in tests
@@ -56,7 +57,6 @@ public class CodeSearchService {
     public CodeSearchService(@org.springframework.beans.factory.annotation.Value("${lucene.index.base:lucene-indices}") String luceneIndexBase) {
         this.analyzer = new StandardAnalyzer();
         this.indexDirectories = new HashMap<>();
-        this.indexWriters = new HashMap<>();
         
         // Set up base path for Lucene indices; allow tests to override via property
         this.baseIndexPath = Paths.get(luceneIndexBase).toAbsolutePath();
@@ -73,13 +73,6 @@ public class CodeSearchService {
 
     @PreDestroy
     public void close() {
-        indexWriters.forEach((k, w) -> {
-            try {
-                w.close();
-            } catch (IOException e) {
-                log.warn("Failed to close index writer for app {}", k, e);
-            }
-        });
         indexDirectories.forEach((k, d) -> {
             try {
                 d.close();
@@ -87,7 +80,6 @@ public class CodeSearchService {
                 log.warn("Failed to close index directory for app {}", k, e);
             }
         });
-        indexWriters.clear();
         indexDirectories.clear();
     }
 
@@ -116,50 +108,6 @@ public class CodeSearchService {
         } catch (IOException e) {
             log.error("Failed to create index directory for app: {}", appName, e);
             throw e;
-        }
-    }
-
-    /**
-     * Get or create the index writer for an application.
-     * Uses Analyzer configured in IndexWriterConfig.
-     */
-    private IndexWriter getIndexWriter(String appName) throws IOException {
-        boolean aggregate = (appName == null || appName.isBlank());
-        if (!aggregate && (appName == null || appName.isBlank())) {
-            appName = "default";
-        }
-        
-        // Check if already created
-        if (indexWriters.containsKey(appName)) {
-            return indexWriters.get(appName);
-        }
-        
-        Directory directory = getIndexDirectory(appName);
-        IndexWriterConfig config = new IndexWriterConfig(analyzer);
-        try {
-            IndexWriter writer = new IndexWriter(directory, config);
-            indexWriters.put(appName, writer);
-            
-            log.debug("Created index writer for app '{}'", appName);
-            return writer;
-        } catch (org.apache.lucene.store.LockObtainFailedException lofe) {
-            // In test environments we sometimes encounter stale locks from previous runs.
-            // Try to remove the lock file and retry once.
-            try {
-                Path lockFile = baseIndexPath.resolve(appName).resolve("write.lock");
-                if (Files.exists(lockFile)) {
-                    log.warn("LockObtainFailed for app='{}'. Attempting to remove stale lock at {}", appName, lockFile);
-                    Files.deleteIfExists(lockFile);
-                    IndexWriter writer = new IndexWriter(directory, config);
-                    indexWriters.put(appName, writer);
-                    return writer;
-                } else {
-                    throw lofe;
-                }
-            } catch (IOException retryEx) {
-                log.error("Failed to obtain index writer for app '{}' after retry", appName, retryEx);
-                throw retryEx;
-            }
         }
     }
 
@@ -198,15 +146,17 @@ public class CodeSearchService {
             // Reset writer and index directory and re-attempt indexing once
             try {
                 resetIndexForApp(app);
-                IndexWriter writer = getIndexWriter(app);
-                Document doc = new Document();
-                doc.add(new StringField("id", id, Field.Store.YES));
-                doc.add(new StringField("app", app, Field.Store.YES));
-                doc.add(new TextField("content", content, Field.Store.YES));
-                writer.addDocument(doc);
-                writer.commit();
+                Directory directory = getIndexDirectory(app);
+                IndexWriterConfig config = new IndexWriterConfig(analyzer);
+                try (IndexWriter writer = new IndexWriter(directory, config)) {
+                    Document doc = new Document();
+                    doc.add(new StringField("id", id, Field.Store.YES));
+                    doc.add(new StringField("app", app, Field.Store.YES));
+                    doc.add(new TextField("content", content, Field.Store.YES));
+                    writer.addDocument(doc);
+                    writer.commit();
+                }
                 log.debug("Indexed document after reset id={} app={} (content len={})", id, app, content != null ? content.length() : 0);
-                return;
             } catch (IOException ex) {
                 log.error("Index reset attempt failed for app={}", app, ex);
                 throw new IndexingException("Failed to index document after resetting index: " + id, ex);
@@ -250,16 +200,6 @@ public class CodeSearchService {
     }
 
     private void resetIndexForApp(String app) throws IOException {
-        // Close and remove any existing writer for the app
-        var writer = indexWriters.remove(app);
-        if (writer != null) {
-            try {
-                writer.close();
-            } catch (IOException ignored) {
-                // continue to attempt to delete
-            }
-        }
-
         // Close and remove directory mapping
         var dir = indexDirectories.remove(app);
         if (dir != null) {
@@ -408,5 +348,94 @@ public class CodeSearchService {
 
     public List<String> searchCode(String queryString) throws Exception {
         return searchCode(queryString, null);
+    }
+
+    public record IndexDocument(String id, String app, String content, String type) {}
+
+    /**
+     * Search for documents (code or summaries) and return full details.
+     */
+    public List<IndexDocument> searchDocuments(String queryString, String appName) throws Exception {
+        return searchDocumentsInternal(queryString, appName, true);
+    }
+
+    private List<IndexDocument> searchDocumentsInternal(String queryString, String appName, boolean treatDefaultAsAggregate) throws Exception {
+        List<IndexDocument> results = new ArrayList<>();
+        boolean aggregate = (appName == null || appName.isBlank()) || (treatDefaultAsAggregate && "default".equalsIgnoreCase(appName));
+
+        if (aggregate) {
+            try (var dirs = Files.list(baseIndexPath)) {
+                dirs.filter(Files::isDirectory).forEach(p -> {
+                    try {
+                        List<IndexDocument> sub = searchDocumentsInternal(queryString, p.getFileName().toString(), false);
+                        results.addAll(sub);
+                    } catch (Exception ignored) { }
+                });
+            }
+            return results;
+        }
+
+        Directory directory = getIndexDirectory(appName);
+        try (DirectoryReader reader = DirectoryReader.open(directory)) {
+            if (reader.numDocs() == 0) return List.of();
+
+            IndexSearcher searcher = new IndexSearcher(reader);
+            QueryParser contentParser = new QueryParser("content", analyzer);
+            Query contentQuery = contentParser.parse(queryString);
+
+            org.apache.lucene.index.Term appTerm = new org.apache.lucene.index.Term("app", appName);
+            Query appQuery = new org.apache.lucene.search.TermQuery(appTerm);
+
+            Query query = new org.apache.lucene.search.BooleanQuery.Builder()
+                    .add(appQuery, org.apache.lucene.search.BooleanClause.Occur.MUST)
+                    .add(contentQuery, org.apache.lucene.search.BooleanClause.Occur.MUST)
+                    .build();
+
+            TopDocs topDocs = searcher.search(query, 20); // Fetch more for context
+            for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
+                Document doc = reader.storedFields().document(scoreDoc.doc);
+                results.add(new IndexDocument(
+                    doc.get("id"),
+                    doc.get("app"),
+                    doc.get("content"),
+                    doc.get("type") // Might be null for code chunks
+                ));
+            }
+        } catch (org.apache.lucene.index.IndexNotFoundException e) {
+            // ignore
+        }
+        return results;
+    }
+
+    /**
+     * Attempt to find the README file for the application.
+     */
+    public String findReadme(String appName) {
+        if (appName == null || appName.isBlank()) return null;
+        try {
+            Directory directory = getIndexDirectory(appName);
+            try (DirectoryReader reader = DirectoryReader.open(directory)) {
+                IndexSearcher searcher = new IndexSearcher(reader);
+                
+                org.apache.lucene.search.BooleanQuery.Builder builder = new org.apache.lucene.search.BooleanQuery.Builder();
+                builder.add(new org.apache.lucene.search.TermQuery(new Term("app", appName)), org.apache.lucene.search.BooleanClause.Occur.MUST);
+                
+                org.apache.lucene.search.BooleanQuery.Builder fileQuery = new org.apache.lucene.search.BooleanQuery.Builder();
+                fileQuery.add(new WildcardQuery(new Term("id", "*README.md")), org.apache.lucene.search.BooleanClause.Occur.SHOULD);
+                fileQuery.add(new WildcardQuery(new Term("id", "*readme.md")), org.apache.lucene.search.BooleanClause.Occur.SHOULD);
+                fileQuery.add(new WildcardQuery(new Term("id", "*Readme.md")), org.apache.lucene.search.BooleanClause.Occur.SHOULD);
+                
+                builder.add(fileQuery.build(), org.apache.lucene.search.BooleanClause.Occur.MUST);
+                
+                TopDocs docs = searcher.search(builder.build(), 1);
+                if (docs.totalHits.value > 0) {
+                    Document doc = reader.storedFields().document(docs.scoreDocs[0].doc);
+                    return doc.get("content");
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to find README for app {}", appName, e);
+        }
+        return null;
     }
 }

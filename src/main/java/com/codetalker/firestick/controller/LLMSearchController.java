@@ -3,7 +3,6 @@ package com.codetalker.firestick.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -16,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codetalker.firestick.llm.LLMServiceClient;
 import com.codetalker.firestick.llm.LLMServiceException;
-import com.codetalker.firestick.model.CodeChunk;
-import com.codetalker.firestick.model.CodeFile;
 import com.codetalker.firestick.repository.CodeChunkRepository;
 import com.codetalker.firestick.repository.CodeFileRepository;
 import com.codetalker.firestick.service.CodeSearchService;
@@ -64,6 +61,11 @@ public class LLMSearchController {
         
         try {
             String query = request.getQuery().trim();
+            // Clean query of potential formatting tags
+            query = query.replaceAll("\\[/?(?i)(TR|TD|TBL|TH|TABLE).*?\\]", " ");
+            query = query.replaceAll("<[^>]+>", " ");
+            query = query.trim();
+
             if (query.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Query cannot be empty"));
@@ -113,7 +115,7 @@ public class LLMSearchController {
                     insights.add(new LLMInsight(
                         "Query Expansion",
                         "Expanded search terms",
-                        "Searched for: " + String.join(", ", expandedTerms),
+                        "Original Query: " + query + "\nAdditional keywords: " + String.join(", ", expandedTerms),
                         1.0
                     ));
                 }
@@ -125,6 +127,20 @@ public class LLMSearchController {
         // Step 2: Search with expanded query
         List<SnippetMatch> matches = fetchSnippetMatches(expandedQuery, app, Math.min(limit, MAX_CONTEXT_SNIPPETS));
 
+        // Context Augmentation for high-level queries
+        if (isHighLevelQuery(query)) {
+            String readmeContent = codeSearchService.findReadme(app);
+            if (readmeContent != null) {
+                // Check if README is already in matches
+                boolean alreadyPresent = matches.stream().anyMatch(m -> m.filePath().toLowerCase().endsWith("readme.md"));
+                if (!alreadyPresent) {
+                    log.info("Augmenting context with README for high-level query");
+                    // Add to front
+                    matches.add(0, new SnippetMatch("README.md", 1, 100, readmeContent));
+                }
+            }
+        }
+
         if (!matches.isEmpty()) {
             String llmSummary = summarizeMatchesWithLLM(query, matches);
             if (llmSummary == null || llmSummary.isBlank()) {
@@ -135,13 +151,14 @@ public class LLMSearchController {
                 insights.add(new LLMInsight(
                     "Answer",
                     "Summary generated from top matching files",
-                    llmSummary,
+                    "Original Query: " + query + "\n\n" + llmSummary,
                     0.95
                 ));
             }
 
             AtomicInteger rank = new AtomicInteger(0);
             matches.stream()
+                .filter(m -> !m.filePath().toLowerCase().contains("summary")) // Only suggest real files
                 .limit(limit)
                 .forEach(match -> suggestedFiles.add(new LLMSuggestedFile(
                     extractTitle(match.filePath(), rank.incrementAndGet()),
@@ -171,29 +188,22 @@ public class LLMSearchController {
     private List<SnippetMatch> fetchSnippetMatches(String query, String app, int limit) {
         List<SnippetMatch> matches = new ArrayList<>();
         try {
-            List<String> ids = codeSearchService.searchCode(query, app);
-            for (String id : ids) {
+            List<CodeSearchService.IndexDocument> docs = codeSearchService.searchDocuments(query, app);
+            for (CodeSearchService.IndexDocument doc : docs) {
                 if (matches.size() >= limit) {
                     break;
                 }
-                SearchController.ParsedId parsed = SearchController.ParsedId.parse(id);
-                if (parsed == null) {
-                    continue;
+                
+                SearchController.ParsedId parsed = SearchController.ParsedId.parse(doc.id());
+                if (parsed != null) {
+                    // It's a code chunk
+                    matches.add(new SnippetMatch(parsed.filePath, parsed.startLine, parsed.endLine, doc.content().strip()));
+                } else {
+                    // It's a summary or other document type
+                    // We include it for context, but mark it as a Summary
+                    String type = doc.type() != null ? doc.type() : "Summary";
+                    matches.add(new SnippetMatch(type, 0, 0, doc.content().strip()));
                 }
-
-                Optional<CodeFile> file = codeFileRepository.findByFilePathAndAppName(parsed.filePath, app);
-                if (file.isEmpty()) {
-                    continue;
-                }
-                Optional<CodeChunk> chunk = codeChunkRepository.findByFileAndStartLineAndEndLine(file.get(), parsed.startLine, parsed.endLine);
-                if (chunk.isEmpty()) {
-                    continue;
-                }
-                String snippet = chunk.get().getContent();
-                if (snippet == null || snippet.isBlank()) {
-                    continue;
-                }
-                matches.add(new SnippetMatch(parsed.filePath, parsed.startLine, parsed.endLine, snippet.strip()));
             }
         } catch (Exception e) {
             log.warn("Failed to gather snippets for app='{}' query='{}': {}", app, query, e.getMessage());
@@ -344,7 +354,7 @@ public class LLMSearchController {
             "Your query: \"" + query + "\"\n" + (app == null || app.isBlank() ? "" : "App: " + app + "\n") + "\n"
                 + "Status:\n"
                 + "No direct code matches found in the index for this query.\n"
-                + "Recommendation: Try using specific class names, method names, or technical terms.",
+                + "No results found. Try rephrasing your query.",
             0.85
         ));
         
@@ -377,6 +387,11 @@ public class LLMSearchController {
         }
         
         return intent.toString().isEmpty() ? "general code search" : intent.toString();
+    }
+
+    private boolean isHighLevelQuery(String query) {
+        String q = query.toLowerCase();
+        return q.contains("goal") || q.contains("purpose") || q.contains("what is") || q.contains("overview") || q.contains("architecture") || q.contains("describe") || q.contains("summary");
     }
 
     /**

@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+
 export type LLMInsight = {
   title?: string
   description?: string
@@ -26,6 +28,18 @@ type Props = {
 export default function LLMResults({ insights, suggestions, loading, error, onOpen }: Props) {
   const hasInsights = insights && insights.length > 0
   const hasSuggestions = suggestions && suggestions.length > 0
+
+  const groupedSuggestions = useMemo(() => {
+    const groups: Record<string, LLMSuggestedFile[]> = {}
+    if (suggestions) {
+      suggestions.forEach(s => {
+        const key = s.filePath || 'Unknown File'
+        if (!groups[key]) groups[key] = []
+        groups[key].push(s)
+      })
+    }
+    return groups
+  }, [suggestions])
 
   return (
     <section style={{ marginTop: 24, padding: 16, border: '1px solid #ddd', borderRadius: 8, background: '#fafafa' }}>
@@ -61,35 +75,41 @@ export default function LLMResults({ insights, suggestions, loading, error, onOp
 
       {hasSuggestions && (
         <div style={{ marginTop: 24 }}>
-          <h4 style={{ marginBottom: 8 }}>Open Suggested Files</h4>
+          <h4 style={{ marginBottom: 8 }}>Suggested Files</h4>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {suggestions.map((suggestion, idx) => (
-              <article key={`${suggestion.filePath || 'suggestion'}-${idx}`} style={{ border: '1px solid #e1e1e1', borderRadius: 6, padding: 12, background: 'white' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                  <div>
-                    <strong style={{ fontSize: 15 }}>{suggestion.title || `Suggestion ${idx + 1}`}</strong>
-                    <p style={{ margin: '6px 0 0', color: '#555' }}>
-                      {suggestion.summary || suggestion.filePath}
-                      {suggestion.startLine && suggestion.endLine && (
-                        <span>{` (lines ${suggestion.startLine}-${suggestion.endLine})`}</span>
-                      )}
-                    </p>
-                    <p style={{ margin: '4px 0 0', fontSize: 12, color: '#666' }}>{suggestion.filePath}</p>
-                  </div>
-                  {typeof suggestion.score === 'number' && (
-                    <span style={{ fontSize: 12, color: '#666' }}>Relevance {(suggestion.score * 100).toFixed(0)}%</span>
-                  )}
+            {Object.entries(groupedSuggestions).map(([filePath, items]) => (
+              <article key={filePath} style={{ border: '1px solid #e1e1e1', borderRadius: 6, padding: 12, background: 'white' }}>
+                <div style={{ marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid #eee' }}>
+                  <strong style={{ fontSize: 15, color: '#2c3e50' }}>{filePath}</strong>
                 </div>
-                {suggestion.snippet && (
-                  <pre style={{ background: '#f5f5f5', padding: 10, borderRadius: 4, margin: '10px 0 0', fontSize: 13, whiteSpace: 'pre-wrap' }}>{suggestion.snippet}</pre>
-                )}
-                {suggestion.filePath && onOpen && (
-                  <div style={{ marginTop: 10 }}>
-                    <button onClick={() => onOpen(suggestion)} style={{ padding: '6px 10px', borderRadius: 4, border: '1px solid #ccc', cursor: 'pointer' }}>
-                      Open suggested file
-                    </button>
-                  </div>
-                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {items.map((suggestion, idx) => (
+                    <div key={`${filePath}-${idx}`} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                        <div>
+                          <strong style={{ fontSize: 14, color: '#444' }}>{suggestion.title || `Reference ${idx + 1}`}</strong>
+                          <p style={{ margin: '4px 0 0', color: '#555', fontSize: 13 }}>
+                            {suggestion.summary}
+                            {suggestion.startLine && suggestion.endLine && (
+                              <span style={{ fontFamily: 'monospace', marginLeft: 6, background: '#f5f5f5', padding: '2px 4px', borderRadius: 3 }}>
+                                lines {suggestion.startLine}-{suggestion.endLine}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        {typeof suggestion.score === 'number' && (
+                          <span style={{ fontSize: 12, color: '#666', whiteSpace: 'nowrap' }}>Relevance {(suggestion.score * 100).toFixed(0)}%</span>
+                        )}
+                      </div>
+                      {suggestion.snippet && (
+                        <details>
+                          <summary style={{ cursor: 'pointer', color: '#0066cc', fontSize: '12px', userSelect: 'none' }}>View code snippet</summary>
+                          <pre style={{ background: '#f8f9fa', padding: 10, borderRadius: 4, marginTop: 6, fontSize: 12, whiteSpace: 'pre-wrap', border: '1px solid #eee' }}>{suggestion.snippet}</pre>
+                        </details>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </article>
             ))}
           </div>

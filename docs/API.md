@@ -52,6 +52,10 @@ This document describes the stable REST endpoints used by the UI.
 	- 200: `IndexingJob[]` (most recent first)
 	- 400: Standard validation error when `limit` is out of range
 
+	- GET `/api/indexing/jobs/{id}/objects`
+		- 200: `IndexingObject[]` — per-object records persisted for the job: { id, jobId, objectType (FOLDER|FILE|METHOD), objectName, startedAt, endedAt, elapsedMs, reasonSkipped }
+		- 404: Job not found when {id} does not exist
+
 - GET `/api/indexing/stream?jobId={id}` (SSE)
 	- Query params:
 		- `jobId` (long, optional, minimum 1) — if omitted, streams the latest job
@@ -60,7 +64,10 @@ This document describes the stable REST endpoints used by the UI.
   
   Notes on SSE:
   - The stream sends an initial comment event to flush headers early so clients can immediately observe `Content-Type: text/event-stream`.
-  - Keepalive/heartbeat comments may be sent to keep connections alive behind proxies.
+	- Keepalive/heartbeat comments may be sent to keep connections alive behind proxies.
+	- Progress events now include additional payloads for object-level timing. Clients should handle two event types:
+		- `IndexingProgress` (JSON) — includes `totalFolders` and `totalMethods` in addition to existing counters.
+		- `object-start` / `object-end` / `object-skipped` (JSON) — per-object lifecycle events with fields like `type`, `name`, `ts`, and `elapsedMs` where applicable.
   - Clients should reconnect on network errors and resume consuming events for the current job.
 
 - POST `/api/indexing/cancel?jobId={id}`

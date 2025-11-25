@@ -74,6 +74,10 @@ __pycache__/
 
 # Logs
 logs/
+logs/backend/
+logs/llm/
+logs/chroma/
+logs/ui/
 
 # UI / Node
 ui/node_modules/

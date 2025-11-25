@@ -31,6 +31,26 @@ if ($PSBoundParameters.ContainsKey('NoOnnx')) {
   $UseOnnx = $true
 }
 
+function Get-LogFileName {
+  param([string]$ServiceName)
+  $date = Get-Date -Format 'yyyy-MM-dd'
+  $logDir = Join-Path $PSScriptRoot "logs\$ServiceName"
+  if (-not (Test-Path $logDir)) { New-Item -ItemType Directory -Force -Path $logDir | Out-Null }
+  
+  $baseName = "$ServiceName-$date"
+  $charIndex = 97 # 'a'
+  
+  $logFile = Join-Path $logDir "$baseName.log"
+  if (Test-Path $logFile) {
+      while (Test-Path (Join-Path $logDir "$baseName$([char]$charIndex).log")) {
+        $charIndex++
+      }
+      $logFile = Join-Path $logDir "$baseName$([char]$charIndex).log"
+  }
+  
+  return $logFile
+}
+
 function Wait-ForHttp {
   param(
     [string]$Url,
@@ -64,11 +84,22 @@ function Start-NewWindow {
   param(
     [string]$Name,
     [string]$Command,
+    [string]$LogFile,
     [string]$WorkingDirectory = $PSScriptRoot
   )
   Write-Host "Starting: $Name -> $Command" -ForegroundColor Cyan
+  if ($LogFile) { Write-Host "Logging to: $LogFile" -ForegroundColor Gray }
+
   if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { $shell = 'pwsh' } else { $shell = 'powershell' }
-  Start-Process -FilePath $shell -ArgumentList '-NoProfile','-NoExit','-Command',$Command -WorkingDirectory $WorkingDirectory
+  
+  if ($LogFile) {
+     # Wrap command to capture stdout and stderr to file
+     $finalCmd = "& { $Command } 2>&1 | Tee-Object -FilePath '$LogFile'"
+  } else {
+     $finalCmd = $Command
+  }
+
+  Start-Process -FilePath $shell -ArgumentList '-NoProfile','-NoExit','-Command',$finalCmd -WorkingDirectory $WorkingDirectory
 }
 
 # End Start-NewWindow
@@ -110,23 +141,25 @@ Push-Location $root
 ## backend starts and we sleep for a minute; see workflow below.
 
 if (-not $SkipBackend) {
+  $logFile = Get-LogFileName -ServiceName "backend"
   # Try running via mvn; fallback to running jar if present
   $mvn = 'mvn'
   $jar = Get-ChildItem -Path "$root\target" -Filter "*.jar" -File -ErrorAction SilentlyContinue | Select-Object -First 1
   if (Get-Command $mvn -ErrorAction SilentlyContinue) {
-    # Use Start-Process with an explicit argument list to avoid shell quoting/parsing issues
+    # Use direct invocation to allow piping to log file
     $mvnArgs = @('-DskipTests')
     if ($UseOnnx) { $mvnArgs += '-Dspring-boot.run.profiles=onnx' }
     $mvnArgs += 'spring-boot:run'
-    $mvnArgStr = ($mvnArgs | ForEach-Object { "'$_'" }) -join ','
-    $mvnCmd = "cd '$root'; Start-Process -FilePath 'mvn' -ArgumentList $mvnArgStr -NoNewWindow"
-    Start-NewWindow -Name 'Backend' -Command $mvnCmd
+    # Use single quotes for arguments to avoid issues with Start-Process argument parsing
+    $mvnArgStr = ($mvnArgs | ForEach-Object { "'$_'" }) -join ' '
+    $mvnCmd = "cd '$root'; & mvn $mvnArgStr"
+    Start-NewWindow -Name 'Backend' -Command $mvnCmd -LogFile $logFile
   } elseif ($jar) {
     if ($UseOnnx) {
       # Ensure the app runs with the ONNX spring profile
-      Start-NewWindow -Name 'Backend' -Command "`$env:SPRING_PROFILES_ACTIVE='onnx'; java -jar '$($jar.FullName)'"
+      Start-NewWindow -Name 'Backend' -Command "`$env:SPRING_PROFILES_ACTIVE='onnx'; java -jar '$($jar.FullName)'" -LogFile $logFile
     } else {
-      Start-NewWindow -Name 'Backend' -Command "java -jar '$($jar.FullName)'"
+      Start-NewWindow -Name 'Backend' -Command "java -jar '$($jar.FullName)'" -LogFile $logFile
     }
   } else {
     Write-Host "Maven not found and no runnable jar in target/ - Backend not started" -ForegroundColor Yellow
@@ -169,32 +202,36 @@ if (-not $SkipBackend) {
   }
 
   # Wait at least a minute after backend is started before launching other services
-  Write-Host "Waiting 60s to let the backend finish initialization before starting other services..." -ForegroundColor Cyan
-  Start-Sleep -Seconds 60
+  # Write-Host "Waiting 60s to let the backend finish initialization before starting other services..." -ForegroundColor Cyan
+  # Start-Sleep -Seconds 60
 }
 
 ## UI will be started after backend wait and LLM/Chroma ??? see below
 
 if (-not $SkipLLM) {
+  $logFile = Get-LogFileName -ServiceName "llm"
   # Activate venv in a new PowerShell and run the LLM script
   $venvActivate = "$root\.venv\Scripts\Activate.ps1"
   if (-not (Test-Path $venvActivate)) {
     Write-Host "Virtual environment not found at $venvActivate - Attempting to create..." -ForegroundColor Yellow
     python -m venv "$root\.venv"
   }
-  $llmCmd = "& '$venvActivate'; python '$root\llm_service_gguf.py'"
-  Start-NewWindow -Name 'LLM' -Command $llmCmd
+  # Use GGUF model for better performance on Windows/CPU
+  $llmCmd = "& '$venvActivate'; `$env:MODEL_PATH='models/mistral/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf'; python '$root\llm_service_gguf.py'"
+  Start-NewWindow -Name 'LLM' -Command $llmCmd -LogFile $logFile
 }
 
 if (-not $SkipChroma) {
+  $logFile = Get-LogFileName -ServiceName "chroma"
   if (Test-Path "$root\start-chroma.ps1") {
-    Start-NewWindow -Name 'Chroma' -Command "& '$root\start-chroma.ps1'"
+    Start-NewWindow -Name 'Chroma' -Command "& '$root\start-chroma.ps1'" -LogFile $logFile
   } else {
     Write-Host "Chroma start script not found; skipping" -ForegroundColor Yellow
   }
 }
 
 if (-not $SkipUI) {
+  $logFile = Get-LogFileName -ServiceName "ui"
   # Start the Vite dev server in the ui folder
   $uiDir = Join-Path $root 'ui'
   if (Test-Path $uiDir) {
@@ -205,7 +242,7 @@ if (-not $SkipUI) {
     if (-not $detectedPort) { $detectedPort = Find-BackendPort }
     if (-not $detectedPort) { $detectedPort = 8080 }
     $backendBase = "http://localhost:$detectedPort"
-    Start-NewWindow -Name 'UI' -Command "cd '$uiDir'; `$env:VITE_API_URL='$backendBase'; npm run dev"
+    Start-NewWindow -Name 'UI' -Command "cd '$uiDir'; `$env:VITE_API_URL='$backendBase'; npm run dev" -LogFile $logFile
   } else {
     Write-Host "UI directory not found; skipping" -ForegroundColor Yellow
   }
@@ -231,20 +268,19 @@ if (-not $SkipBackend) {
 }
 
 if (-not $SkipLLM) {
-  $ok = Wait-ForHttp -Url 'http://127.0.0.1:8001/health' -HttpTimeoutSeconds $TimeoutSeconds
+  $ok = Wait-ForHttp -Url 'http://localhost:8001/health' -HttpTimeoutSeconds $TimeoutSeconds
   if (-not $ok) { $allOk = $false }
 }
 
 if (-not $SkipChroma) {
-  try {
-    $chromaOk = Test-NetConnection -ComputerName '127.0.0.1' -Port 8000 -WarningAction SilentlyContinue
-    if ($chromaOk -and $chromaOk.TcpTestSucceeded) { Write-Host 'Chroma: listening on port 8000' -ForegroundColor Green } else { Write-Host 'Chroma: not reachable on port 8000' -ForegroundColor Yellow; $allOk = $false }
-  } catch { Write-Host 'Chroma check failed' -ForegroundColor Yellow; $allOk = $false }
+  # Chroma exposes a heartbeat endpoint
+  $ok = Wait-ForHttp -Url 'http://localhost:8000/api/v1/heartbeat' -HttpTimeoutSeconds $TimeoutSeconds
+  if ($ok) { Write-Host 'Chroma: listening on port 8000' -ForegroundColor Green } else { Write-Host 'Chroma: not reachable on port 8000' -ForegroundColor Yellow; $allOk = $false }
 }
 
 if (-not $SkipUI) {
   # Vite's default dev server port is 5173
-  $ok = Wait-ForHttp -Url 'http://127.0.0.1:5173' -HttpTimeoutSeconds $TimeoutSeconds
+  $ok = Wait-ForHttp -Url 'http://localhost:5173' -HttpTimeoutSeconds $TimeoutSeconds
   if (-not $ok) { $allOk = $false }
 }
 

@@ -27,6 +27,7 @@ export default function IndexingPage() {
         skippedFiles: [],
       },
       currentFile: '',
+      currentObject: undefined,
       startedAt: '',
       endedAt: '',
     } as IndexingJob)
@@ -58,9 +59,12 @@ export default function IndexingPage() {
   async function refreshLatest() {
     try {
       const latest = await getLatestJob()
-      // Patch: ensure stats object is populated for UI compatibility
+      // Patch: ensure stats object is populated for UI compatibility and include folder/method counts
       setJob(latest ? {
         ...latest,
+        // keep top-level totals if present (backend provides totalFolders/totalMethods)
+        totalFolders: latest.totalFolders ?? latest['totalFolders'] ?? latest.totalFolders,
+        totalMethods: latest.totalMethods ?? latest['totalMethods'] ?? latest.totalMethods,
         stats: {
           filesDiscovered: latest.stats?.filesDiscovered ?? latest['filesDiscovered'] ?? 0,
           filesParsed: latest.stats?.filesParsed ?? latest['filesParsed'] ?? 0,
@@ -68,7 +72,14 @@ export default function IndexingPage() {
           documentsIndexed: latest.stats?.documentsIndexed ?? latest['documentsIndexed'] ?? 0,
           embeddingsGenerated: latest.stats?.embeddingsGenerated ?? latest['embeddingsGenerated'] ?? 0,
           filesSkipped: latest.stats?.filesSkipped ?? latest['filesSkipped'] ?? 0,
-        }
+          // folder/method summary counts (used by Folder/Method progress bars)
+          filesSummarized: latest.stats?.filesSummarized ?? latest['filesSummarized'] ?? 0,
+          foldersSummarized: latest.stats?.foldersSummarized ?? latest['foldersSummarized'] ?? 0,
+          methodsSummarized: latest.stats?.methodsSummarized ?? latest['methodsSummarized'] ?? 0,
+          skippedFiles: latest.stats?.skippedFiles ?? latest['skippedFiles'] ?? []
+        },
+        // include active object if provided by backend; otherwise fall back to currentFile
+        currentObject: latest.currentObject ?? latest['currentObject'] ?? (latest.currentFile ? { type: 'file', name: latest.currentFile } : undefined)
       } : null)
     } catch (e: any) {
       setError(e?.message ?? 'Failed to load latest job')
@@ -257,6 +268,32 @@ export default function IndexingPage() {
             try {
               const newEvt = { event: p.event, type: p.type, name: p.name, ts: p.ts || Date.now(), elapsedMs: p.elapsedMs }
               setObjectEvents(prev => [newEvt, ...prev].slice(0, 30))
+              // reflect active object in job state
+              if (newEvt.event === 'object-start') {
+                // set startedAt from event ts
+                const startedAt = new Date(newEvt.ts || Date.now()).toISOString()
+                setJob(prev => ({ ...(prev || {} as any), currentObject: { type: newEvt.type, name: newEvt.name, startedAt, endedAt: undefined, elapsedMs: undefined } } as IndexingJob))
+              } else if (newEvt.event === 'object-end') {
+                // if we have a previous currentObject, record endedAt and elapsedMs; keep the object visible
+                const endedAt = new Date(newEvt.ts || Date.now()).toISOString()
+                setJob(prev => {
+                  try {
+                    const prevObj = prev?.currentObject
+                    let elapsed = newEvt.elapsedMs
+                    if (typeof elapsed !== 'number' && prevObj?.startedAt) {
+                      const s = new Date(prevObj.startedAt).getTime()
+                      elapsed = Math.max(0, (new Date(endedAt).getTime() - s))
+                    }
+                    return { ...(prev || {} as any), currentObject: { type: newEvt.type, name: newEvt.name, startedAt: prevObj?.startedAt, endedAt, elapsedMs: typeof elapsed === 'number' ? elapsed : undefined } } as IndexingJob
+                  } catch {
+                    return prev as IndexingJob
+                  }
+                })
+              } else if (newEvt.event === 'object-skipped') {
+                // skipped - set started/ended to same ts and record reason as elapsed 0
+                const ts = new Date(newEvt.ts || Date.now()).toISOString()
+                setJob(prev => ({ ...(prev || {} as any), currentObject: { type: newEvt.type, name: newEvt.name, startedAt: ts, endedAt: ts, elapsedMs: newEvt.elapsedMs ?? 0 } } as IndexingJob))
+              }
             } catch { /* ignore */ }
           }
           setJob((prev: IndexingJob | null) => {
@@ -282,7 +319,8 @@ export default function IndexingPage() {
               totalFolders: p?.totalFolders ?? prev?.totalFolders,
               totalMethods: p?.totalMethods ?? prev?.totalMethods,
               stats: mergedStats,
-              currentFile: p?.currentFile ?? prev?.currentFile
+              currentFile: p?.currentFile ?? prev?.currentFile,
+              currentObject: p?.currentObject ?? prev?.currentObject
             } as IndexingJob
           })
           if (p?.percent >= 100) {
@@ -308,7 +346,8 @@ export default function IndexingPage() {
     }
   }
 
-    let progress = 0;
+    // Per-category progress values (folders, files, methods)
+    let fileProgress = 0;
     if (
       job &&
       job.stats &&
@@ -316,11 +355,21 @@ export default function IndexingPage() {
       typeof job.stats.filesDiscovered === 'number' &&
       job.stats.filesDiscovered > 0
     ) {
-      progress = Math.round((job.stats.filesParsed / job.stats.filesDiscovered) * 100);
+      fileProgress = Math.round((job.stats.filesParsed / job.stats.filesDiscovered) * 100);
     } else if (typeof job?.progress === 'number') {
-      progress = job.progress;
+      fileProgress = job.progress;
     } else if (job?.status === 'COMPLETED') {
-      progress = 100;
+      fileProgress = 100;
+    }
+
+    let folderProgress = 0;
+    if (job && typeof job?.totalFolders === 'number' && job.totalFolders > 0) {
+      folderProgress = Math.round(((job.stats?.foldersSummarized ?? 0) / job.totalFolders) * 100);
+    }
+
+    let methodProgress = 0;
+    if (job && typeof job?.totalMethods === 'number' && job.totalMethods > 0) {
+      methodProgress = Math.round(((job.stats?.methodsSummarized ?? 0) / job.totalMethods) * 100);
     }
 
   function formatTime(iso?: string) {
@@ -347,10 +396,19 @@ export default function IndexingPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', width: '92%', margin: '0 auto', padding: 12 }}>
-      <h2 style={{ fontWeight: 700, fontSize: 22, marginBottom: 12, letterSpacing: 0.5 }}>
-        Indexing Console
-      </h2>
+    // Use full width of the available content area so reporting isn't cramped
+    <div style={{ width: '100%', maxWidth: 'none', padding: '12px 18px' }}>
+      {/* Compact header: title + app selector on single line to save vertical space */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+        <h2 style={{ fontWeight: 700, fontSize: 18, margin: 0, letterSpacing: 0.3 }}>Indexing Console</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* show the App label and compact selector inline */}
+          <div style={{ fontSize: 13, color: '#666', fontWeight: 500 }}>App:</div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <AppSelector compact={true} />
+          </div>
+        </div>
+      </div>
       {/* LLM Progress Section */}
       {llmProgress && (
         <div style={{ background: '#e3f2fd', borderRadius: 6, padding: 8, marginBottom: 12, fontSize: 14, color: '#1565c0', fontWeight: 500 }}>
@@ -361,10 +419,8 @@ export default function IndexingPage() {
         </div>
       )}
       {/* Configuration Card */}
-      <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 6px #eee', padding: 12, marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <AppSelector compact={true} />
-        </div>
+      <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 6px #eee', padding: '6px 10px', marginBottom: 0 }}>
+        {/* App selector moved up into the compact header to save vertical space */}
         <div style={{ fontWeight: 600, fontSize: 16, marginBottom: 8, color: '#1976d2', display: 'flex', alignItems: 'center' }}>
           Configuration
         </div>
@@ -414,19 +470,44 @@ export default function IndexingPage() {
           Indexing Progress
         </div>
         <div style={{ display: 'grid', gap: 10 }}>
-          <div style={{ fontSize: 16, fontWeight: 500 }}>
-            <span style={{ color: '#1976d2', fontWeight: 700 }}>Job ID:</span> {job?.id ?? '—'} {job?.appName ? <span style={{ color: '#666', fontWeight: 400 }}>({job.appName})</span> : ''}
-            {job?.id && <a href={`/admin/indexing-objects?jobId=${job.id}`} style={{ marginLeft: 10, fontSize: 12, color: '#1976d2' }}>View objects</a>}
-            {/* Reordered to match the Summary block: Folders, Files, Methods */}
-            <span style={{ marginLeft: 14, color: '#000', fontWeight: 700 }}>
-              <span style={{ color: '#6a1b9a' }}>Folders:</span> {job?.totalFolders ?? job?.stats?.foldersSummarized ?? 0}
-            </span>
-            <span style={{ marginLeft: 18, color: '#000', fontWeight: 700 }}>
-              <span style={{ color: '#43a047' }}>Files:</span> {job?.filesDiscovered ?? job?.stats?.filesDiscovered ?? 0}
-            </span>
-            <span style={{ marginLeft: 18, color: '#000', fontWeight: 700 }}>
-              <span style={{ color: '#ef6c00' }}>Methods:</span> {job?.totalMethods ?? job?.stats?.methodsSummarized ?? 0}
-            </span>
+          {/* Evenly-distributed header grid: 7 equal columns with consistent size */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 12, alignItems: 'center', fontSize: 14, fontWeight: 600 }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ color: '#1976d2', fontWeight: 700 }}>Job ID</div>
+              <div style={{ fontWeight: 700 }}>{job?.id ?? '—'}</div>
+              {job?.id && <a href={`/admin/indexing-objects?jobId=${job.id}`} style={{ fontSize: 12, color: '#1976d2' }}>View</a>}
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#6a1b9a', fontWeight: 700 }}>Folders</div>
+              <div style={{ fontWeight: 700 }}>{job?.totalFolders ?? job?.stats?.foldersSummarized ?? 0}</div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#43a047', fontWeight: 700 }}>Files</div>
+              <div style={{ fontWeight: 700 }}>{job?.filesDiscovered ?? job?.stats?.filesDiscovered ?? 0}</div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#ef6c00', fontWeight: 700 }}>Methods</div>
+              <div style={{ fontWeight: 700 }}>{job?.totalMethods ?? job?.stats?.methodsSummarized ?? 0}</div>
+            </div>
+
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#1976d2', fontWeight: 700 }}>Documents</div>
+              <div style={{ fontWeight: 700 }}>{job?.stats?.documentsIndexed ?? 0}</div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#d84315', fontWeight: 700 }}>Chunks</div>
+              <div style={{ fontWeight: 700 }}>{job?.stats?.chunksProduced ?? 0}</div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: '#6a1b9a', fontWeight: 700 }}>Embeds</div>
+              <div style={{ fontWeight: 700 }}>{job?.stats?.embeddingsGenerated ?? 0}</div>
+            </div>
           </div>
           {job?.currentFile && (
              <div style={{ fontSize: 13, color: '#555', fontFamily: 'monospace', background: '#f5f5f5', padding: '6px 12px', borderRadius: 6, marginBottom: 4 }}>
@@ -448,40 +529,67 @@ export default function IndexingPage() {
             </div>
           )}
           <div>
-            <strong style={{ fontWeight: 600 }}>Progress:</strong>
+            <strong style={{ fontWeight: 600 }}>Folder Progress:</strong>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
-              <div style={{ flex: 1 }}><ProgressBar value={progress} color="#2ecc40" /></div>
-              <span style={{ fontSize: 14, minWidth: 90, textAlign: 'right', fontWeight: 500, color: '#1976d2' }}>
+              <div style={{ flex: 1 }}><ProgressBar value={folderProgress} color="#6a1b9a" /></div>
+              <span style={{ fontSize: 14, minWidth: 140, textAlign: 'right', fontWeight: 500, color: '#6a1b9a' }}>
+                {job?.stats?.foldersSummarized ?? 0} / {job?.totalFolders ?? '?'} folders
+              </span>
+            </div>
+
+            <div style={{ height: 8 }} />
+
+            <strong style={{ fontWeight: 600 }}>File Progress:</strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
+              <div style={{ flex: 1 }}><ProgressBar value={fileProgress} color="#2ecc40" /></div>
+              <span style={{ fontSize: 14, minWidth: 140, textAlign: 'right', fontWeight: 500, color: '#1976d2' }}>
                 {job?.stats?.filesParsed ?? 0} / {job?.stats?.filesDiscovered ?? '?'} files
               </span>
             </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 8 }}>
-            <div><strong>Started:</strong><br/><span style={{ fontSize: 14 }}>{job?.startedAt ? formatTime(job.startedAt) : '—'}</span></div>
-            <div><strong>Finished:</strong><br/><span style={{ fontSize: 14 }}>{job?.endedAt ? formatTime(job.endedAt) : '—'}</span></div>
-            <div><strong>Elapsed:</strong><br/><span style={{ fontSize: 14 }}>{job?.startedAt ? getDuration(job.startedAt, job.endedAt) : '—'}</span></div>
-          </div>
-          {/* Summary Section for Methods, Files, Folders */}
-          <div style={{ background: '#e3f2fd', borderRadius: 6, padding: 8, marginTop: 12, fontSize: 14, color: '#1565c0', fontWeight: 500 }}>
-            <div style={{ marginBottom: 6 }}><strong>Summary:</strong></div>
-            <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', fontFamily: 'monospace', fontSize: 15 }}>
-              <div><span style={{ fontWeight: 600 }}>Folders summarized:</span> {job?.totalFolders ?? job?.stats?.foldersSummarized ?? '—'}</div>
-              <div><span style={{ fontWeight: 600 }}>Files summarized:</span> {job?.filesDiscovered ?? job?.stats?.filesSummarized ?? '—'}</div>
-              <div><span style={{ fontWeight: 600 }}>Methods summarized:</span> {job?.totalMethods ?? job?.stats?.methodsSummarized ?? '—'}</div>
+
+            <div style={{ height: 8 }} />
+
+            <strong style={{ fontWeight: 600 }}>Method Progress:</strong>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 6 }}>
+              <div style={{ flex: 1 }}><ProgressBar value={methodProgress} color="#ef6c00" /></div>
+              <span style={{ fontSize: 14, minWidth: 140, textAlign: 'right', fontWeight: 500, color: '#ef6c00' }}>
+                {job?.stats?.methodsSummarized ?? 0} / {job?.totalMethods ?? '?'} methods
+              </span>
+            </div>
+            {/* Current index object: displays whether currently processing a Folder / File / Method and its full path */}
+            <div style={{ marginTop: 10 }}>
+              <strong style={{ fontWeight: 600 }}>Current Index Object:</strong>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 6 }}>
+                <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 6, fontFamily: 'monospace', flex: 1, overflow: 'hidden' }}>
+                  <div style={{ fontSize: 13, color: '#666' }}>{job?.currentObject?.type ? String(job.currentObject.type).charAt(0).toUpperCase() + String(job.currentObject.type).slice(1) : (job?.currentFile ? 'File' : '—')}</div>
+                  <div style={{ fontWeight: 700, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job?.currentObject?.name ?? job?.currentFile ?? '—'}</div>
+                </div>
+                <div style={{ fontSize: 13, color: '#888', minWidth: 160, textAlign: 'right' }}>{sseConnected ? 'live' : '—'}</div>
+              </div>
             </div>
           </div>
-          {job?.stats && <div style={{ background: '#f9fbe7', borderRadius: 6, padding: 8, marginTop: 8, fontSize: 14, fontFamily: 'monospace', color: '#333', boxShadow: '0 1px 4px #e0e0e0' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', marginTop: 8, fontFamily: 'monospace', fontSize: 15, background: 'transparent', boxShadow: 'none', borderRadius: 0, padding: 0 }}>
-              <div><span style={{ fontWeight: 600 }}>Files Discovered:</span> {job.stats.filesDiscovered}</div>
-              <div><span style={{ fontWeight: 600 }}>Files Parsed:</span> {job.stats.filesParsed}</div>
-              <div><span style={{ fontWeight: 600 }}>Files Skipped:</span> {(job.stats.filesSkipped && job.stats.filesSkipped > 0) ? job.stats.filesSkipped : (job.stats.filesDiscovered - job.stats.filesParsed)}</div>
+          {/* spread the started/finished/elapsed boxes across the full width */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18, marginTop: 8 }}>
+            <div>
+              <strong>Started:</strong><br/>
+              <span style={{ fontSize: 14 }}>
+                {job?.currentObject?.startedAt ? formatTime(job.currentObject.startedAt) : (job?.startedAt ? formatTime(job.startedAt) : '—')}
+              </span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '32px', marginTop: 8, fontFamily: 'monospace', fontSize: 15 }}>
-              <div><span style={{ fontWeight: 600 }}>Chunks Produced:</span> {job.stats.chunksProduced}</div>
-              <div><span style={{ fontWeight: 600 }}>Documents Indexed:</span> {job.stats.documentsIndexed}</div>
-              <div><span style={{ fontWeight: 600 }}>Embeddings Generated:</span> {job.stats.embeddingsGenerated}</div>
+            <div>
+              <strong>Finished:</strong><br/>
+              <span style={{ fontSize: 14 }}>
+                {job?.currentObject?.endedAt ? formatTime(job.currentObject.endedAt) : (job?.endedAt ? formatTime(job.endedAt) : '—')}
+              </span>
             </div>
-          </div>}
+            <div>
+              <strong>Elapsed:</strong><br/>
+              <span style={{ fontSize: 14 }}>
+                {job?.currentObject?.startedAt ? getDuration(job.currentObject.startedAt, job.currentObject?.endedAt) : (job?.startedAt ? getDuration(job.startedAt, job.endedAt) : '—')}
+              </span>
+            </div>
+          </div>
+          {/* Summary card removed — no extra spacer left here */}
         </div>
       </div>
       {/* Skipped Files Area */}
@@ -508,7 +616,7 @@ export default function IndexingPage() {
           </table>
         </div>
       )}
-      <h3 style={{ marginTop: 16, fontWeight: 700, fontSize: 18, color: '#1976d2' }}><span style={{ marginRight: 8 }}>🕑</span> Recent Jobs</h3>
+      <h3 style={{ marginTop: 0, fontWeight: 700, fontSize: 18, color: '#1976d2' }}><span style={{ marginRight: 8 }}>🕑</span> Recent Jobs</h3>
       <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 6px #eee', padding: 12, marginBottom: 12 }}>
         {recent.length === 0 ? (
           <div style={{ color: '#888', fontSize: 15, padding: 10 }}>No jobs yet</div>

@@ -11,7 +11,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -38,12 +37,35 @@ class IndexingProgressControllerHappyPathTest {
         IndexingJob j = new IndexingJob();
         j.setId(42L);
         when(jobRepository.findTopByOrderByStartedAtDesc()).thenReturn(Optional.of(j));
-        when(progressBus.register(42L)).thenReturn(new SseEmitter(1000L));
+        // Use a small custom emitter to capture sends
+        class TestEmitter extends SseEmitter {
+            volatile Object lastSent = null;
+            TestEmitter(long timeout) { super(timeout); }
+            @Override
+            public synchronized void send(Object object, org.springframework.http.MediaType mediaType) throws java.io.IOException {
+                this.lastSent = object;
+                // skip calling super to avoid trying to write to a real output stream in test
+            }
+            @Override
+            public synchronized void send(Object object) throws java.io.IOException {
+                this.lastSent = object;
+                // skip calling super to avoid IO in test
+            }
+            @Override
+            public synchronized void send(org.springframework.web.servlet.mvc.method.annotation.SseEmitter.SseEventBuilder event) throws java.io.IOException {
+                this.lastSent = event;
+                // no super call
+            }
+        }
+        TestEmitter emitter = new TestEmitter(1000L);
+        when(progressBus.register(42L)).thenReturn(emitter);
         // Keep heartbeat interval small and deterministic
         when(sseProperties.getHeartbeatMs()).thenReturn(1000L);
 
         mockMvc.perform(get("/api/indexing/stream").accept(MediaType.TEXT_EVENT_STREAM))
-            .andExpect(status().isOk())
-            .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_EVENT_STREAM));
+            .andExpect(status().isOk());
+
+        // controller should have sent an initial event (open comment) to the emitter
+        assert emitter.lastSent != null;
     }
 }

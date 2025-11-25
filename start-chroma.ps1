@@ -35,11 +35,11 @@ Write-Host "✅ Virtual environment activated" -ForegroundColor Green
 # Check if chroma is installed
 Write-Host ""
 Write-Host "Checking if chroma is installed..." -ForegroundColor Yellow
-$chromaInstalled = pip list | Select-String "chroma-core"
+$chromaInstalled = pip list | Select-String "chromadb"
 
 if (-not $chromaInstalled) {
     Write-Host "Installing Chroma..." -ForegroundColor Yellow
-    pip install chroma-core
+    pip install chromadb
     Write-Host "✅ Chroma installed" -ForegroundColor Green
 } else {
     Write-Host "✅ Chroma is already installed" -ForegroundColor Green
@@ -68,8 +68,15 @@ Write-Host ""
 Write-Host "Starting Chroma on http://localhost:8000" -ForegroundColor Yellow
 Write-Host ""
 
-# Start Chroma with the specified data directory
-chroma run --path $chromaDataDir --port 8000 --host 0.0.0.0
+# Start Chroma with the specified data directory and config
+$configFile = Join-Path $scriptDir "chroma_config.yaml"
+if (Test-Path $configFile) {
+    Write-Host "Using config file: $configFile" -ForegroundColor Yellow
+    chroma run --path $chromaDataDir --port 8000 --host 0.0.0.0 $configFile
+} else {
+    Write-Host "Config file not found, using defaults" -ForegroundColor Yellow
+    chroma run --path $chromaDataDir --port 8000 --host 0.0.0.0
+}
 
 Write-Host ""
 Write-Host "❌ Chroma server stopped" -ForegroundColor Red

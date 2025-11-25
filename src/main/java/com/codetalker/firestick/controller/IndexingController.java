@@ -81,8 +81,44 @@ public class IndexingController {
                 excludeGlobs == null || excludeGlobs.isEmpty() ? null : excludeGlobs,
                 finalAppName);
         log.info("[API] Indexing run requested: app={}, root={}, excludeDirs={}, excludeGlobs={} ", finalAppName, rootPath, excludeDirs, excludeGlobs);
-        IndexingReport report = indexingService.index(req);
-        return ResponseEntity.ok(report);
+        // Start indexing work in a background thread so the API returns immediately
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                indexingService.index(req);
+            } catch (Exception ex) {
+                log.error("Background indexing failed", ex);
+            }
+        });
+
+        // Attempt to locate the newly created job quickly so callers receive the job id
+        long deadline = System.currentTimeMillis() + 1500;
+        while (System.currentTimeMillis() < deadline) {
+            var latest = jobRepository.findTopByOrderByStartedAtDesc();
+            if (latest.isPresent()) {
+                var job = latest.get();
+                // Return a minimal report so frontend can subscribe to SSE immediately
+                int discovered = job.getFilesDiscovered();
+                int parsed = job.getFilesParsed();
+                int skipped = Math.max(0, discovered - parsed);
+                return ResponseEntity.ok(new IndexingReport(
+                    job.getId(), job.getStatus() == null ? "UNKNOWN" : job.getStatus().name(), req.rootPath(),
+                    discovered,
+                    job.getTotalFolders(),
+                    job.getTotalMethods(),
+                    parsed,
+                    skipped,
+                    job.getChunksProduced(),
+                    job.getDocumentsIndexed(),
+                    job.getEmbeddingsGenerated(),
+                    job.getStartedAt() == null ? System.currentTimeMillis() : job.getStartedAt().toEpochMilli(),
+                    0L, new java.util.ArrayList<>(), 0, 0, 0, new java.util.ArrayList<>()
+                ));
+            }
+            try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+        }
+
+        // If job isn't visible yet, return accepted (202) so caller knows indexing was triggered
+        return ResponseEntity.accepted().build();
     }
 
     @PostMapping("/run")
@@ -97,8 +133,34 @@ public class IndexingController {
     })
     public ResponseEntity<IndexingReport> run(@RequestBody @jakarta.validation.Valid IndexingRequest request) {
         log.info("[API] Indexing run requested (POST): app={}, root={}", request.appName(), request.rootPath());
-        IndexingReport report = indexingService.index(request);
-        return ResponseEntity.ok(report);
+        // run asynchronously so API caller returns immediately and can attach to SSE
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                indexingService.index(request);
+            } catch (Exception ex) {
+                log.error("Background indexing failed", ex);
+            }
+        });
+
+        // try to find the new job quickly and return a minimal report
+        long deadline = System.currentTimeMillis() + 1500;
+        while (System.currentTimeMillis() < deadline) {
+            var latest = jobRepository.findTopByOrderByStartedAtDesc();
+            if (latest.isPresent()) {
+                var job = latest.get();
+                int discovered = job.getFilesDiscovered();
+                int parsed = job.getFilesParsed();
+                int skipped = Math.max(0, discovered - parsed);
+                return ResponseEntity.ok(new IndexingReport(
+                    job.getId(), job.getStatus() == null ? "UNKNOWN" : job.getStatus().name(), request.rootPath(), discovered, job.getTotalFolders(), job.getTotalMethods(), parsed, skipped,
+                    job.getChunksProduced(), job.getDocumentsIndexed(), job.getEmbeddingsGenerated(),
+                    job.getStartedAt() == null ? System.currentTimeMillis() : job.getStartedAt().toEpochMilli(),
+                    0L, new java.util.ArrayList<>(), 0, 0, 0, new java.util.ArrayList<>()
+                ));
+            }
+            try { Thread.sleep(100); } catch (InterruptedException ignored) {}
+        }
+        return ResponseEntity.accepted().build();
     }
 
     @GetMapping("/browse")

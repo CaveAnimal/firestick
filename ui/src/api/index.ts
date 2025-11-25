@@ -23,8 +23,10 @@ export async function apiGet<T>(path: string, opts: GetOptions = {}): Promise<T>
   const signal = opts.signal || controller.signal
   const p = (async () => {
     try {
-      const res = await fetch(path, { signal })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      console.log(`[API] GET ${path}`)
+      const res = await fetch(path, { signal, headers: { 'Accept': 'application/json' } })
+      console.log(`[API] Response ${path} -> ${res.status} ${res.statusText}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`)
       return res.json() as Promise<T>
     } finally {
       inflight.delete(key)
@@ -62,10 +64,24 @@ export async function startIndexing(opts: IndexingOptions = {}, app?: string): P
 export type IndexingJob = {
   id?: string | number
   status?: string
-  startTime?: string
-  endTime?: string
+  startedAt?: string
+  endedAt?: string
   progress?: number
-  stats?: Record<string, number>
+  stats?: Record<string, any>
+  appName?: string
+  currentFile?: string
+  // currentObject is set when indexing is actively processing an object (folder / file / method)
+  // includes timestamps and elapsedMs when available
+  currentObject?: { type?: string; name?: string; startedAt?: string; endedAt?: string; elapsedMs?: number }
+  filesDiscovered?: number
+  filesParsed?: number
+  chunksProduced?: number
+  documentsIndexed?: number
+  embeddingsGenerated?: number
+  filesSkipped?: number
+  totalFolders?: number
+  totalMethods?: number
+  skippedFiles?: Array<{ fileName: string; reason: string }>
 }
 
 export async function getLatestJob(app?: string): Promise<IndexingJob> {
@@ -76,6 +92,38 @@ export async function getLatestJob(app?: string): Promise<IndexingJob> {
 export async function getJobById(id: string | number, app?: string): Promise<IndexingJob> {
   const url = app ? `/api/indexing/jobs/${id}?app=${encodeURIComponent(app)}` : `/api/indexing/jobs/${id}`
   return apiGet<IndexingJob>(url, { dedupe: 'share' })
+}
+
+export type IndexingObject = {
+  id?: number | string
+  jobId?: number | string
+  objectType?: string
+  objectName?: string
+  startedAt?: string
+  endedAt?: string
+  elapsedMs?: number
+  reasonSkipped?: string
+}
+
+export type IndexingObjectsPage = {
+  items: IndexingObject[]
+  page: number
+  size: number
+  total: number
+}
+
+// Supports (optional) pagination and filtering: page, limit, objectType, q
+export async function getIndexingObjects(jobId: string | number, opts: { page?: number; limit?: number; objectType?: string; q?: string } = {}): Promise<IndexingObjectsPage | IndexingObject[]> {
+  const params = new URLSearchParams()
+  if (typeof opts.page === 'number') params.set('page', String(opts.page))
+  if (typeof opts.limit === 'number') params.set('limit', String(opts.limit))
+  if (opts.objectType) params.set('objectType', opts.objectType)
+  if (opts.q) params.set('q', opts.q)
+  const url = `/api/indexing/jobs/${jobId}/objects${params.toString() ? `?${params.toString()}` : ''}`
+  const res = await apiGet<any>(url, { dedupe: 'share' })
+  // Backend returns either full array (legacy) or paged envelope {items,page,size,total}
+  if (Array.isArray(res)) return res as IndexingObject[]
+  return res as IndexingObjectsPage
 }
 
 export async function getRecentJobs(limit = 10, app?: string): Promise<IndexingJob[]> {

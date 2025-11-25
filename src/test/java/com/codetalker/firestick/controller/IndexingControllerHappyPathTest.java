@@ -41,14 +41,41 @@ class IndexingControllerHappyPathTest {
     private com.codetalker.firestick.service.AppRenameService appRenameService;
 
     private static IndexingReport sampleReport() {
-        return new IndexingReport(1L, "C:/repo", 3, 3, 0, 7, 7, 7,
-                1000L, 2000L, List.of());
+        return new IndexingReport(
+            1L, // jobId
+            "RUNNING",
+            "C:/repo", // rootPath
+            3, // filesDiscovered
+            1, // totalFolders
+            5, // totalMethods
+            3, // filesParsed
+            0, // filesSkipped
+            7, // chunksProduced
+            7, // documentsIndexed
+            7, // embeddingsGenerated
+            1000L, // startedAtMillis
+            2000L, // endedAtMillis
+            List.of(), // errors
+            2, // filesSummarized
+            1, // foldersSummarized
+            5, // methodsSummarized
+            List.of() // skippedFiles
+        );
     }
 
     @Test
     void getRun_WithValidParams_ShouldReturn200() throws Exception {
         when(indexingService.index(new IndexingRequest("C:/repo", null, null)))
                 .thenReturn(sampleReport());
+
+        // Mock job repository returning a recently created job so controller can return job id immediately
+        var j = new com.codetalker.firestick.model.IndexingJob();
+        j.setId(1L);
+        j.setAppName("default");
+        j.setRootPath("C:/repo");
+        j.setStatus(com.codetalker.firestick.model.IndexingJob.Status.RUNNING);
+        j.setStartedAt(java.time.Instant.ofEpochMilli(1000L));
+        when(jobRepository.findTopByOrderByStartedAtDesc()).thenReturn(java.util.Optional.of(j));
 
         mockMvc.perform(get("/api/indexing/run")
                 .param("root", "C:/repo")
@@ -63,6 +90,14 @@ class IndexingControllerHappyPathTest {
         when(indexingService.index(req)).thenReturn(sampleReport());
 
         String body = "{\n  \"rootPath\": \"C:/repo\"\n}";
+        // Mock job repository
+        var j2 = new com.codetalker.firestick.model.IndexingJob();
+        j2.setId(1L);
+        j2.setAppName("default");
+        j2.setRootPath("C:/repo");
+        j2.setStatus(com.codetalker.firestick.model.IndexingJob.Status.RUNNING);
+        j2.setStartedAt(java.time.Instant.ofEpochMilli(1000L));
+        when(jobRepository.findTopByOrderByStartedAtDesc()).thenReturn(java.util.Optional.of(j2));
         mockMvc.perform(post("/api/indexing/run")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body)

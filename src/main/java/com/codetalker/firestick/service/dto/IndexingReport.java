@@ -7,8 +7,11 @@ import java.util.List;
  */
 public record IndexingReport(
         Long jobId,
+        String status,
         String rootPath,
         int filesDiscovered,
+        int totalFolders,
+        int totalMethods,
         int filesParsed,
         int filesSkipped,
         int chunksProduced,
@@ -16,7 +19,13 @@ public record IndexingReport(
         int embeddingsGenerated,
         long startedAtMillis,
         long endedAtMillis,
-        List<String> errors
+        List<String> errors,
+        int filesSummarized,
+        int foldersSummarized,
+        int methodsSummarized,
+        List<SkippedFile> skippedFiles
 ) {
     public long durationMillis() { return endedAtMillis - startedAtMillis; }
+
+    public static record SkippedFile(String fileName, String reason) {}
 }

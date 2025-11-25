@@ -20,6 +20,18 @@ class IndexingJobControllerValidationTest {
     @MockBean
     private IndexingJobRepository repository;
 
+    @MockBean
+    private com.codetalker.firestick.repository.CodeFileRepository codeFileRepository;
+
+    @MockBean
+    private com.codetalker.firestick.repository.CodeChunkRepository codeChunkRepository;
+
+    @MockBean
+    private com.codetalker.firestick.repository.FolderSummaryRepository folderSummaryRepository;
+
+    @MockBean
+    private com.codetalker.firestick.repository.IndexingObjectRepository indexingObjectRepository;
+
     @Test
     void recent_withLimitZero_ShouldReturnBadRequest() throws Exception {
         mockMvc.perform(get("/api/indexing/jobs").param("limit", "0"))

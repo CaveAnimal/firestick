@@ -8,6 +8,7 @@ const SearchPage = lazy(() => import('./pages/Search'))
 const DashboardPage = lazy(() => import('./pages/Dashboard'))
 const IndexingPage = lazy(() => import('./pages/Indexing'))
 const DiagnosticsPage = lazy(() => import('./pages/Diagnostics'))
+const AdminIndexingObjects = lazy(() => import('./pages/AdminIndexingObjects'))
 
 // Home component moved to `ui/src/pages/Home.tsx` and lazy loaded above
 
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/graph" element={<GraphPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/indexing" element={<IndexingPage />} />
+          <Route path="/admin/indexing-objects" element={<AdminIndexingObjects />} />
           <Route path="/diagnostics" element={<DiagnosticsPage />} />
         </Routes>
       </Suspense>

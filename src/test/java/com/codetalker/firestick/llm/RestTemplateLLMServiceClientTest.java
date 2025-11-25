@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
@@ -30,6 +31,8 @@ class RestTemplateLLMServiceClientTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        when(builder.connectTimeout(any())).thenReturn(builder);
+        when(builder.readTimeout(any())).thenReturn(builder);
         when(builder.build()).thenReturn(restTemplate);
         client = new RestTemplateLLMServiceClient(builder, "http://localhost:8001");
     }

@@ -87,3 +87,39 @@ Method-Level Summarization involves generating summaries for individual methods,
 ### Step 3: Concept Search
 **Process:** Generate embeddings for these *summaries* (both file and folder level).
 **Search:** When a user asks "Where is the security layer?", the vector search matches the *description* of the `auth` package, even if the user didn't use the word "auth".
+
+---
+
+# Goal: Indexing Console — Live, real-time progress and object-level reporting
+
+Add a user-facing, developer-testable goal to make the Indexing Console (Indexing page) report live updates for every progress variable and also show the current object being indexed, with either a duration or a reason why that object wasn't indexed.
+
+Purpose
+- Give users an accurate real-time view of ongoing indexing activity so they can monitor progress, debug issues, and verify coverage.
+
+Acceptance criteria
+- The Indexing Console UI shows live updates for all progress-related fields during a running job: filesDiscovered, filesParsed, chunksProduced, documentsIndexed, embeddingsGenerated, filesSkipped, filesSummarized, foldersSummarized, methodsSummarized, and the computed percent/progress value.
+- The same UI area additionally shows the "current object" being processed (file, folder or method), updated live by SSE or other streaming updates.
+- For the current object, the UI displays either:
+	- the elapsed duration (ms/seconds) from object-start to object-end, or
+	- a short human-readable reason (e.g., "skipped: unsupported file type" or "error: parse failure") if the object was not indexed.
+- The server publishes object-level events over the existing SSE endpoint (`/api/indexing/stream`) with event payloads that include: event-type (object-start, object-end, object-skipped), object type (file/folder/method), object name/path, timestamp(s), elapsedMs (if applicable), and reason (optional, for skipped/failed). Aggregated stats are published at sensible intervals (or after each object event) and are merged in the UI so all counters stay current.
+- If SSE disconnects or is not available, the UI falls back to a short-polling refresh of the latest job so progress still updates (degraded mode).
+- End-to-end tests validate the UI receives a small synthetic job and updates each progress field and current-object info as the server emits object-level events.
+
+Implementation notes (developer facing)
+- Backend
+	- Ensure `IndexingService` emits object-level events via the existing SSE/ProgressBus (or equivalent) when a per-object lifecycle occurs: on object-start (include timestamp), on object-end (include timestamp + elapsedMs), and on object-skipped (include timestamp + reason).
+	- Continue to emit aggregated job-level stats (filesParsed, etc.) at least after each object completion to keep UI counters in sync with DB persisted totals.
+	- Make sure the event payload keys match what the UI expects (percent, filesParsed, filesDiscovered, totalFolders, totalMethods, currentFile or objectName, objectType, elapsedMs, reason).
+	- Add or update integration tests to assert SSE stream emits object-start / object-end / object-skipped events and aggregated stat updates.
+
+- Frontend
+	- Indexing page should open SSE to `/api/indexing/stream?jobId=` and merge incoming messages into `job` state (all counters) and a `currentObject` / `objectEvents` area. The UI should show an explicit connection status (connected/connecting/disconnected).
+	- Show the current object's name, type, start time, and either duration or reason (if skipped or failed). If object-end emits elapsedMs, compute a friendly duration string for display.
+	- Add unit/integration tests (jest / react-testing-library / e2e) to verify UI updates when it receives simulated SSE messages (object-start/end/skip and aggregated stat updates).
+
+- Backward compatibility
+	- Keep backward-compatible payload parsing in the UI so older servers that don't publish per-object SSE still work (UI merges aggregated stats and falls back to polling when necessary).
+
+This goal describes the user-visible feature, the acceptance criteria to validate it, and basic backend/frontend responsibilities so teams can implement it and write tests to prevent regressions.

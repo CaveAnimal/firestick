@@ -1,0 +1,1 @@
+﻿Provide real time live updates to the Indexing Console, Indexing Progress with the current index object path/name and current progress. update of each and every progress bar which should be representing progress as a percent complete

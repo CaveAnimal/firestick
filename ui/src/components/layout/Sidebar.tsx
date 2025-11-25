@@ -11,6 +11,8 @@ export default function Sidebar() {
         <li><Link to="/dashboard">Dashboard</Link></li>
         <li><Link to="/indexing">Indexing</Link></li>
         <li><Link to="/diagnostics">Diagnostics</Link></li>
+        <li style={{ marginTop: 8, fontWeight: 600, color: '#777' }}>Admin</li>
+        <li style={{ marginLeft: 6 }}><Link to="/admin/indexing-objects">Indexing Objects</Link></li>
       </ul>
     </aside>
   )

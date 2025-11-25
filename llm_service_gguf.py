@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CodeLlama 7B GGUF Flask microservice for Firestick
+Local GGUF Flask microservice for Firestick
 Uses local GGUF model (no downloads needed)
 Provides LLM capabilities: code explanation, documentation, pattern detection, relationship analysis
 Runs on port 8001 for integration with Java backend
@@ -10,9 +10,10 @@ import os
 import sys
 import json
 import logging
+import re
 from datetime import datetime
 from typing import Dict, List, Optional
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 
 # Fix Windows console encoding for Unicode characters
@@ -49,8 +50,40 @@ requests_handler.setFormatter(logging.Formatter('%(asctime)s - %(message)s'))
 requests_logger.addHandler(requests_handler)
 requests_logger.setLevel(logging.INFO)
 
+
 app = Flask(__name__)
 CORS(app)
+
+# SSE progress event subscribers
+import threading
+progress_subscribers = set()
+progress_lock = threading.Lock()
+
+def send_progress_event(event: str, data: dict):
+    msg = f"event: {event}\ndata: {json.dumps(data)}\n\n"
+    with progress_lock:
+        for sub in list(progress_subscribers):
+            try:
+                sub.put(msg)
+            except Exception:
+                progress_subscribers.discard(sub)
+
+def sse_stream():
+    import queue
+    q = queue.Queue()
+    with progress_lock:
+        progress_subscribers.add(q)
+    try:
+        while True:
+            msg = q.get()
+            yield msg
+    except GeneratorExit:
+        with progress_lock:
+            progress_subscribers.discard(q)
+
+@app.route('/api/llm/progress-stream')
+def llm_progress_stream():
+    return Response(sse_stream(), mimetype='text/event-stream')
 
 # ============================================================================
 # Load Local GGUF Model with llama-cpp-python
@@ -100,7 +133,7 @@ def initialize_model():
             logger.info("Install with: pip install llama-cpp-python")
             return False
         
-        logger.info("Loading CodeLlama 7B model (this may take a minute)...")
+        logger.info(f"Loading model from {model_path} (this may take a minute)...")
         
         # Load the model
         model = Llama(
@@ -110,7 +143,7 @@ def initialize_model():
             n_ctx=N_CTX,  # Context window (configurable variable)
             verbose=False
         )
-        logger.info("✓ CodeLlama 7B model loaded successfully")
+        logger.info(f"✓ Model loaded successfully: {os.path.basename(model_path)}")
         logger.info(f"✓ Model context: {N_CTX} tokens")
         return True
         
@@ -133,7 +166,7 @@ def generate_response(prompt: str, max_tokens: int = MAX_TOKENS_DEFAULT) -> str:
             max_tokens=max_tokens,
             temperature=0.7,
             top_p=0.9,
-            stop=["```", "---"]
+            stop=["```", "---", "[/INST]", "</s>"]
         )
         
         result = response["choices"][0]["text"].strip()
@@ -152,9 +185,9 @@ def health_check():
     """Health check endpoint"""
     health_data = {
         "status": "healthy",
-        "service": "CodeLlama LLM Service (GGUF)",
+        "service": "Local GGUF LLM Service",
         "timestamp": datetime.now().isoformat(),
-        "model": "codellama-7b.Q4_K_M.gguf",
+        "model": os.path.basename(model_path),
         "model_loaded": model is not None
     }
     requests_logger.info(f"HEALTH CHECK - Status: {health_data['status']}, Model Loaded: {health_data['model_loaded']}")
@@ -189,6 +222,7 @@ def root():
 def explain_code():
     """Explain code functionality"""
     try:
+        send_progress_event("llm_progress", {"status": "started", "type": "explain", "timestamp": datetime.now().isoformat()})
         data = request.get_json()
         code = data.get('code', '')
         
@@ -207,7 +241,9 @@ def explain_code():
 [/INST]"""
         
         logger.debug(f"Generated prompt: {prompt[:300]}...")
+        send_progress_event("llm_progress", {"status": "generating", "type": "explain", "timestamp": datetime.now().isoformat()})
         explanation = generate_response(prompt, max_tokens=EXPLAIN_MAX_TOKENS)
+        send_progress_event("llm_progress", {"status": "completed", "type": "explain", "timestamp": datetime.now().isoformat()})
         
         requests_logger.info(f"EXPLAIN SUCCESS - Response length: {len(explanation)} chars, Response: {explanation[:100]}...")
         logger.debug(f"Full response: {explanation}")
@@ -221,6 +257,50 @@ def explain_code():
     except Exception as e:
         logger.error(f"Error explaining code: {e}", exc_info=True)
         requests_logger.error(f"EXPLAIN ERROR - {str(e)}")
+        send_progress_event("llm_progress", {"status": "error", "type": "explain", "timestamp": datetime.now().isoformat(), "error": str(e)})
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/api/llm/summarize', methods=['POST'])
+def summarize_code():
+    """Summarize code functionality"""
+    try:
+        send_progress_event("llm_progress", {"status": "started", "type": "summarize", "timestamp": datetime.now().isoformat()})
+        data = request.get_json()
+        code = data.get('code', '')
+        
+        requests_logger.info(f"SUMMARIZE REQUEST - Code length: {len(code)} chars")
+        logger.debug(f"Received code: {code[:200]}...")
+        
+        if not code:
+            requests_logger.warning("SUMMARIZE FAILED - No code provided")
+            return jsonify({"error": "No code provided"}), 400
+        
+        prompt = f"""[INST] Summarize what this code does in 2-3 sentences:
+
+```
+{code}
+```
+[/INST]"""
+        
+        logger.debug(f"Generated prompt: {prompt[:300]}...")
+        send_progress_event("llm_progress", {"status": "generating", "type": "summarize", "timestamp": datetime.now().isoformat()})
+        summary = generate_response(prompt, max_tokens=EXPLAIN_MAX_TOKENS)
+        send_progress_event("llm_progress", {"status": "completed", "type": "summarize", "timestamp": datetime.now().isoformat()})
+        
+        requests_logger.info(f"SUMMARIZE SUCCESS - Response length: {len(summary)} chars, Response: {summary[:100]}...")
+        logger.debug(f"Full response: {summary}")
+        
+        return jsonify({
+            "success": True,
+            "summary": summary,
+            "timestamp": datetime.now().isoformat()
+        })
+    
+    except Exception as e:
+        logger.error(f"Error summarizing code: {e}", exc_info=True)
+        requests_logger.error(f"SUMMARIZE ERROR - {str(e)}")
+        send_progress_event("llm_progress", {"status": "error", "type": "summarize", "timestamp": datetime.now().isoformat(), "error": str(e)})
         return jsonify({"error": str(e)}), 500
 
 
@@ -368,12 +448,18 @@ def expand_query():
         data = request.get_json()
         query = data.get('query', '')
         
+        # Clean query of potential formatting tags
+        if query:
+            query = re.sub(r'\[/?(TR|TD|TBL|TH|TABLE|tr|td|tbl|th|table).*?\]', '', query)
+            query = re.sub(r'<[^>]+>', '', query)
+            query = query.strip()
+        
         requests_logger.info(f"EXPAND REQUEST - Query: {query}")
         
         if not query:
             return jsonify({"error": "No query provided"}), 400
             
-        prompt = f"""[INST] You are an expert Java developer. Provide 5-10 technical keywords, class names, or concepts related to the following query for a legacy Java application. Do not explain, just list the terms separated by commas.
+        prompt = f"""[INST] Provide 5-10 keywords, concepts, or technical terms related to the following query for a software application. Include both functional terms and technical terms. Do not explain, just list the terms separated by commas.
 
 Query: {query}
 [/INST]"""
@@ -381,14 +467,29 @@ Query: {query}
         logger.debug(f"Generated prompt: {prompt}")
         response_text = generate_response(prompt, max_tokens=128)
         
+        # Clean response text of tags before parsing
+        if response_text:
+            # Remove any square bracket tags like [INST], [ROW], [TR]
+            response_text = re.sub(r'\[[^\]]*\]', ' ', response_text)
+            # Remove any HTML tags
+            response_text = re.sub(r'<[^>]*>', ' ', response_text)
+        
         # Parse response: split by commas or newlines, strip whitespace
         terms = []
         if response_text:
             # Handle comma-separated or newline-separated lists
             raw_terms = response_text.replace('\n', ',').split(',')
             for term in raw_terms:
-                clean_term = term.strip().strip('- ').strip()
-                if clean_term and len(clean_term) > 2:
+                # Remove leading numbers/bullets (e.g., "1.", "2)", "-")
+                clean_term = re.sub(r'^[\d\-\.\)\s]+', '', term).strip()
+                
+                # Filter out the original query, very long sentences, and repetitive phrases
+                if (clean_term and 
+                    len(clean_term) > 2 and 
+                    len(clean_term) < 40 and 
+                    clean_term.lower() not in query.lower() and 
+                    query.lower() not in clean_term.lower() and
+                    "to help a user" not in clean_term.lower()): # Specific guard against observed hallucination
                     terms.append(clean_term)
         
         # Deduplicate
@@ -417,6 +518,12 @@ def answer_question():
         query = data.get('query', '')
         context_chunks = data.get('context_chunks', [])
         
+        # Clean query
+        if query:
+            query = re.sub(r'\[/?(TR|TD|TBL|TH|TABLE|tr|td|tbl|th|table).*?\]', '', query)
+            query = re.sub(r'<[^>]+>', '', query)
+            query = query.strip()
+        
         requests_logger.info(f"ANSWER REQUEST - Query: {query}, Chunks: {len(context_chunks)}")
         
         if not query:
@@ -439,6 +546,15 @@ Context:
         
         # Use a larger token limit for the answer
         answer = generate_response(prompt, max_tokens=512)
+        
+        # Clean answer of tags
+        if answer:
+            # Remove [ROW], [INST], [TR], etc.
+            answer = re.sub(r'\[[^\]]*\]', ' ', answer)
+            # Remove HTML tags
+            answer = re.sub(r'<[^>]*>', ' ', answer)
+            # Remove leading "Answer:" or "Question:" if the model repeats it
+            answer = re.sub(r'^(Answer:|Question:)\s*', '', answer.strip(), flags=re.IGNORECASE)
         
         requests_logger.info(f"ANSWER SUCCESS - Response length: {len(answer)}")
         

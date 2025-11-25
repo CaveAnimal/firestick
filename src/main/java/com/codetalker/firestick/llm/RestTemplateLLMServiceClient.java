@@ -1,5 +1,6 @@
 package com.codetalker.firestick.llm;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -36,7 +37,10 @@ public class RestTemplateLLMServiceClient implements LLMServiceClient {
             RestTemplateBuilder builder,
             @Value("${llm.service.url:http://127.0.0.1:8001}") String llmServiceUrl) {
         this.llmServiceUrl = llmServiceUrl;
-        this.restTemplate = builder.build();
+        this.restTemplate = builder
+                .connectTimeout(Duration.ofSeconds(5))
+                .readTimeout(Duration.ofSeconds(60))
+                .build();
     }
     
     @Override

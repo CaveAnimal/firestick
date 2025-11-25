@@ -37,6 +37,8 @@ public class IndexingService {
     private final com.codetalker.firestick.llm.LLMServiceClient llmServiceClient;
     private final SummaryAggregationService summaryAggregationService;
     private final ProgressBus progressBus;
+        private final com.codetalker.firestick.repository.IndexingObjectRepository indexingObjectRepository;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
     private final IndexingJobControl jobControl;
 
     public IndexingService(
@@ -50,7 +52,9 @@ public class IndexingService {
             com.codetalker.firestick.llm.LLMServiceClient llmServiceClient,
             SummaryAggregationService summaryAggregationService,
             ProgressBus progressBus,
-            IndexingJobControl jobControl) {
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper,
+            IndexingJobControl jobControl,
+            com.codetalker.firestick.repository.IndexingObjectRepository indexingObjectRepository) {
         this.fileDiscoveryService = fileDiscoveryService;
         this.codeParserService = codeParserService;
         this.codeSearchService = codeSearchService;
@@ -61,6 +65,8 @@ public class IndexingService {
         this.llmServiceClient = llmServiceClient;
         this.summaryAggregationService = summaryAggregationService;
         this.progressBus = progressBus;
+            this.indexingObjectRepository = indexingObjectRepository;
+        this.objectMapper = objectMapper;
         this.jobControl = jobControl;
     }
 
@@ -90,14 +96,76 @@ public class IndexingService {
     int discovered = files.size();
     log.info("[Indexing] Discovered {} files under {}", discovered, request.rootPath());
     // publish initial progress
+    // Compute folder & method totals before heavy processing so the UI can display totals
+    java.util.Set<String> folders = new java.util.HashSet<>();
+    java.util.Map<java.nio.file.Path, com.codetalker.firestick.model.CodeFile> parsedFiles = new java.util.HashMap<>();
+    int totalMethods = 0;
+    for (Path p : files) {
+        Path parent = p.getParent();
+        if (parent != null) folders.add(parent.toString());
+        try {
+            // pre-parse to count methods (lightweight use of parser)
+            com.codetalker.firestick.model.CodeFile cf = codeParserService.parseFile(p.toString());
+            parsedFiles.put(p, cf);
+            if (cf.getChunks() != null) {
+                for (com.codetalker.firestick.model.CodeChunk ck : cf.getChunks()) {
+                    if ("method".equalsIgnoreCase(ck.getType())) totalMethods++;
+                }
+            }
+        } catch (Exception ex) {
+            // parsing may fail for some non-Java or malformed files — ignore for totals
+        }
+    }
+    int totalFolders = folders.size();
+    job.setFilesDiscovered(discovered);
+    job.setTotalFolders(totalFolders);
+    job.setTotalMethods(totalMethods);
+    job = jobRepository.save(job);
+
+    // Persist per-object rows (folders / files / methods)
+    try {
+        java.util.List<com.codetalker.firestick.model.IndexingObject> objs = new java.util.ArrayList<>();
+        for (String folder : folders) {
+            com.codetalker.firestick.model.IndexingObject o = new com.codetalker.firestick.model.IndexingObject();
+            o.setJobId(job.getId()); o.setObjectType("FOLDER"); o.setObjectName(folder);
+            objs.add(o);
+        }
+        for (Path p : files) {
+            com.codetalker.firestick.model.IndexingObject o = new com.codetalker.firestick.model.IndexingObject();
+            o.setJobId(job.getId()); o.setObjectType("FILE"); o.setObjectName(p.toString());
+            objs.add(o);
+            // add methods discovered for this file
+            com.codetalker.firestick.model.CodeFile cf = parsedFiles.get(p);
+            if (cf != null && cf.getChunks() != null) {
+                for (com.codetalker.firestick.model.CodeChunk ck : cf.getChunks()) {
+                    if ("method".equalsIgnoreCase(ck.getType())) {
+                        com.codetalker.firestick.model.IndexingObject mo = new com.codetalker.firestick.model.IndexingObject();
+                        mo.setJobId(job.getId());
+                        mo.setObjectType("METHOD");
+                        mo.setObjectName(p.toString() + "#" + (ck.getName() == null ? "method" : ck.getName()));
+                        objs.add(mo);
+                    }
+                }
+            }
+        }
+        if (!objs.isEmpty()) indexingObjectRepository.saveAll(objs);
+    } catch (Exception ex) {
+        // non-fatal; log and continue
+        log.warn("Failed to persist indexing objects for job {}: {}", job.getId(), ex.getMessage());
+    }
+
+    // publish initial progress with totals
     progressBus.publish(job.getId(), new com.codetalker.firestick.service.dto.IndexingProgress(
-        job.getId(), job.getStatus().name(), discovered, 0, 0, 0, 0, 0, 0));
+        job.getId(), job.getStatus().name(), discovered, totalFolders, totalMethods, 0, 0, 0, 0, 0, 0, null, 0, 0, 0, java.util.List.of()));
 
         AtomicInteger parsedCount = new AtomicInteger();
     AtomicInteger chunkCount = new AtomicInteger();
     AtomicInteger skippedCount = new AtomicInteger();
         AtomicInteger indexedDocs = new AtomicInteger();
         AtomicInteger embeddings = new AtomicInteger();
+        AtomicInteger filesSummarized = new AtomicInteger();
+        AtomicInteger methodsSummarized = new AtomicInteger();
+        java.util.List<com.codetalker.firestick.service.dto.IndexingReport.SkippedFile> skippedFiles = new java.util.ArrayList<>();
 
         // 2) Parse -> chunk is handled inside CodeParserService.parseFile()
     for (Path p : files) {
@@ -117,10 +185,38 @@ public class IndexingService {
                     fsLastModified.equals(existing.get().getLastModified()) && 
                     existing.get().getSummary() != null && !existing.get().getSummary().isBlank()) {
                     skippedCount.incrementAndGet();
+                    // mark per-file object as skipped with reason
+                    try {
+                        var fo = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString());
+                        if (fo.isPresent()) {
+                            var o = fo.get();
+                            o.setReasonSkipped("unchanged");
+                            o.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                            if (o.getStartedAt() != null) o.setElapsedMs(java.time.Duration.between(o.getStartedAt(), o.getEndedAt()).toMillis());
+                            indexingObjectRepository.save(o);
+                            progressBus.publish(job.getId(), java.util.Map.of("event","object-skipped","type","FILE","name", p.toString(), "reason","unchanged"));
+                        }
+                    } catch (Exception ex) {
+                        log.debug("Failed to mark file object skipped for {}: {}", p, ex.getMessage());
+                    }
                     continue;
                 }
 
-                CodeFile codeFile = codeParserService.parseFile(p.toString());
+                // mark file object started (best-effort)
+                try {
+                    var fo = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString());
+                    if (fo.isPresent()) {
+                        var o = fo.get();
+                        o.setStartedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                        indexingObjectRepository.save(o);
+                        progressBus.publish(job.getId(), java.util.Map.of("event","object-start","type","FILE","name", p.toString(), "ts", System.currentTimeMillis()));
+                    }
+                } catch (Exception ex) {
+                    log.debug("Failed to mark file object started for {}: {}", p, ex.getMessage());
+                }
+
+                // Use pre-parsed result when available
+                CodeFile codeFile = parsedFiles.containsKey(p) ? parsedFiles.get(p) : codeParserService.parseFile(p.toString());
                 
                 // Generate Summary using LLM
                 try {
@@ -131,6 +227,9 @@ public class IndexingService {
                     }
                     String summary = llmServiceClient.summarize(content);
                     codeFile.setSummary(summary);
+                    if (summary != null && !summary.isBlank()) {
+                        filesSummarized.incrementAndGet();
+                    }
                 } catch (Exception e) {
                     log.warn("Failed to generate summary for file: {}", p, e);
                     // Continue without summary
@@ -143,35 +242,107 @@ public class IndexingService {
                     chunkCount.addAndGet(chunks.size());
                     // 3) Index & 4) Embed (mock)
                     for (CodeChunk c : chunks) {
+                        // method-level per-object timing
+                        com.codetalker.firestick.model.IndexingObject methodObj = null;
                         // Method-Level Summarization
                         if ("method".equals(c.getType()) && c.getContent().length() > 500) { // Only summarize methods > ~500 chars
                             try {
+                                // mark method object started (best-effort)
+                                try {
+                                    String mName = c.getName() == null ? "method" : c.getName();
+                                    var opt = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString() + "#" + mName);
+                                    if (opt.isPresent()) {
+                                        methodObj = opt.get();
+                                        methodObj.setStartedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                                        indexingObjectRepository.save(methodObj);
+                                        progressBus.publish(job.getId(), java.util.Map.of("event","object-start","type","METHOD","name", methodObj.getObjectName(), "ts", System.currentTimeMillis()));
+                                    }
+                                } catch (Exception ignore) {}
                                 String methodSummary = llmServiceClient.summarize(c.getContent());
                                 c.setSummary(methodSummary);
+                                if (methodSummary != null && !methodSummary.isBlank()) {
+                                    methodsSummarized.incrementAndGet();
+                                }
                             } catch (Exception e) {
                                 log.warn("Failed to summarize method chunk: {}", c.getName(), e);
                             }
                         }
 
                         String id = buildDocId(codeFile, c);
+                        // Ensure we persist a DOCUMENT object for this chunk so the UI/db can show document-level progress
+                        com.codetalker.firestick.model.IndexingObject docObj = null;
+                        try {
+                            var opt = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), id);
+                            if (opt.isPresent()) {
+                                docObj = opt.get();
+                            } else {
+                                docObj = new com.codetalker.firestick.model.IndexingObject();
+                                docObj.setJobId(job.getId());
+                                docObj.setObjectType("DOCUMENT");
+                                docObj.setObjectName(id);
+                                indexingObjectRepository.save(docObj);
+                            }
+                            // mark doc started
+                            try {
+                                docObj.setStartedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                                docObj.setEndedAt(null);
+                                docObj.setElapsedMs(null);
+                                indexingObjectRepository.save(docObj);
+                                progressBus.publish(job.getId(), java.util.Map.of("event","object-start","type","DOCUMENT","name", id, "ts", System.currentTimeMillis()));
+                            } catch (Exception ignore) {}
+                        } catch (Exception ex) {
+                            // best-effort - keep going even if doc object persistence fails
+                            log.debug("Failed to create/mark document object {} for job {}: {}", id, job.getId(), ex.getMessage());
+                        }
                         String content = c.getContent() == null ? "" : c.getContent();
                         // propagate tenant/app name into chunk & index
                         c.setAppName(request.appName());
-                        codeSearchService.indexCode(id, request.appName(), content);
+                        try {
+                            codeSearchService.indexCode(id, request.appName(), content);
+                        } catch (com.codetalker.firestick.exception.IndexingException ie) {
+                            // Lucene indexing problems (locks, IO) should be handled per-file rather than
+                            // bubbling up and failing the entire indexing run. Record the error and continue.
+                            String msg = "Indexing error for file " + p + " -> " + ie.getMessage();
+                            log.warn("[Indexing] {}", msg, ie);
+                            errors.add(msg);
+                            skippedFiles.add(new com.codetalker.firestick.service.dto.IndexingReport.SkippedFile(p.toString(), ie.getMessage()));
+                            // continue to next chunk/file
+                            continue;
+                        }
                         
                         // Index method summary if available
                         if (c.getSummary() != null && !c.getSummary().isBlank()) {
                             codeSearchService.indexSummary(id + "_summary", request.appName(), c.getSummary(), "method_summary");
                         }
 
+                        // mark method object ended (best-effort)
+                        if (methodObj != null) {
+                            try {
+                                methodObj.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                                if (methodObj.getStartedAt() != null) methodObj.setElapsedMs(java.time.Duration.between(methodObj.getStartedAt(), methodObj.getEndedAt()).toMillis());
+                                indexingObjectRepository.save(methodObj);
+                                progressBus.publish(job.getId(), java.util.Map.of("event","object-end","type","METHOD","name", methodObj.getObjectName(), "ts", System.currentTimeMillis(), "elapsedMs", methodObj.getElapsedMs()));
+                            } catch (Exception ignore) {}
+                        }
+
+                        // mark document object ended (best-effort)
+                        if (docObj != null) {
+                            try {
+                                docObj.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                                if (docObj.getStartedAt() != null) docObj.setElapsedMs(java.time.Duration.between(docObj.getStartedAt(), docObj.getEndedAt()).toMillis());
+                                indexingObjectRepository.save(docObj);
+                                progressBus.publish(job.getId(), java.util.Map.of("event","object-end","type","DOCUMENT","name", docObj.getObjectName(), "ts", System.currentTimeMillis(), "elapsedMs", docObj.getElapsedMs()));
+                            } catch (Exception ignore) {}
+                        }
+
                         indexedDocs.incrementAndGet();
                         float[] vec = embeddingService.getEmbedding(content);
                         if (vec != null && vec.length > 0) embeddings.incrementAndGet();
                     }
-                    int percent = discovered == 0 ? 0 : (int) Math.min(100, Math.round((parsedCount.get() * 100.0) / discovered));
-                    progressBus.publish(job.getId(), new com.codetalker.firestick.service.dto.IndexingProgress(
-                            job.getId(), job.getStatus().name(), discovered, parsedCount.get(), skippedCount.get(),
-                            chunkCount.get(), indexedDocs.get(), embeddings.get(), percent));
+                        int percent = discovered == 0 ? 0 : (int) Math.min(100, Math.round((parsedCount.get() * 100.0) / discovered));
+                            progressBus.publish(job.getId(), new com.codetalker.firestick.service.dto.IndexingProgress(
+                                job.getId(), job.getStatus().name(), discovered, job.getTotalFolders(), job.getTotalMethods(), parsedCount.get(), skippedCount.get(),
+                                chunkCount.get(), indexedDocs.get(), embeddings.get(), percent, p.toString(), filesSummarized.get(), 0, methodsSummarized.get(), new java.util.ArrayList<>(skippedFiles)));
 
                     // Persist file and replace chunks
                     CodeFile managedFile;
@@ -213,29 +384,79 @@ public class IndexingService {
                         c.setFile(managedFile);
                         codeChunkRepository.save(c);
                     }
+                    // mark file object ended and set elapsed
+                    try {
+                        var fo = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString());
+                        if (fo.isPresent()) {
+                            var o = fo.get();
+                            o.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                            if (o.getStartedAt() != null) o.setElapsedMs(java.time.Duration.between(o.getStartedAt(), o.getEndedAt()).toMillis());
+                            indexingObjectRepository.save(o);
+                            progressBus.publish(job.getId(), java.util.Map.of("event","object-end","type","FILE","name", o.getObjectName(), "ts", System.currentTimeMillis(), "elapsedMs", o.getElapsedMs()));
+                        }
+                    } catch (Exception ex) {
+                        log.debug("Failed to mark file object ended for {}: {}", p, ex.getMessage());
+                    }
                 }
             } catch (java.io.IOException e) {
                 String msg = "IO error indexing file: " + p + " -> " + e.getMessage();
                 log.warn("[Indexing] {}", msg, e);
                 errors.add(msg);
+                skippedFiles.add(new com.codetalker.firestick.service.dto.IndexingReport.SkippedFile(p.toString(), e.getMessage()));
+                // mark file object ended with failure reason
+                try {
+                    var fo = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString());
+                    if (fo.isPresent()) {
+                        var o = fo.get();
+                        o.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                        if (o.getStartedAt() != null) o.setElapsedMs(java.time.Duration.between(o.getStartedAt(), o.getEndedAt()).toMillis());
+                        o.setReasonSkipped(e.getMessage());
+                        indexingObjectRepository.save(o);
+                    }
+                } catch (Exception ex) {
+                    // ignore
+                }
             } catch (com.codetalker.firestick.exception.CodeParsingException e) {
                 String msg = "Parsing error indexing file: " + p + " -> " + e.getMessage();
                 log.warn("[Indexing] {}", msg, e);
                 errors.add(msg);
+                skippedFiles.add(new com.codetalker.firestick.service.dto.IndexingReport.SkippedFile(p.toString(), e.getMessage()));
+                try {
+                    var fo = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString());
+                    if (fo.isPresent()) {
+                        var o = fo.get();
+                        o.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                        if (o.getStartedAt() != null) o.setElapsedMs(java.time.Duration.between(o.getStartedAt(), o.getEndedAt()).toMillis());
+                        o.setReasonSkipped(e.getMessage());
+                        indexingObjectRepository.save(o);
+                    }
+                } catch (Exception ex) {}
             } catch (org.springframework.dao.DataAccessException e) {
                 String msg = "Database error while indexing file: " + p + " -> " + e.getMessage();
                 log.warn("[Indexing] {}", msg, e);
                 errors.add(msg);
+                skippedFiles.add(new com.codetalker.firestick.service.dto.IndexingReport.SkippedFile(p.toString(), e.getMessage()));
+                try {
+                    var fo = indexingObjectRepository.findFirstByJobIdAndObjectName(job.getId(), p.toString());
+                    if (fo.isPresent()) {
+                        var o = fo.get();
+                        o.setEndedAt(java.time.Instant.ofEpochMilli(System.currentTimeMillis()));
+                        if (o.getStartedAt() != null) o.setElapsedMs(java.time.Duration.between(o.getStartedAt(), o.getEndedAt()).toMillis());
+                        o.setReasonSkipped(e.getMessage());
+                        indexingObjectRepository.save(o);
+                    }
+                } catch (Exception ex) {}
             }
         }
 
         long endedAt = System.currentTimeMillis();
 
         // Trigger "Reduce" phase: Aggregate summaries by folder
+        int foldersSummarizedCount = 0;
         if (errors.isEmpty() && !jobControl.isCancelled(job.getId())) {
             try {
                 log.info("[Indexing] Starting Map-Reduce aggregation for app: {}", job.getAppName());
-                summaryAggregationService.aggregateSummaries(job.getAppName());
+                foldersSummarizedCount = summaryAggregationService.aggregateSummaries(job.getAppName());
             } catch (Exception e) {
                 log.error("[Indexing] Failed to aggregate summaries", e);
                 errors.add("Summary aggregation failed: " + e.getMessage());
@@ -259,22 +480,38 @@ public class IndexingService {
             } else {
                 job.setStatus(IndexingJob.Status.SUCCESS);
             }
+            // persist summarization counters and skipped files payload
+            try {
+                job.setFilesSummarized(filesSummarized.get());
+                job.setFoldersSummarized(foldersSummarizedCount);
+                job.setMethodsSummarized(methodsSummarized.get());
+                if (skippedFiles != null && !skippedFiles.isEmpty()) {
+                    job.setSkippedFiles(objectMapper.writeValueAsString(skippedFiles));
+                } else {
+                    job.setSkippedFiles(null);
+                }
+            } catch (Exception ignored) {
+                // if JSON serialization fails, store nothing — non-fatal
+            }
         } catch (Exception e) {
             job.setStatus(IndexingJob.Status.FAILED);
         } finally {
             jobRepository.save(job);
-            int percent = 100;
-            progressBus.publish(job.getId(), new com.codetalker.firestick.service.dto.IndexingProgress(
-                    job.getId(), job.getStatus().name(), discovered, parsedCount.get(), skippedCount.get(),
-                    chunkCount.get(), indexedDocs.get(), embeddings.get(), percent));
+                int percent = 100;
+                progressBus.publish(job.getId(), new com.codetalker.firestick.service.dto.IndexingProgress(
+                    job.getId(), job.getStatus().name(), discovered, job.getTotalFolders(), job.getTotalMethods(), parsedCount.get(), skippedCount.get(),
+                    chunkCount.get(), indexedDocs.get(), embeddings.get(), percent, null, filesSummarized.get(), foldersSummarizedCount, methodsSummarized.get(), new java.util.ArrayList<>(skippedFiles)));
             progressBus.complete(job.getId());
             jobControl.clear(job.getId());
         }
 
     return new IndexingReport(
         job.getId(),
+        job.getStatus() == null ? "UNKNOWN" : job.getStatus().name(),
         request.rootPath(),
         discovered,
+        job.getTotalFolders(),
+        job.getTotalMethods(),
         parsedCount.get(),
         skippedCount.get(),
         chunkCount.get(),
@@ -282,7 +519,11 @@ public class IndexingService {
         embeddings.get(),
         startedAt,
         endedAt,
-        errors
+        errors,
+        filesSummarized.get(), // filesSummarized
+        foldersSummarizedCount, // foldersSummarized
+        methodsSummarized.get(), // methodsSummarized
+        new java.util.ArrayList<>(skippedFiles) // skippedFiles
     );
     }
 

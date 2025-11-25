@@ -42,10 +42,21 @@ public class IndexingJob {
 
     private int filesDiscovered;
     private int filesParsed;
+    // Totals discovered before indexing begins
+    private int totalFolders;
+    private int totalMethods;
     private int chunksProduced;
     private int documentsIndexed;
     private int embeddingsGenerated;
     private int errorCount;
+
+    // Persisted counters for summarization & skipped files
+    private int filesSummarized;
+    private int foldersSummarized;
+    private int methodsSummarized;
+
+    @Lob
+    private String skippedFiles; // JSON array of SkippedFile {filePath, reason}
 
     @Lob
     private String errorSummary; // optional, newline-delimited
@@ -71,6 +82,12 @@ public class IndexingJob {
     public int getFilesDiscovered() { return filesDiscovered; }
     public void setFilesDiscovered(int filesDiscovered) { this.filesDiscovered = filesDiscovered; }
 
+    public int getTotalFolders() { return totalFolders; }
+    public void setTotalFolders(int totalFolders) { this.totalFolders = totalFolders; }
+
+    public int getTotalMethods() { return totalMethods; }
+    public void setTotalMethods(int totalMethods) { this.totalMethods = totalMethods; }
+
     public int getFilesParsed() { return filesParsed; }
     public void setFilesParsed(int filesParsed) { this.filesParsed = filesParsed; }
 
@@ -88,4 +105,16 @@ public class IndexingJob {
 
     public String getErrorSummary() { return errorSummary; }
     public void setErrorSummary(String errorSummary) { this.errorSummary = errorSummary; }
+
+    public int getFilesSummarized() { return filesSummarized; }
+    public void setFilesSummarized(int filesSummarized) { this.filesSummarized = filesSummarized; }
+
+    public int getFoldersSummarized() { return foldersSummarized; }
+    public void setFoldersSummarized(int foldersSummarized) { this.foldersSummarized = foldersSummarized; }
+
+    public int getMethodsSummarized() { return methodsSummarized; }
+    public void setMethodsSummarized(int methodsSummarized) { this.methodsSummarized = methodsSummarized; }
+
+    public String getSkippedFiles() { return skippedFiles; }
+    public void setSkippedFiles(String skippedFiles) { this.skippedFiles = skippedFiles; }
 }
