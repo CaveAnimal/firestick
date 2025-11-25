@@ -20,3 +20,20 @@ How to use
 3. Keep `dev5CAPTAINS_LOG.md` updated with notes that are useful for everyone.
 
 If you'd like I can make `tasksDEV5.md` an exact merge of the common subtasks from dev1-4 — say the word and I'll do that next.
+
+## Synthetic SSE harness (dev5 helper)
+
+dev5 includes a small synthetic SSE server under `tools/work/dev5/scripts/synthetic_indexing_server.py` that emits deterministic indexing events for local development and short CI smoke checks.
+
+Quick start (PowerShell):
+
+```powershell
+& .\.venv\Scripts\Activate.ps1  # if you use the repo venv
+python tools/work/dev5/scripts/synthetic_indexing_server.py --port 9001 --job-id 123
+```
+
+Then connect to: http://127.0.0.1:9001/sse?jobId=123 and watch SSE events stream. There are helper wrappers:
+
+- `tools/work/dev5/scripts/run-synthetic-indexing.ps1` (PowerShell)
+- `tools/work/dev5/scripts/run-synthetic-indexing.sh` (bash)
+
