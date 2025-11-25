@@ -37,3 +37,16 @@ Then connect to: http://127.0.0.1:9001/sse?jobId=123 and watch SSE events stream
 - `tools/work/dev5/scripts/run-synthetic-indexing.ps1` (PowerShell)
 - `tools/work/dev5/scripts/run-synthetic-indexing.sh` (bash)
 
+Pre-commit / local hook helper
+--------------------------------
+We provide a small helper to block accidentally committing very large files (helpful given earlier issues with large model artifacts):
+
+Install the pre-commit hook locally (PowerShell):
+
+```powershell
+.
+tools\work\dev5\scripts\install-git-hooks.ps1
+```
+
+This copies `prevent_large_commit.sh` into `.git/hooks/pre-commit` — edit the script or hook to tune max size as needed.
+
