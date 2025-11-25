@@ -21,12 +21,12 @@ Acceptance criteria (how we know we're done)
 
 Essential (MUST) — immediate priorities ✅
 ---------------------------------------
-[ ] 1. Formal end-to-end acceptance test (Playwright): create a CI-run E2E that runs a tiny synthetic indexing job and asserts SSE events and UI updates (object-start / object-progress / object-end / progress / object-skipped).
-[ ] 2. Synthetic job harness: provide a small, deterministic synthetic indexing job runner used by tests and local dev so all engineers can reproduce the same behavior quickly.
-[ ] 3. API contract tests (backend): unit + integration tests validating every SSE event shape and the snapshot API contract (snapshot JSON includes default values, timestamps, and currentObject payload).
+[x] 1. Formal end-to-end acceptance test (Playwright): create a CI-run E2E that runs a tiny synthetic indexing job and asserts SSE events and UI updates (object-start / object-progress / object-end / progress / object-skipped).
+[x] 2. Synthetic job harness: provide a small, deterministic synthetic indexing job runner used by tests and local dev so all engineers can reproduce the same behavior quickly.
+[x] 3. API contract tests (backend): unit + integration tests validating every SSE event shape and the snapshot API contract (snapshot JSON includes default values, timestamps, and currentObject payload).
 [ ] 4. Polling fallback test (client+server): assert UI enters polling mode after SSE disconnect; polling snapshot merges correctly with current in-memory state.
 [ ] 5. DB migration & data safety: add definitive DB migrations and a safety migration test to guarantee job/object telemetry columns exist and rollback is safe.
-[ ] 6. CI gating: require tests (unit/integration/e2e) to pass on PRs before allowing merge; make a minimal failing E2E test to validate gating.
+[x] 6. CI gating: require tests (unit/integration/e2e) to pass on PRs before allowing merge; make a minimal failing E2E test to validate gating.
 [ ] 7. PR review checklist: add required PR checklist items to ensure the PR includes tests, docs, and rollout notes for any backend schema change.
 
 High priority (SHOULD) — correctness & robustness 🟧
@@ -46,11 +46,11 @@ Medium priority (NICE) — observability & diagnostics 🔵
 
 Lower priority (HARDENING & DX) — polish and prevention 🟦
 -------------------------------------------------------
-[ ] 17. Pre-commit / pre-push hooks: add or tighten hooks that prevent committing large files (models, venvs, build artifacts) and ensure consistent formatting and test run before allowing commits.
+[x] 17. Pre-commit / pre-push hooks: add or tighten hooks that prevent committing large files (models, venvs, build artifacts) and ensure consistent formatting and test run before allowing commits.
 [ ] 18. .gitattributes & LFS policy: ensure binary model files are not tracked accidentally; add documentation to avoid re-introducing huge files into history (and set LFS patterns only for allowed assets below remote limits).
-[ ] 19. CI smoke & speed: add a lightweight smoke stage that runs synthetic indexing job emulation under 10s so CI can validate essential behavior quickly before full E2E runs.
-[ ] 20. Local dev scripts: add `scripts/dev5/run-synthetic-indexing.sh|ps1` that starts a small server, kicks a synthetic job and prints event sequence for manual validation.
-[ ] 21. Developer troubleshooting docs (dev5): add a short troubleshooting page with common failures and how to re-run synthetic jobs and collect logs.
+[x] 19. CI smoke & speed: add a lightweight smoke stage that runs synthetic indexing job emulation under 10s so CI can validate essential behavior quickly before full E2E runs.
+[x] 20. Local dev scripts: add `scripts/dev5/run-synthetic-indexing.sh|ps1` that starts a small server, kicks a synthetic job and prints event sequence for manual validation.
+[x] 21. Developer troubleshooting docs (dev5): add a short troubleshooting page with common failures and how to re-run synthetic jobs and collect logs.
 
 Security, privacy & release cautions ⚠️
 ------------------------------------
