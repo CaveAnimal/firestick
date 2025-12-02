@@ -264,9 +264,13 @@ export default function IndexingPage() {
           const p = JSON.parse(ev.data)
           setLastEventAt(Date.now())
           // handle object start/end events
-          if (p?.event && (p.event === 'object-start' || p.event === 'object-end' || p.event === 'object-skipped')) {
+          if (p?.event && (p.event === 'object-start' || p.event === 'object-end' || p.event === 'object-skipped' || p.event === 'object-progress')) {
             try {
-              const newEvt = { event: p.event, type: p.type, name: p.name, ts: p.ts || Date.now(), elapsedMs: p.elapsedMs }
+              const newEvt: any = { event: p.event, type: p.type, name: p.name, ts: p.ts || Date.now(), elapsedMs: p.elapsedMs }
+              if (p.event === 'object-progress') {
+                newEvt.objectWorkDone = p.objectWorkDone
+                newEvt.objectTotalWork = p.objectTotalWork
+              }
               setObjectEvents(prev => [newEvt, ...prev].slice(0, 30))
               // reflect active object in job state
               if (newEvt.event === 'object-start') {
@@ -293,6 +297,19 @@ export default function IndexingPage() {
                 // skipped - set started/ended to same ts and record reason as elapsed 0
                 const ts = new Date(newEvt.ts || Date.now()).toISOString()
                 setJob(prev => ({ ...(prev || {} as any), currentObject: { type: newEvt.type, name: newEvt.name, startedAt: ts, endedAt: ts, elapsedMs: newEvt.elapsedMs ?? 0 } } as IndexingJob))
+              } else if (newEvt.event === 'object-progress') {
+                // update visible current object with work counters and keep startedAt/endedAt if present
+                setJob(prev => {
+                  try {
+                    const prevObj = prev?.currentObject
+                    // keep startedAt from prior state if available
+                    const startedAt = prevObj?.startedAt
+                    const endedAt = prevObj?.endedAt
+                    return { ...(prev || {} as any), currentObject: { type: newEvt.type, name: newEvt.name, startedAt, endedAt, objectWorkDone: newEvt.objectWorkDone, objectTotalWork: newEvt.objectTotalWork } } as IndexingJob
+                  } catch {
+                    return prev as IndexingJob
+                  }
+                })
               }
             } catch { /* ignore */ }
           }
@@ -370,6 +387,12 @@ export default function IndexingPage() {
     let methodProgress = 0;
     if (job && typeof job?.totalMethods === 'number' && job.totalMethods > 0) {
       methodProgress = Math.round(((job.stats?.methodsSummarized ?? 0) / job.totalMethods) * 100);
+    }
+
+    // per-object percent if available
+    let objectPercent: number | undefined = undefined
+    if (job?.currentObject && typeof job.currentObject?.objectWorkDone === 'number' && typeof job.currentObject?.objectTotalWork === 'number' && job.currentObject.objectTotalWork > 0) {
+      objectPercent = Math.round((job.currentObject.objectWorkDone / job.currentObject.objectTotalWork) * 100)
     }
 
   function formatTime(iso?: string) {
@@ -563,6 +586,16 @@ export default function IndexingPage() {
                 <div style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: 6, fontFamily: 'monospace', flex: 1, overflow: 'hidden' }}>
                   <div style={{ fontSize: 13, color: '#666' }}>{job?.currentObject?.type ? String(job.currentObject.type).charAt(0).toUpperCase() + String(job.currentObject.type).slice(1) : (job?.currentFile ? 'File' : '—')}</div>
                   <div style={{ fontWeight: 700, color: '#333', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job?.currentObject?.name ?? job?.currentFile ?? '—'}</div>
+                  {/* Per-object progress (if available) */}
+                  {typeof objectPercent === 'number' ? (
+                    <div style={{ marginTop: 6 }}>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}><ProgressBar value={objectPercent} color="#29b6f6" /></div>
+                        <div style={{ minWidth: 70, textAlign: 'right', fontSize: 13, color: '#444', fontWeight: 600 }}>{objectPercent}%</div>
+                      </div>
+                      <div style={{ fontSize: 12, color: '#777', marginTop: 4 }}>{job?.currentObject?.objectWorkDone} / {job?.currentObject?.objectTotalWork}</div>
+                    </div>
+                  ) : null}
                 </div>
                 <div style={{ fontSize: 13, color: '#888', minWidth: 160, textAlign: 'right' }}>{sseConnected ? 'live' : '—'}</div>
               </div>
@@ -689,7 +722,7 @@ export default function IndexingPage() {
 
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 500, color: '#666' }}>
-                Current Path:
+                Current Path <span style={{ color: '#888', fontWeight: 400, fontSize: 12, marginLeft: 6 }}>{browserListing?.currentPath === '/' ? 'This PC (drive list)' : ''}</span>
               </label>
               <div style={{
                 display: 'flex',
@@ -698,14 +731,14 @@ export default function IndexingPage() {
               }}>
                 <input
                   type="text"
-                  value={browserListing?.currentPath || ''}
+                  value={browserListing?.currentPath === '/' ? '' : (browserListing?.currentPath || '')}
                   onChange={(e) => {
                     const newPath = e.target.value.trim()
                     if (newPath) {
                       setCurrentBrowsePath(newPath)
                     }
                   }}
-                  placeholder="Enter path..."
+                  placeholder={browserListing?.currentPath === '/' ? 'This PC — double-click a drive to open it' : 'Enter path...'}
                   style={{
                     flex: 1,
                     padding: '8px 12px',

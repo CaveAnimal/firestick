@@ -17,7 +17,7 @@ Tip: Use a small script or your editor's search to count "[x]" and "[ ]" to comp
 ---
 
 ## 🧭 Overview (one-liner goal)
-[ ] Provide real time live updates to the Indexing Console (Indexing Progress) showing the current object's path/name and current progress. Update every progress bar to show percent-complete.
+[x] Provide real time live updates to the Indexing Console (Indexing Progress) showing the current object's path/name and current progress. Update every progress bar to show percent-complete.
 
 ## 1. Project setup and orientation (first day for a new dev)
 [ ] Clone the repo and open it in VS Code
@@ -35,42 +35,43 @@ Tip: Use a small script or your editor's search to count "[x]" and "[ ]" to comp
 [ ] Add simple unit tests to assert DTOs serialize to expected JSON shapes
 
 ## 3. Backend: emit events from the Indexing service (starter tasks)
-[ ] Add `object-start` emission at the point where an object begins processing
+[x] Add `object-start` emission at the point where an object begins processing
   - [ ] Locate the IndexingService or equivalent class
-  - [ ] Insert SSE emit for `object-start` with ts=System.currentTimeMillis()
-  - [ ] Add a simple log line to show the event was sent
-  - [ ] Add a unit test or integration assertion for `object-start` emission
-[ ] Emit `object-end` when an object finishes
-  - [ ] Compute elapsedMs = endTs - startTs
-  - [ ] Emit `object-end` with elapsedMs
-  - [ ] Verify aggregated job counters are recomputed after object-end
-[ ] Add optional `object-progress` emits for long-running objects
-  - [ ] Emit only at limited frequency (throttle to ~1/sec) to avoid SSE flooding
-  - [ ] Ensure event includes objectWorkDone/objectTotalWork when available
-[ ] Emit aggregated `progress` messages frequently (after each object-end or N seconds)
+  - [x] Insert SSE emit for `object-start` with ts=System.currentTimeMillis()
+  - [x] Add a simple log line to show the event was sent
+  - [x] Add a unit test or integration assertion for `object-start` emission
+[x] Emit `object-end` when an object finishes
+  - [x] Compute elapsedMs = endTs - startTs
+  - [x] Emit `object-end` with elapsedMs
+  - [x] Verify aggregated job counters are recomputed after object-end
+[x] Add optional `object-progress` emits for long-running objects
+  - [x] Emit only at limited frequency (throttle to ~1/sec) to avoid SSE flooding
+  - [x] Ensure event includes objectWorkDone/objectTotalWork when available
+[x] Emit aggregated `progress` messages frequently (after each object-end or N seconds)
 
 ## 4. Database & persistence (safe, small steps)
-[ ] Add minimal `indexing_objects` table (if not present) with columns: id, job_id, path, type, status, start_ts, end_ts, elapsed_ms, reason
-  - [ ] Create a DB migration script (Flyway/Liquibase) in the repo
-  - [ ] Run migrations in local dev and verify schema added
-  - [ ] Add a simple persistence test that writes and reads an object row
-[ ] Add fields to job metadata (e.g., totalFiles, totalFolders) if not present
+[x] Add minimal `indexing_objects` table (if not present) with columns: id, job_id, path, type, status, start_ts, end_ts, elapsed_ms, reason
+  - [x] Create a DB migration script (Flyway/Liquibase) in the repo
+  - [x] Run migrations in local dev and verify schema added
+  - [x] Add a simple persistence test that writes and reads an object row
+[x] Add fields to job metadata (e.g., totalFiles, totalFolders) if not present
 
 ## 5. API: SSE endpoint & snapshot (small increments)
-[ ] Confirm or add GET /api/indexing/stream?jobId=<id> endpoint
-  - [ ] Add basic docs for the event shapes in-code and in the API README
+[x] Confirm or add GET /api/indexing/stream?jobId=<id> endpoint
+  - [x] Add basic docs for the event shapes in-code and in the API README
+  - [x] Add a small integration test that opens SSE and receives object-start/object-end events (integration test present)
   - [ ] Add a small integration test that opens SSE and receives at least one `progress` event
 [ ] Add snapshot endpoint GET /api/indexing/job/<jobId>/status returning latest aggregated counters and current object
   - [ ] Add unit test checking snapshot JSON shape and default values
 
 ## 6. Frontend: wire up SSE and show a minimal Current Object card (first UI PR)
-[ ] Add EventSource/SSE consumer to the Indexing page
-  - [ ] Connect to `/api/indexing/stream?jobId=` when page loads
-  - [ ] Add state hooks to receive `object-start`, `object-progress`, `object-end`, `object-skipped`, and `progress`
-  - [ ] Add a connection status indicator (Connected / Reconnecting / Disconnected)
-[ ] Render a minimal Current Object card showing path/name and object type
+[x] Add EventSource/SSE consumer to the Indexing page
+  - [x] Connect to `/api/indexing/stream?jobId=` when page loads
+  - [x] Add state hooks to receive `object-start`, `object-progress`, `object-end`, `object-skipped`, and `progress`
+  - [x] Add a connection status indicator (Connected / Reconnecting / Disconnected)
+[x] Render a minimal Current Object card showing path/name and object type
   - [ ] While `in-progress` show spinner and startedAt timestamp
-  - [ ] On `object-end` replace spinner with elapsedMs text
+  - [x] On `object-end` replace spinner with elapsedMs text
   - [ ] On `object-skipped` show reason text
 
 ## 7. Frontend: show percent-based progress bars for each counter (next PR)
@@ -80,15 +81,15 @@ Tip: Use a small script or your editor's search to count "[x]" and "[ ]" to comp
   - [ ] Ensure accessible aria attributes on each progress bar
 
 ## 8. Frontend: per-object percent handling
-[ ] If `object-progress` includes objectWorkDone/objectTotalWork compute object percent and show a per-object progress bar
+ [x] If `object-progress` includes objectWorkDone/objectTotalWork compute object percent and show a per-object progress bar
   - [ ] If objectTotalWork unknown, render indeterminate spinner until `object-end`
 
 ## 9. Tests: unit, integration, and end-to-end (required)
 [ ] Backend unit tests for events and serialization
   - [ ] object-start, object-progress, object-end, object-skipped, progress message shapes are tested
-[ ] Backend integration test: synthetic indexing job emits the right sequence of SSE messages
+[x] Backend integration test: synthetic indexing job emits the right sequence of SSE messages
 [ ] Frontend unit tests: mocked EventSource to send sample messages and assert UI updates (Jest/RTL)
-[ ] End-to-end Playwright test: run a small synthetic indexing job and assert that the UI shows counters, progress bars, current object updates and elapsed/skip reason
+[x] End-to-end Playwright test: run a small synthetic indexing job and assert that the UI shows counters, progress bars, current object updates and elapsed/skip reason
 
 ## 10. Observability & rollout (finalize)
 [ ] Add metric collection for SSE publishes and connection errors

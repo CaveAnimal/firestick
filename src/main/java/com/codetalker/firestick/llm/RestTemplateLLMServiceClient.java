@@ -17,6 +17,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 /**
  * RestTemplate-based HTTP client for LLM microservice
@@ -292,10 +295,21 @@ public class RestTemplateLLMServiceClient implements LLMServiceClient {
             String url = llmServiceUrl + "/health";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             boolean statusHealthy = response.getStatusCode().is2xxSuccessful();
-            healthy.set(statusHealthy);
+            // if we transitioned from unhealthy->healthy, log that change
+            boolean previous = healthy.getAndSet(statusHealthy);
+            if (!previous && statusHealthy) {
+                logger.log(Level.INFO, "LLM service health check recovered: now healthy");
+            }
             return statusHealthy;
         } catch (RestClientException e) {
-            logger.log(Level.WARNING, "LLM service health check failed: {0}", e.getMessage());
+            // Only log a warning when we're transitioning from healthy to unhealthy
+            boolean wasHealthy = healthy.getAndSet(false);
+            if (wasHealthy) {
+                logger.log(Level.WARNING, "LLM service health check failed (transition to unhealthy): {0}", e.getMessage());
+            } else {
+                // avoid noisy repeated logs; keep at fine-level for diagnostics
+                logger.log(Level.FINE, "LLM service health check still failing: {0}", e.getMessage());
+            }
             markUnhealthy();
             return false;
         }
@@ -319,16 +333,11 @@ public class RestTemplateLLMServiceClient implements LLMServiceClient {
     private String parseJsonField(String json, String field) {
         if (json == null || json.isEmpty()) return "";
         try {
-            String key = "\"" + field + "\":\"";
-            int start = json.indexOf(key);
-            if (start == -1) return "";
-            
-            start += key.length();
-            int end = json.indexOf("\"", start);
-            if (end == -1) return "";
-            
-            return json.substring(start, end);
-        } catch (RuntimeException e) {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.readTree(json);
+            JsonNode val = node.get(field);
+            return val != null && !val.isNull() ? val.asText("") : "";
+        } catch (Exception e) {
             logger.log(Level.WARNING, "Failed to parse JSON field: {0}", field);
             return "";
         }

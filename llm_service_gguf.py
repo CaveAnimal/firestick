@@ -90,6 +90,163 @@ def llm_progress_stream():
 # ============================================================================
 
 model = None
+import uuid
+import subprocess
+import threading
+import queue
+import time
+
+# Worker manager: spawns llm_worker.py and communicates via JSON-lines on stdin/stdout
+class LLMWorkerManager:
+    def __init__(self, worker_path='llm_worker.py'):
+        self.worker_path = worker_path
+        self.proc = None
+        self._reader_thread = None
+        self._out_queue = queue.Queue()
+        self._resp_map = {}
+        self._lock = threading.Lock()
+        # config
+        self.worker_timeout = int(os.getenv('LLM_WORKER_TIMEOUT', '120'))
+        self.worker_restart_threshold = int(os.getenv('LLM_WORKER_RESTART_THRESHOLD', '3'))
+        self._consecutive_timeouts = 0
+
+        self.start_worker()
+
+    def start_worker(self):
+        with self._lock:
+            if self.proc and self.proc.poll() is None:
+                return
+            cmd = [sys.executable, self.worker_path]
+            self.proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
+            # start reader thread
+            self._reader_thread = threading.Thread(target=self._read_loop, daemon=True)
+            self._reader_thread.start()
+            # start stderr reader
+            threading.Thread(target=self._stderr_reader, daemon=True).start()
+            # start a heartbeat monitor so the main service prints status regularly
+            def _monitor():
+                try:
+                    while self.proc and self.proc.poll() is None:
+                        logger.info('[worker monitor] worker alive pid=%s', self.proc.pid if self.proc else None)
+                        # also print one visible line to stdout for CI consoles
+                        print(f"[llm_worker-manager] heartbeat: worker_pid={self.proc.pid if self.proc else None}", flush=True)
+                        time.sleep(60)
+                except Exception:
+                    logger.exception('worker monitor exiting')
+            threading.Thread(target=_monitor, daemon=True).start()
+
+    def _stderr_reader(self):
+        try:
+            if self.proc and self.proc.stderr:
+                for line in self.proc.stderr:
+                    logger.error('[worker stderr] %s', line.strip())
+        except Exception:
+            pass
+
+    def _read_loop(self):
+        try:
+            if not self.proc or not self.proc.stdout:
+                return
+            for raw in self.proc.stdout:
+                raw = raw.strip()
+                if not raw:
+                    continue
+                # tolerate non-JSON lines on stdout (some tools may print diagnostics)
+                if not (raw.startswith('{') and raw.endswith('}')):
+                    logger.debug('Worker non-JSON stdout: %s', raw)
+                    continue
+                try:
+                    obj = json.loads(raw)
+                except Exception:
+                    logger.warning('Worker JSON parse failed: %s', raw)
+                    continue
+                rid = obj.get('id')
+                if rid is None:
+                    logger.debug('Worker message without id: %s', obj)
+                    continue
+                # put into map
+                with self._lock:
+                    fut = self._resp_map.pop(rid, None)
+                if fut is not None:
+                    fut.put(obj)
+        except Exception:
+            logger.exception('Worker read loop ended')
+
+    def is_ready(self):
+        return self.proc is not None and self.proc.poll() is None
+
+    def request(self, prompt, max_tokens=128, timeout=None):
+        # ensure worker running
+        if not self.is_ready():
+            logger.warning('Worker not running, starting')
+            self.start_worker()
+            # small wait
+            t0 = time.time()
+            while not self.is_ready() and time.time() - t0 < 5:
+                time.sleep(0.05)
+        if not self.is_ready():
+            raise RuntimeError('llm worker not available')
+
+        req_id = str(uuid.uuid4())
+        payload = {'id': req_id, 'prompt': prompt, 'max_tokens': max_tokens}
+        # prepare response container
+        q = queue.Queue()
+        with self._lock:
+            self._resp_map[req_id] = q
+        # send
+        try:
+            line = json.dumps(payload) + '\n'
+            self.proc.stdin.write(line)
+            self.proc.stdin.flush()
+        except Exception as e:
+            logger.exception('Failed to send to worker: %s', e)
+            # clean up
+            with self._lock:
+                self._resp_map.pop(req_id, None)
+            raise
+
+        effective_timeout = timeout or self.worker_timeout
+        try:
+            obj = q.get(timeout=effective_timeout)
+            # success — reset consecutive timeout counter
+            self._consecutive_timeouts = 0
+            return obj
+        except queue.Empty:
+            with self._lock:
+                self._resp_map.pop(req_id, None)
+            # increment counter and possibly restart worker
+            self._consecutive_timeouts += 1
+            logger.warning('Worker request timed out (count=%s)', self._consecutive_timeouts)
+            if self._consecutive_timeouts >= self.worker_restart_threshold:
+                logger.warning('Restarting worker after %s consecutive timeouts', self._consecutive_timeouts)
+                try:
+                    self.stop()
+                except Exception:
+                    logger.exception('Failed to stop worker during restart')
+                # small delay before restart
+                time.sleep(0.1)
+                try:
+                    self.start_worker()
+                except Exception:
+                    logger.exception('Failed to restart worker')
+                self._consecutive_timeouts = 0
+            raise TimeoutError('worker request timed out')
+
+    def stop(self):
+        try:
+            if self.proc:
+                self.proc.kill()
+        except Exception:
+            pass
+
+# Instantiate a worker manager; will attempt worker startup. Use environment var to control
+worker_enabled = os.getenv('LLM_USE_WORKER', '1').strip() not in ('0', 'false', 'False')
+worker_manager = None
+if worker_enabled:
+    try:
+        worker_manager = LLMWorkerManager(worker_path=os.path.join(os.getcwd(), 'llm_worker.py'))
+    except Exception:
+        logger.exception('Failed to start LLM worker')
 # Allow overriding model path via environment variable
 model_path = os.getenv("MODEL_PATH", "models/codellama-7b.Q4_K_M.gguf")
 
@@ -155,26 +312,44 @@ def initialize_model():
 
 def generate_response(prompt: str, max_tokens: int = MAX_TOKENS_DEFAULT) -> str:
     """Generate a response using the loaded model"""
+    # Use worker-based inference when configured to keep Flask process safe
     try:
+        # enforce max_tokens bound to worker/context window to avoid worker errors
+        safe_max = min(MAX_TOKENS_DEFAULT, max(16, int(N_CTX) - 16))
+        if max_tokens > safe_max:
+            logger.warning('Requested max_tokens=%s exceeds safe maximum (%s) — clamping', max_tokens, safe_max)
+            max_tokens = safe_max
+
+        if worker_manager and worker_manager.is_ready():
+            try:
+                resp = worker_manager.request(prompt=prompt, max_tokens=max_tokens)
+                if resp.get('ok'):
+                    return resp.get('result', '')
+                else:
+                    logger.warning('Worker returned error: %s', resp.get('error'))
+                    # fallback to in-process model if available
+            except Exception as we:
+                logger.exception('Worker request failed, falling back to in-process: %s', we)
+
+        # fallback to local in-process model (best-effort)
         if model is None:
-            error_msg = "Model not initialized"
+            error_msg = 'Model not initialized'
             logger.error(error_msg)
-            return f"Error: {error_msg}"
-        logger.debug(f"Generating response with max_tokens={max_tokens}")
+            return f'Error: {error_msg}'
+        logger.debug(f'Generating response with max_tokens={max_tokens} (in-process fallback)')
         response = model(
             prompt,
             max_tokens=max_tokens,
             temperature=0.7,
             top_p=0.9,
-            stop=["```", "---", "[/INST]", "</s>"]
+            stop=['```', '---', '[/INST]', '</s>']
         )
-        
-        result = response["choices"][0]["text"].strip()
-        logger.debug(f"Generation complete: {len(result)} chars")
+        result = response['choices'][0]['text'].strip()
+        logger.debug(f'Generation complete: {len(result)} chars')
         return result
     except Exception as e:
-        logger.error(f"Generation error: {e}", exc_info=True)
-        return f"Error generating response: {e}"
+        logger.error(f'Generation error: {e}', exc_info=True)
+        return f'Error generating response: {e}'
 
 # ============================================================================
 # REST API Endpoints

@@ -111,6 +111,14 @@ public class EmbeddingService {
                 Path vocab = Path.of(tokenizerPath).resolve("vocab.txt");
                 this.onnx = new OnnxEmbedder(model, vocab, maxSeqLen, dimension);
                 log.info("[Embedding] ONNX initialized. model={}, vocab={}, maxLen={}, dim={}", model, vocab, maxSeqLen, dimension);
+
+                // Add CUDA provider
+                try {
+                    this.onnx.addCUDA(0); // Attempt to use GPU 0
+                    log.info("[Embedding] CUDA provider added successfully.");
+                } catch (Exception e) {
+                    log.warn("[Embedding] CUDA provider not available, falling back to CPU: {}", e.getMessage());
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
@@ -52,6 +53,33 @@ class RestTemplateLLMServiceClientTest {
         when(restTemplate.getForEntity(anyString(), eq(String.class)))
                 .thenThrow(new RestClientException("Connection refused"));
         
+        assertFalse(client.isHealthy());
+    }
+
+    @Test
+    @DisplayName("parseJsonField handles escaped JSON fields correctly via generateDocumentation")
+    void testParseJsonFieldEscaped() throws LLMServiceException {
+        // ensure healthy
+        when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(ResponseEntity.ok("OK"));
+
+        // Mock generate-docs response containing escaped quotes
+        String body = "{\"documentation\":\"Some \\\"quoted\\\" text\"}";
+        when(restTemplate.postForEntity(contains("/api/llm/generate-docs"), any(), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(body));
+
+        String docs = client.generateDocumentation("class C {}");
+        assertTrue(docs.contains("Some \"quoted\" text"));
+    }
+
+    @Test
+    @DisplayName("isHealthy transitions from healthy to unhealthy on failure")
+    void testIsHealthyTransition() {
+        // healthy first
+        when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(ResponseEntity.ok("OK"));
+        assertTrue(client.isHealthy());
+
+        // then fail
+        when(restTemplate.getForEntity(anyString(), eq(String.class))).thenThrow(new RestClientException("Connection refused"));
         assertFalse(client.isHealthy());
     }
     

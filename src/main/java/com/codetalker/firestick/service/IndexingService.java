@@ -241,6 +241,10 @@ public class IndexingService {
                 if (chunks != null) {
                     chunkCount.addAndGet(chunks.size());
                     // 3) Index & 4) Embed (mock)
+                    // per-file progress tracking
+                    int totalChunksForFile = (chunks == null) ? 0 : chunks.size();
+                    int processedForFile = 0;
+                    long lastProgressEmitMs = 0L;
                     for (CodeChunk c : chunks) {
                         // method-level per-object timing
                         com.codetalker.firestick.model.IndexingObject methodObj = null;
@@ -336,6 +340,23 @@ public class IndexingService {
                         }
 
                         indexedDocs.incrementAndGet();
+                        // increment per-file processed counter and optionally emit object-progress
+                        processedForFile++;
+                        try {
+                            // throttle to roughly 1/sec per-file to avoid SSE flooding
+                            long nowMs = System.currentTimeMillis();
+                            if (nowMs - lastProgressEmitMs >= 900 || processedForFile == totalChunksForFile) {
+                                lastProgressEmitMs = nowMs;
+                                progressBus.publish(job.getId(), java.util.Map.of(
+                                    "event", "object-progress",
+                                    "type", "FILE",
+                                    "name", p.toString(),
+                                    "objectWorkDone", processedForFile,
+                                    "objectTotalWork", totalChunksForFile,
+                                    "ts", nowMs
+                                ));
+                            }
+                        } catch (Exception ignore) {}
                         float[] vec = embeddingService.getEmbedding(content);
                         if (vec != null && vec.length > 0) embeddings.incrementAndGet();
                     }

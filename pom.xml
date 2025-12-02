@@ -116,6 +116,13 @@
             <version>${onnxruntime.version}</version>
         </dependency>
 
+        <!-- ONNX Runtime GPU Dependency -->
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime_gpu</artifactId>
+            <version>${onnxruntime.version}</version>
+        </dependency>
+
         <!-- DJL (Deep Java Library) -->
         <dependency>
             <groupId>ai.djl</groupId>

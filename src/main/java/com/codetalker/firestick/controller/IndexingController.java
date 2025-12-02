@@ -169,7 +169,23 @@ public class IndexingController {
         try {
             Path path;
             if (pathStr == null || pathStr.trim().isEmpty()) {
-                // List user home directory as starting point
+                // If no path requested, show top-level roots (drives on Windows) so users can browse the whole OS
+                // Fall back to user.home if listing roots is not appropriate
+                try {
+                    java.io.File[] roots = java.io.File.listRoots();
+                    if (roots != null && roots.length > 0) {
+                        List<DirectoryEntry> entriesRoot = new ArrayList<>();
+                        for (java.io.File r : roots) {
+                            try {
+                                entriesRoot.add(new DirectoryEntry(r.getPath(), r.getAbsolutePath(), r.isDirectory()));
+                            } catch (Exception ignore) {}
+                        }
+                        return ResponseEntity.ok(new DirectoryListing("/", entriesRoot, null));
+                    }
+                } catch (Exception e) {
+                    // Fall through to default user home listing if roots can't be enumerated
+                }
+                // Default to user home if roots enumeration failed
                 path = Path.of(System.getProperty("user.home"));
             } else {
                 path = Path.of(pathStr).toAbsolutePath().normalize();

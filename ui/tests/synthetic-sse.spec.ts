@@ -53,13 +53,14 @@ test('synthetic SSE acceptance: server emits object-end and final progress 100',
     (window as any).__es = es;
   });
 
-  // wait until events include object-end and final progress 100
+  // wait until events include object-end, object-progress and final progress 100
   const found = await page.waitForFunction(() => {
     // @ts-ignore
     const ev = (window as any).__events || [];
     const hasObjectEnd = ev.some((e: any) => e.event === 'object-end');
+    const hasObjectProgress = ev.some((e: any) => e.event === 'object-progress');
     const finalProgress = ev.some((e: any) => e.event === 'progress' && e.percent === 100);
-    return hasObjectEnd && finalProgress;
+    return hasObjectEnd && hasObjectProgress && finalProgress;
   }, { timeout: 10000 });
 
   expect(found).toBeTruthy();

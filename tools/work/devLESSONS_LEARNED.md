@@ -9,3 +9,9 @@ Symptom: npm E404 Not Found for package; UI deps couldn't install; TS/JSX types 
 Cause: Dev dependency no longer exists/renamed; Vitest v2 already ships a built-in `junit` reporter, so extra package unnecessary.
 Work done: Removed `vitest-junit-reporter` from ui/package.json; installed deps; excluded Playwright specs from Vitest; fixed minor TS types; added @types/prismjs.
 Result/Prevent: UI builds, tests, and typecheck pass; prefer built-in reporters; keep e2e tests under separate runner and exclude from unit runner.
+
+Incident 0003 (2025-12-01 14:30 CST): Verified CUDA Toolkit and cuDNN setup for GPU enablement.
+Symptom: None; verification successful.
+Cause: Routine check during GPU enablement tasks.
+Work done: Ran `nvcc --version` and `where cudnn64*.dll` to confirm CUDA and cuDNN availability.
+Result/Prevent: CUDA Toolkit 13.0 and cuDNN libraries confirmed accessible; no issues encountered.
