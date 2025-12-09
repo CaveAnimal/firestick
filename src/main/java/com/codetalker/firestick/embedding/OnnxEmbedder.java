@@ -21,7 +21,8 @@ import ai.onnxruntime.OrtSession;
  */
 public class OnnxEmbedder implements Closeable {
     private final OrtEnvironment env;
-    private final OrtSession session;
+    private OrtSession session;
+    private final Path onnxModelPath;
     private final WordPieceTokenizer tokenizer;
     private final int hiddenSize;
 
@@ -34,6 +35,7 @@ public class OnnxEmbedder implements Closeable {
         if (!Files.exists(onnxModel)) throw new IOException("ONNX model not found: " + onnxModel);
         if (!Files.exists(vocabTxt)) throw new IOException("vocab.txt not found: " + vocabTxt);
 
+        this.onnxModelPath = onnxModel;
         this.env = OrtEnvironment.getEnvironment();
         this.session = env.createSession(onnxModel.toString(), new OrtSession.SessionOptions());
         this.tokenizer = new WordPieceTokenizer(
@@ -42,6 +44,15 @@ public class OnnxEmbedder implements Closeable {
                 maxSeqLen
         );
         this.hiddenSize = hiddenSize;
+    }
+
+    public void addCUDA(int deviceId) throws OrtException {
+        OrtSession.SessionOptions opts = new OrtSession.SessionOptions();
+        opts.addCUDA(deviceId);
+        if (this.session != null) {
+            this.session.close();
+        }
+        this.session = env.createSession(onnxModelPath.toString(), opts);
     }
 
     public float[] embed(String text) throws OrtException {

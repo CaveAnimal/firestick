@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout">
+  <head>
+    <title th:fragment="title">Logs - Firestick</title>
+  </head>
+  <body>
+    <div th:fragment="body">
+      <h2>Logs</h2>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+        <button class="btn" onclick="fetchLogs('/api/logs/latest', 'logs-block')">Refresh</button>
+      </div>
+      <pre id="logs-block" style="width:100%;height:500px;overflow:auto;border:1px solid var(--color-border);padding:12px;background:var(--color-surface);"></pre>
+      <script>fetchLogs('/api/logs/latest', 'logs-block');</script>
+    </div>
+  </body>
+</html>

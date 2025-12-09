@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="layout :: layout">
+  <head>
+    <title th:fragment="title">Indexing - Firestick</title>
+  </head>
+  <body>
+    <div th:fragment="body">
+      <h2>Indexing</h2>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <select id="app-select" style="padding:6px;border:1px solid var(--color-border)">
+          <option value="">default</option>
+        </select>
+        <button class="btn btn-primary" id="start-btn">Start Indexing</button>
+        <button class="btn" id="stop-btn">Stop Indexing</button>
+      </div>
+
+      <div style="margin-top:16px;">
+        <strong>Status:</strong> <span id="index-status">idle</span>
+      </div>
+
+      <pre id="index-log" style="margin-top:12px;border:1px solid var(--color-border);padding:12px;height:300px;overflow:auto;background:var(--color-bg);"></pre>
+    </div>
+  </body>
+</html>

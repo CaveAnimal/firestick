@@ -1,7 +1,7 @@
 <#
 Start-All: Start backend (Spring Boot), UI (Vite), Chroma vector DB, Python LLM service
 
-Usage: .\start-all.ps1 [-SkipChroma] [-SkipUI] [-SkipLLM] [-SkipBackend] [-TimeoutSeconds 120]
+Usage: .\start-all.ps1 [-SkipChroma] [-SkipLLM] [-SkipBackend] [-TimeoutSeconds 120]
 
 # Notes:
 # - Starting profile: ONNX is the default now. To start without ONNX, pass `-NoOnnx`.
@@ -12,7 +12,7 @@ This script will start processes in new PowerShell windows and then poll health 
 
 param(
   [switch]$SkipChroma,
-  [switch]$SkipUI,
+  # [switch]$SkipUI,  # UI is now served by the backend (server-side templates) - no separate Vite dev server
   [switch]$SkipLLM,
   [switch]$SkipBackend,
   [switch]$WithOnnx,
@@ -230,23 +230,7 @@ if (-not $SkipChroma) {
   }
 }
 
-if (-not $SkipUI) {
-  $logFile = Get-LogFileName -ServiceName "ui"
-  # Start the Vite dev server in the ui folder
-  $uiDir = Join-Path $root 'ui'
-  if (Test-Path $uiDir) {
-    # Detect backend port automatically so UI can set VITE_API_URL to the correct backend.
-    # Probe 8080..8085; if none available wait 60s and try again until a port is found.
-    # If we already detected backend through the earlier probe, use that; otherwise try detection
-    $detectedPort = $detectedBackendPort
-    if (-not $detectedPort) { $detectedPort = Find-BackendPort }
-    if (-not $detectedPort) { $detectedPort = 8080 }
-    $backendBase = "http://localhost:$detectedPort"
-    Start-NewWindow -Name 'UI' -Command "cd '$uiDir'; `$env:VITE_API_URL='$backendBase'; npm run dev" -LogFile $logFile
-  } else {
-    Write-Host "UI directory not found; skipping" -ForegroundColor Yellow
-  }
-}
+# UI is now part of the backend; no separate dev server will be started.
 
 Write-Host "All start commands issued. Verifying services..." -ForegroundColor Cyan
 
@@ -278,11 +262,7 @@ if (-not $SkipChroma) {
   if ($ok) { Write-Host 'Chroma: listening on port 8000' -ForegroundColor Green } else { Write-Host 'Chroma: not reachable on port 8000' -ForegroundColor Yellow; $allOk = $false }
 }
 
-if (-not $SkipUI) {
-  # Vite's default dev server port is 5173
-  $ok = Wait-ForHttp -Url 'http://localhost:5173' -HttpTimeoutSeconds $TimeoutSeconds
-  if (-not $ok) { $allOk = $false }
-}
+ # UI is served by the backend; no separate UI check required
 
 if ($allOk) { Write-Host '??? All services started successfully' -ForegroundColor Green } else { Write-Host '??????  Some services failed to start or did not respond in time' -ForegroundColor Yellow }
 

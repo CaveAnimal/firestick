@@ -160,6 +160,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Thymeleaf server-side templates for migrated UI -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+
         <!-- WebFlux client for SSE testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
