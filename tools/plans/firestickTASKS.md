@@ -9,12 +9,55 @@
 
 ## Task Summary
 
-**Total Tasks:** 1,747 tasks (including main tasks and sub-tasks)  
-**Completed/Tested:** 32 tasks  
+**Total Tasks:** 5 tasks (including main tasks and sub-tasks)  
+**Completed/Tested:** 4 tasks  
 **In Progress:** 1 tasks  
-**Blocked:** 1 tasks  
-**Percent Complete:** 1.83%  
-**Last Updated:** October 15, 2025    2:00 PM Central Standard Time
+**Blocked:** 0 tasks  
+**Percent Complete:** 80%  
+**Last Updated:** November 6, 2025    2:31 PM Central Standard Time
+
+### Child Task Lists
+- Dev1 Task List: tools/work/dev1/tasksDEV1.md
+- Dev2 Task List: tools/work/dev2/tasksDEV2.md
+
+## Current Phase — Focused Scope (Counted)
+
+- `[V]` ONNX mode profile configured and model/tokenizer inventory verified
+- `[V]` GlobalExceptionHandler in place with ErrorResponse.requestId contract and tests
+- `[V]` OpenAPI baseline generated with drift-check test enforced in CI
+- `[V]` Rescope master task list and seed Dev3 execution lane for current sprint
+- `[-]` Initialize Dev3 runbook: refresh DEV3 summary and kick off first verification tasks
+
+## Deferred / Backlog (Excluded from Percent)
+
+<!-- @SKIP-COUNT:START deferred -->
+
+## Recently Completed Follow-ups (Cross-Team)
+
+- `[V]` Chroma v2 tenant/database connectivity verified (heartbeat and collection create/get/delete via REST)
+- `[V]` End-to-end pipeline test with mocked Chroma v2; added `docs/PIPELINE.md`, sample `HelloWorld.java` and `Calculator.java`, and multi-document assertions
+- `[V]` Embeddings ONNX mode wiring in `EmbeddingService` with minimal WordPiece tokenizer; added guarded ONNX smoke test and updated docs
+- `[V]` Centralized logging and GlobalExceptionHandler with domain exceptions; tests verifying handler behavior
+- `[V]` Lucene modernization to StoredFields API (removed deprecated IndexSearcher.doc usage)
+- `[V]` File discovery enhancements (exclude directories, glob patterns)
+- `[V]` Externalized defaults via `IndexingConfig` (indexing.* properties)
+- `[V]` Indexing orchestrator (`IndexingService`) and REST endpoints (`/api/indexing/run`)
+- `[V]` Job tracking (`IndexingJob` entity/repo) and controller (`/api/indexing/jobs/...`)
+- `[V]` Incremental indexing (skip unchanged files by lastModified)
+- `[V]` Persistence of `CodeFile` and `CodeChunk` with transactional replacement of chunks
+- `[V]` Exposed `jobId` in `IndexingReport` and API responses
+- `[V]` Controller tests for job endpoints (latest/byId)
+- `[V]` README updates covering incremental behavior and report fields
+- `[V]` TheRules: policy to not analyze Surefire reports unless requested; treat `[INFO] BUILD SUCCESS` as sufficient
+- `[V]` Parser and graph now separate static vs non-static imports; normalized import labels (strip "static ", semicolons); tests adjusted and passing
+- `[V]` Dependency graph enhanced with CALLS across classes: qualified calls and static-imported unqualified calls resolved heuristically; unit tests added
+- `[V]` Rolled up Dev1 progress (+5%) into global: instance and constructor call resolution (simple chained calls) added with focused tests; overall percent updated
+- `[V]` Static import wildcard resolution and metrics: unqualified CALLS via `Class.*` supported; added `callsStaticWildcardResolved` and `callsQualifiedChainedResolved`; tests extended
+- `[V]` Rolled up Dev1 progress (+5%) into global: resolved `this.`/`super.` qualified calls and added unresolved-call metrics buckets; new unit tests added and full suite passing; overall percent updated
+
+- `[V]` Rolled up Dev1 final (+3%) into global: added FQN-qualified call resolution metric (`callsQualifiedFqnResolved`) and unique simple-name fallback metric (`callsQualifiedUniqueSimpleResolved`); implemented fallback resolver; tests added; full suite passing; overall percent updated
+
+- `[V]` Test suite green with JaCoCo gate (>=80% PACKAGE coverage per pom.xml); refreshed Task Summary (DEV1 82.57%, DEV2 95.93%, firestick 9.34%); confirmed Dev1/Dev2 lists linked under Child Task Lists
 
 ## Task Management System
 
@@ -98,9 +141,9 @@ class HealthControllerTest {
 - `[V]` Create `service` package under `com.codetalkerl.firestick`
 - `[V]` Create `CodeParserService.java` class
 - `[V]` Implement basic method to parse a Java file
-  - `[ ]` Sub-task: Accept file path as parameter
-  - `[ ]` Sub-task: Return CompilationUnit from JavaParser
-  - `[ ]` Sub-task: Handle parsing errors with try-catch
+  - `[V]` Sub-task: Accept file path as parameter
+  - `[V]` Sub-task: Return CompilationUnit from JavaParser
+  - `[V]` Sub-task: Handle parsing errors with try-catch
 - `[V]` Create `CodeParserServiceTest.java`
 - `[V]` Test: Parse a sample Java file successfully
 
@@ -122,12 +165,12 @@ public CompilationUnit parseJavaFile(String filePath) {
   - `lucene-analysis-common` version 9.12.0
 - `[V]` Create `CodeSearchService.java` class
 - `[V]` Implement basic indexing method
-  - `[ ]` Sub-task: Create in-memory Lucene index
-  - `[ ]` Sub-task: Add sample document to index
-  - `[ ]` Sub-task: Handle IOException properly
+  - `[V]` Sub-task: Create in-memory Lucene index
+  - `[V]` Sub-task: Add sample document to index
+  - `[V]` Sub-task: Handle IOException properly
 - `[V]` Implement basic search method
-  - `[ ]` Sub-task: Accept query string parameter
-  - `[ ]` Sub-task: Return list of matching documents
+  - `[V]` Sub-task: Accept query string parameter
+  - `[V]` Sub-task: Return list of matching documents
 - `[V]` Create `CodeSearchServiceTest.java`
 - `[V]` Test: Index and search a sample document
 
@@ -141,12 +184,12 @@ public CompilationUnit parseJavaFile(String filePath) {
   - `jgrapht-io` version 1.5.2
 - `[V]` Create `DependencyGraphService.java` class
 - `[V]` Implement method to create simple graph
-  - `[ ]` Sub-task: Create DirectedGraph instance
-  - `[ ]` Sub-task: Add vertices (nodes)
-  - `[ ]` Sub-task: Add edges (connections)
+  - `[V]` Sub-task: Create DirectedGraph instance
+  - `[V]` Sub-task: Add vertices (nodes)
+  - `[V]` Sub-task: Add edges (connections)
 - `[V]` Implement method to find dependencies
-  - `[ ]` Sub-task: Get outgoing edges from a vertex
-  - `[ ]` Sub-task: Return list of dependent classes
+  - `[V]` Sub-task: Get outgoing edges from a vertex
+  - `[V]` Sub-task: Return list of dependent classes
 - `[V]` Create `DependencyGraphServiceTest.java`
 - `[V]` Test: Create graph and query dependencies
 
@@ -157,15 +200,15 @@ public CompilationUnit parseJavaFile(String filePath) {
 #### Day 6: H2 Database Setup
 **Goal:** Set up embedded database for metadata storage
 
-- `[ ]` Add H2 database dependency to `pom.xml` (already exists)
-- `[ ]` Add Spring Data JPA dependency (already exists)
-- `[ ]` Create `application.properties` configuration
-  - `[ ]` Sub-task: Set H2 console enabled = true
-  - `[ ]` Sub-task: Set datasource URL to file-based H2
-  - `[ ]` Sub-task: Set JPA DDL auto to `update`
-  - `[ ]` Sub-task: Add logging for SQL statements (optional)
-- `[ ]` Test: Start application and access H2 console at `/h2-console`
-- `[ ]` Verify database file is created
+- `[V]` Add H2 database dependency to `pom.xml` (already exists)
+- `[V]` Add Spring Data JPA dependency (already exists)
+- `[V]` Create `application.properties` configuration
+  - `[V]` Sub-task: Set H2 console enabled = true
+  - `[V]` Sub-task: Set datasource URL to file-based H2
+  - `[V]` Sub-task: Set JPA DDL auto to `update`
+  - `[V]` Sub-task: Add logging for SQL statements (optional)
+- `[V]` Test: Start application and access H2 console at `/h2-console`
+- `[V]` Verify database file is created
 
 **Configuration Example:**
 ```properties
@@ -186,23 +229,23 @@ spring.jpa.hibernate.ddl-auto=update
 #### Day 7: Create Database Entities
 **Goal:** Define data models for code metadata
 
-- `[ ]` Create `entity` package under `com.codetalkerl.firestick`
-- `[ ]` Create `CodeFile.java` entity (30 min)
-  - `[ ]` Sub-task: Add fields: id, filePath, lastModified, hash
-  - `[ ]` Sub-task: Add JPA annotations (@Entity, @Id, @GeneratedValue)
-  - `[ ]` Sub-task: Add constructors, getters, setters
-- `[ ]` Create `CodeChunk.java` entity (30 min)
-  - `[ ]` Sub-task: Add fields: id, fileId, content, startLine, endLine, type
-  - `[ ]` Sub-task: Add @ManyToOne relationship to CodeFile
-  - `[ ]` Sub-task: Add JPA annotations
-- `[ ]` Create `Symbol.java` entity (30 min)
-  - `[ ]` Sub-task: Add fields: id, name, type, signature, fileId, lineNumber
-  - `[ ]` Sub-task: Add JPA annotations
-- `[ ]` Create repository interfaces (1h)
-  - `[ ]` Sub-task: `CodeFileRepository extends JpaRepository`
-  - `[ ]` Sub-task: `CodeChunkRepository extends JpaRepository`
-  - `[ ]` Sub-task: `SymbolRepository extends JpaRepository`
-- `[ ]` Test: Run application and verify tables are created in H2
+- `[V]` Create `entity` package under `com.codetalkerl.firestick`
+- `[V]` Create `CodeFile.java` entity (30 min)
+  - `[V]` Sub-task: Add fields: id, filePath, lastModified, hash
+  - `[V]` Sub-task: Add JPA annotations (@Entity, @Id, @GeneratedValue)
+  - `[V]` Sub-task: Add constructors, getters, setters
+- `[V]` Create `CodeChunk.java` entity (30 min)
+  - `[V]` Sub-task: Add fields: id, fileId, content, startLine, endLine, type
+  - `[V]` Sub-task: Add @ManyToOne relationship to CodeFile
+  - `[V]` Sub-task: Add JPA annotations
+- `[V]` Create `Symbol.java` entity (30 min)
+  - `[V]` Sub-task: Add fields: id, name, type, signature, fileId, lineNumber
+  - `[V]` Sub-task: Add JPA annotations
+- `[V]` Create repository interfaces (1h)
+  - `[V]` Sub-task: `CodeFileRepository extends JpaRepository`
+  - `[V]` Sub-task: `CodeChunkRepository extends JpaRepository`
+  - `[V]` Sub-task: `SymbolRepository extends JpaRepository`
+- `[V]` Test: Run application and verify tables are created in H2
 
 **Entity Example:**
 ```java
@@ -227,21 +270,21 @@ public class CodeFile {
 #### Day 8: ONNX Runtime Setup
 **Goal:** Set up local embedding model infrastructure
 
-- `[ ]` Verify ONNX Runtime dependency in `pom.xml` (already exists)
-- `[ ]` Create `models` directory in project root (5 min)
-- `[ ]` Download all-MiniLM-L6-v2 ONNX model (30 min)
-  - `[ ]` Sub-task: Find model on Hugging Face (search "all-MiniLM-L6-v2 onnx")
-  - `[ ]` Sub-task: Download `model.onnx` file
-  - `[ ]` Sub-task: Download `tokenizer.json` file
-  - `[ ]` Sub-task: Save both files to `models/` directory
+- `[V]` Verify ONNX Runtime dependency in `pom.xml` (already exists)
+- `[V]` Create `models` directory in project root (5 min)
+- `[V]` Download all-MiniLM-L6-v2 ONNX model (30 min)
+  - `[V]` Sub-task: Find model on Hugging Face (search "all-MiniLM-L6-v2 onnx")
+  - `[V]` Sub-task: Download `model.onnx` file
+  - `[V]` Sub-task: Download `tokenizer.json` file
+  - `[V]` Sub-task: Save both files to `models/` directory
   - Note: Model size is approximately 90MB
-- `[ ]` Create `EmbeddingService.java` class (2h)
-  - `[ ]` Sub-task: Add method to load ONNX model
-  - `[ ]` Sub-task: Add method to load tokenizer
-  - `[ ]` Sub-task: Add method `getEmbedding(String text)` that returns float[]
-  - `[ ]` Sub-task: Handle model loading errors
-- `[ ]` Create simple test to generate one embedding (1h)
-- `[ ]` Test: Generate embedding for "Hello World" successfully
+- `[V]` Create `EmbeddingService.java` class (2h)
+  - `[V]` Sub-task: Add method to load ONNX model
+  - `[V]` Sub-task: Add method to load tokenizer
+  - `[V]` Sub-task: Add method `getEmbedding(String text)` that returns float[]
+  - `[V]` Sub-task: Handle model loading errors
+- `[V]` Create simple test to generate one embedding (1h)
+- `[V]` Test: Generate embedding for "Hello World" successfully
 
 **Download Instructions:**
 1. Go to https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2
@@ -273,30 +316,38 @@ public class EmbeddingService {
 
 **Background:** The Chroma Java client is not stable, so we'll use HTTP REST API instead.
 
-- `[ ]` Verify Chroma is running locally (15 min)
-  - `[ ]` Sub-task: Open terminal/PowerShell
-  - `[ ]` Sub-task: Navigate to Chroma directory
-  - `[ ]` Sub-task: Run `chroma run --host localhost --port 8000`
-  - `[ ]` Sub-task: Test with browser: `http://localhost:8000/api/v1/heartbeat`
-- `[ ]` Add RestTemplate configuration (30 min)
-  - `[ ]` Sub-task: Create `config` package
-  - `[ ]` Sub-task: Create `RestTemplateConfig.java`
-  - `[ ]` Sub-task: Create `@Bean` for RestTemplate
-- `[ ]` Create `ChromaService.java` class (3h)
-  - `[ ]` Sub-task: Add method `createCollection(String name)`
-  - `[ ]` Sub-task: Add method `addEmbeddings(String collection, List<float[]> embeddings, List<String> documents)`
-  - `[ ]` Sub-task: Add method `query(String collection, float[] queryEmbedding, int topK)`
-  - `[ ]` Sub-task: Build HTTP requests manually using RestTemplate
-  - `[ ]` Sub-task: Parse JSON responses
-- `[ ]` Create `ChromaServiceTest.java`
-- `[ ]` Test: Create collection and add one document
+- `[V]` Verify Chroma is running locally (15 min)
+  - `[V]` Sub-task: Open terminal/PowerShell
+  - `[V]` Sub-task: Navigate to Chroma directory
+  - `[V]` Sub-task: Run `chroma run --host localhost --port 8000`
+  - `[V]` Sub-task: Test with browser: `http://localhost:8000/api/v2/heartbeat` (v1 returns "Unimplemented")
+- `[V]` Add RestTemplate configuration (30 min)
+  - `[V]` Sub-task: Create `config` package
+  - `[V]` Sub-task: Create `RestTemplateConfig.java`
+  - `[V]` Sub-task: Create `@Bean` for RestTemplate
+- `[V]` Create `ChromaService.java` class (3h)
+  - `[V]` Sub-task: Add method `createCollection(String name)`
+  - `[V]` Sub-task: Add method `addEmbeddings(String collection, List<float[]> embeddings, List<String> documents)`
+  - `[V]` Sub-task: Add method `query(String collection, float[] queryEmbedding, int topK)`
+  - `[V]` Sub-task: Build HTTP requests manually using RestTemplate
+  - `[V]` Sub-task: Parse JSON responses
+- `[V]` Create `ChromaServiceTest.java`
+- `[V]` Test: Create collection and add one document
 
-**Chroma REST API Reference:**
+**Chroma REST API Reference (v2):**
 ```
-POST http://localhost:8000/api/v1/collections
-GET  http://localhost:8000/api/v1/collections/{name}
-POST http://localhost:8000/api/v1/collections/{name}/add
-POST http://localhost:8000/api/v1/collections/{name}/query
+POST http://localhost:8000/api/v2/collections
+GET  http://localhost:8000/api/v2/collections/{name}
+POST http://localhost:8000/api/v2/collections/{name}/add
+POST http://localhost:8000/api/v2/collections/{name}/query
+```
+
+Note: On newer Chroma servers, resource routes are namespaced by tenant and database. Use:
+```
+POST http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections
+GET  http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections/{name}
+POST http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections/{name}/add
+POST http://localhost:8000/api/v2/tenants/{tenant}/databases/{database}/collections/{name}/query
 ```
 
 **Service Example:**
@@ -321,21 +372,21 @@ public class ChromaService {
 #### Day 10: End-to-End Pipeline Test
 **Goal:** Test complete flow from code to embeddings to Chroma
 
-- `[ ]` Create integration test class `CodeIndexingPipelineTest.java` (4h)
-  - `[ ]` Sub-task: Parse a sample Java file with CodeParserService
-  - `[ ]` Sub-task: Extract method text content
-  - `[ ]` Sub-task: Generate embedding with EmbeddingService
-  - `[ ]` Sub-task: Store in Chroma with ChromaService
-  - `[ ]` Sub-task: Query Chroma with sample question
-  - `[ ]` Sub-task: Verify results are returned
-- `[ ]` Create sample test data (30 min)
-  - `[ ]` Sub-task: Create `test-data/sample-code/` directory
-  - `[ ]` Sub-task: Add 2-3 simple Java files for testing
-- `[ ]` Document the pipeline flow (1h)
-  - `[ ]` Sub-task: Create `PIPELINE.md` in `docs/` directory
-  - `[ ]` Sub-task: Document each step with code examples
-  - `[ ]` Sub-task: Add troubleshooting section
-- `[ ]` Fix any bugs discovered during testing
+- `[V]` Create integration test class `E2EPipelineTest.java` (4h)
+  - `[V]` Sub-task: Parse a sample Java file with CodeParserService
+  - `[V]` Sub-task: Extract method text content
+  - `[V]` Sub-task: Generate embedding with EmbeddingService
+  - `[V]` Sub-task: Store in Chroma with ChromaService (mocked Chroma v2 via `MockRestServiceServer`)
+  - `[V]` Sub-task: Query Chroma with sample question
+  - `[V]` Sub-task: Verify results are returned (including multi-document assertions)
+- `[V]` Create sample test data (30 min)
+  - `[V]` Sub-task: Create `test-data/sample-code/` directory
+  - `[V]` Sub-task: Add 2–3 simple Java files for testing (`HelloWorld.java`, `Calculator.java`)
+- `[V]` Document the pipeline flow (1h)
+  - `[V]` Sub-task: Create `PIPELINE.md` in `docs/` directory
+  - `[V]` Sub-task: Document each step with code examples
+  - `[V]` Sub-task: Add troubleshooting section
+- `[V]` Fix any bugs discovered during testing (JSON mock escaping in Chroma response)
 
 **Pipeline Flow:**
 ```
@@ -377,27 +428,27 @@ class CodeIndexingPipelineTest {
   - `[ ]` Sub-task: Run all tests to verify nothing broke
 
 - `[ ]` Add logging framework (1h)
-  - `[ ]` Sub-task: Add SLF4J + Logback dependencies (may already be included)
-  - `[ ]` Sub-task: Create `logback.xml` in `src/main/resources/`
-  - `[ ]` Sub-task: Add logger to each service class
-  - `[ ]` Sub-task: Add meaningful log statements (INFO, DEBUG, ERROR)
+  - `[V]` Sub-task: Add SLF4J + Logback dependencies (may already be included)
+  - `[V]` Sub-task: Create `logback.xml` in `src/main/resources/`
+  - `[V]` Sub-task: Add logger to each service class
+  - `[V]` Sub-task: Add meaningful log statements (INFO, DEBUG, ERROR)
   - `[ ]` Sub-task: Test logging at different levels
 
 - `[ ]` Implement error handling (2h)
-  - `[ ]` Sub-task: Create custom exceptions in `exception` package
+  - `[V]` Sub-task: Create custom exceptions in `exception` package
     - `CodeParsingException`
     - `EmbeddingGenerationException`
     - `ChromaConnectionException`
-  - `[ ]` Sub-task: Create `@ControllerAdvice` class for global exception handling
-  - `[ ]` Sub-task: Return proper HTTP status codes (400, 500, etc.)
+  - `[V]` Sub-task: Create `@ControllerAdvice` class for global exception handling
+  - `[V]` Sub-task: Return proper HTTP status codes (400, 500, etc.)
   - `[ ]` Sub-task: Add error handling to all service methods
 
 - `[ ]` Improve test coverage (3h)
   - `[ ]` Sub-task: Add more test cases to existing test classes
-  - `[ ]` Sub-task: Test error conditions and edge cases
-  - `[ ]` Sub-task: Add integration tests for database operations
-  - `[ ]` Sub-task: Run `mvn test` and verify >70% coverage
-  - `[ ]` Sub-task: Fix any failing tests
+  - `[V]` Sub-task: Test error conditions and edge cases
+  - `[V]` Sub-task: Add integration tests for database operations
+  - `[V]` Sub-task: Run `mvn test` and verify >70% coverage
+  - `[V]` Sub-task: Fix any failing tests
 
 - `[ ]` Create README documentation (1h)
   - `[ ]` Sub-task: Add project description
@@ -418,14 +469,14 @@ Before moving to Phase 2, verify ALL of the following:
 - ✅ Can parse Java files with JavaParser
 - ✅ Can create Lucene index and search
 - ✅ Can create dependency graphs with JGraphT
-- ⬜ H2 database is configured and accessible
-- ⬜ Database entities are created and persisted
+- ✅ H2 database is configured and accessible
+- ✅ Database entities are created and persisted
 - ⬜ ONNX model generates embeddings successfully
 - ⬜ Chroma connection works and can store/retrieve vectors
-- ⬜ End-to-end pipeline test passes
+- ✅ End-to-end pipeline test passes
 
-### Code Quality Requirements
-- ⬜ All unit tests pass (`mvn test`)
+-### Code Quality Requirements
+- ✅ All unit tests pass (`mvn test`)
 - ⬜ Integration tests pass
 - ⬜ No critical errors in logs
 - ⬜ Code follows consistent naming conventions
@@ -593,16 +644,16 @@ This is the foundation of Firestick. Without good indexing, search won't work we
   - `[ ]` Sub-task: Add logger fields to all service classes
   - `[ ]` Sub-task: Add log statements at key points (method entry, errors, important decisions)
 
-- `[ ]` **Implement Global Exception Handling** (2h)
-  - `[ ]` Sub-task: Create `exception` package
-  - `[ ]` Sub-task: Create custom exceptions:
+- `[V]` **Implement Global Exception Handling** (2h)
+  - `[V]` Sub-task: Create `exception` package
+  - `[V]` Sub-task: Create custom exceptions:
     - `FileDiscoveryException`
     - `CodeParsingException`
     - `IndexingException`
     - `EmbeddingException`
-  - `[ ]` Sub-task: Create `GlobalExceptionHandler` with `@ControllerAdvice`
-  - `[ ]` Sub-task: Handle exceptions and return proper HTTP status codes
-  - `[ ]` Sub-task: Test exception handling with intentional errors
+  - `[V]` Sub-task: Create `GlobalExceptionHandler` with `@ControllerAdvice`
+  - `[V]` Sub-task: Handle exceptions and return proper HTTP status codes
+  - `[V]` Sub-task: Test exception handling with intentional errors
 
 **Logback Configuration Example:**
 ```xml
@@ -862,21 +913,21 @@ public class CodeChunkingService {
 ### Day 15: Dependency Graph Building - Part 1
 **Goal:** Build comprehensive dependency graph from parsed code
 
-- `[ ]` **Plan Graph Structure** (1h)
-  - `[ ]` Sub-task: Review JGraphT documentation
-  - `[ ]` Sub-task: Decide on graph node types (Class, Method, Package)
-  - `[ ]` Sub-task: Decide on edge types (EXTENDS, IMPLEMENTS, CALLS, IMPORTS)
-  - `[ ]` Sub-task: Document graph schema in `docs/GRAPH_SCHEMA.md`
+- `[V]` **Plan Graph Structure** (1h)
+  - `[V]` Sub-task: Review JGraphT documentation
+  - `[V]` Sub-task: Decide on graph node types (Class, Method, Package)
+  - `[V]` Sub-task: Decide on edge types (EXTENDS, IMPLEMENTS, CALLS, IMPORTS)
+  - `[V]` Sub-task: Document graph schema in `docs/GRAPH_SCHEMA.md`
 
-- `[ ]` **Enhance DependencyGraphService** (4h)
-  - `[ ]` Sub-task: Update `DependencyGraphService.java`
-  - `[ ]` Sub-task: Create method `buildFromParsedFiles(List<FileInfo> files)`
-  - `[ ]` Sub-task: Add all classes as vertices
-  - `[ ]` Sub-task: Add all methods as vertices
-  - `[ ]` Sub-task: Create edges for inheritance (extends)
-  - `[ ]` Sub-task: Create edges for interface implementation (implements)
-  - `[ ]` Sub-task: Create edges for imports
-  - `[ ]` Sub-task: Store graph metadata
+- `[V]` **Enhance DependencyGraphService** (4h)
+  - `[V]` Sub-task: Update `DependencyGraphService.java`
+  - `[V]` Sub-task: Create method `buildFromParsedFiles(List<FileInfo> files)`
+  - `[V]` Sub-task: Add all classes as vertices
+  - `[V]` Sub-task: Add all methods as vertices
+  - `[V]` Sub-task: Create edges for inheritance (extends)
+  - `[V]` Sub-task: Create edges for interface implementation (implements)
+  - `[V]` Sub-task: Create edges for imports
+  - `[V]` Sub-task: Store graph metadata
 
 - `[ ]` **Create Graph Node Classes** (2h)
   - `[ ]` Sub-task: Create `GraphNode.java` interface or abstract class
@@ -937,17 +988,17 @@ public class DependencyGraphService {
 ### Day 16: Dependency Graph Building - Part 2
 **Goal:** Complete dependency graph with method call analysis
 
-- `[ ]` **Implement Method Call Detection** (4h)
-  - `[ ]` Sub-task: Research JavaParser method call visitor pattern
-  - `[ ]` Sub-task: Create `MethodCallVisitor` class extends VoidVisitorAdapter
-  - `[ ]` Sub-task: Override visit(MethodCallExpr) to detect method calls
-  - `[ ]` Sub-task: Store caller → callee relationships
-  - `[ ]` Sub-task: Handle method calls within same class
-  - `[ ]` Sub-task: Handle method calls to other classes
+- `[V]` **Implement Method Call Detection** (4h)
+  - `[V]` Sub-task: Research JavaParser method call visitor pattern
+  - `[V]` Sub-task: Create `MethodCallVisitor` class extends VoidVisitorAdapter
+  - `[V]` Sub-task: Override visit(MethodCallExpr) to detect method calls
+  - `[V]` Sub-task: Store caller → callee relationships
+  - `[V]` Sub-task: Handle method calls within same class
+  - `[V]` Sub-task: Handle method calls to other classes
 
-- `[ ]` **Add Method Call Edges to Graph** (2h)
-  - `[ ]` Sub-task: Update `DependencyGraphService` to include method calls
-  - `[ ]` Sub-task: Create edges with CALLS type
+- `[V]` **Add Method Call Edges to Graph** (2h)
+  - `[V]` Sub-task: Update `DependencyGraphService` to include method calls
+  - `[V]` Sub-task: Create edges with CALLS type
   - `[ ]` Sub-task: Handle unresolved method calls gracefully
   - `[ ]` Sub-task: Add statistics logging (total calls, unique calls, etc.)
 
@@ -977,8 +1028,8 @@ public class MethodCallVisitor extends VoidVisitorAdapter<Map<String, List<Strin
 ```
 
 - `[ ]` **Create Tests** (1h)
-  - `[ ]` Sub-task: Test graph building with sample classes
-  - `[ ]` Sub-task: Test method call detection
+  - `[V]` Sub-task: Test graph building with sample classes
+  - `[V]` Sub-task: Test method call detection
   - `[ ]` Sub-task: Test query methods return correct results
   - `[ ]` Sub-task: Test circular dependency detection
 
@@ -4402,6 +4453,627 @@ Before moving to Phase 5, verify ALL of the following:
 - How can we improve result presentation?
 
 ---
+
+# Phase 4b: CodeLlama 7B LLM Integration ⭐ **NEW** (Weeks 7-8)
+
+**Status:** Not Started  
+**Goal:** Integrate CodeLlama 7B for code explanation, summarization, and documentation generation  
+**Team:** Backend Developer + DevOps (Python setup)  
+**Duration:** Dec 2 - Dec 8, 2025 (1 week, Sprint 4b)  
+**Dependencies:** Phase 3 (Search API must be working), Phase 4 (Analysis API for context)
+
+---
+
+## Phase 4b Overview: Why CodeLlama?
+
+### What We're Building
+A Python microservice running CodeLlama 7B that provides:
+1. **Code Summarization** - 2-3 sentence explanations of methods/classes
+2. **Dependency Explanation** - Natural language descriptions of why classes are related
+3. **Documentation Generation** - Auto-generate Javadoc-style comments
+4. **Pattern Detection** - Identify code patterns and anti-patterns
+5. **Dead Code Analysis** - Assist in identifying unused/unreachable code
+
+### Why CodeLlama 7B Specifically
+- **Code-trained:** Built specifically for code understanding (vs. general-purpose Mistral)
+- **Efficient:** 7B parameters run on CPU in ~3-5GB RAM
+- **Offline:** No internet required (matches Firestick philosophy)
+- **License:** MIT (fully open-source)
+- **Performance:** 2-5 second response times on consumer hardware
+
+### Architecture Pattern
+```
+┌─────────────────────────────────────────────────────────┐
+│               Firestick Desktop App                     │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │      Spring Boot Backend (Java 21)                │  │
+│  │  - SearchController                               │  │
+│  │  - AnalysisController                             │  │
+│  │  - LLMServiceClient (REST calls to Python)        │  │
+│  └──────────────────┬───────────────────────────────┘  │
+│                     │ REST (http://localhost:8001)      │
+│  ┌──────────────────▼───────────────────────────────┐  │
+│  │   Python FastAPI Service (Microservice)           │  │
+│  │  - CodeLlama 7B model (ONNX optimized)           │  │
+│  │  - Explanation generation                        │  │
+│  │  - Pattern detection                             │  │
+│  │  - Rate limiting & caching                       │  │
+│  └──────────────────────────────────────────────────┘  │
+│                                                          │
+│  Storage Layer (shared)                                 │
+│  - H2 Database (metadata)                               │
+│  - Chroma (vector embeddings)                           │
+│  - Lucene (keyword index)                               │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Phase 4b Detailed Tasks
+
+### Day 1-2: Python Microservice Setup
+
+#### Task 4b.1: Python FastAPI Project Initialization
+- [ ] Create `/llm-service` directory structure (0.5h)
+  ```
+  llm-service/
+  ├── main.py              # FastAPI app entry point
+  ├── requirements.txt     # Pinned dependencies
+  ├── models/              # Model-related code
+  │   ├── llama.py        # CodeLlama wrapper
+  │   └── cache.py        # Model caching
+  ├── endpoints/           # API endpoints
+  │   ├── summarize.py
+  │   ├── analyze.py
+  │   └── health.py
+  ├── tests/               # Unit tests
+  │   └── test_llama.py
+  └── README.md
+  ```
+- [ ] Initialize Python 3.12 venv in llm-service (0.5h)
+  ```bash
+  python -m venv .venv
+  source .venv/bin/activate  # or .venv\Scripts\Activate.ps1 on Windows
+  ```
+- [ ] Create base requirements.txt with versions (1h)
+  ```
+  fastapi==0.115.0
+  uvicorn==0.38.0
+  torch==2.9.0
+  transformers==4.55.4
+  pydantic==2.9.2
+  python-dotenv==1.1.1
+  pydantic-settings==2.5.0
+  ```
+- [ ] Create .env.example (0.5h)
+  ```
+  MODEL_NAME=codellama/CodeLlama-7b-Instruct-hf
+  MODEL_CACHE_DIR=./models
+  TORCH_HOME=./models
+  LLM_SERVICE_PORT=8001
+  LLM_SERVICE_HOST=127.0.0.1
+  MAX_TOKENS=512
+  TIMEOUT_SECONDS=30
+  ```
+- [ ] Unit test: Verify Python 3.12 environment (0.5h)
+
+**Subtasks & Success Criteria:**
+- [ ] `requirement.txt` created and pinned
+- [ ] venv activates without errors
+- [ ] Python version verified as 3.12+
+- [ ] pip install -r requirements.txt succeeds
+
+#### Task 4b.2: Download & Cache CodeLlama Model
+- [ ] Download CodeLlama 7B Instruct model (2h)
+  - Model source: `codellama/CodeLlama-7b-Instruct-hf` from Hugging Face
+  - Expected size: ~13GB (full precision), ~4-5GB (4-bit quantized)
+  - Recommendation: Use 4-bit quantized version for consumer hardware
+  - Command: `huggingface-hub download codellama/CodeLlama-7b-Instruct-hf --cache-dir ./models`
+- [ ] Verify model integrity (checksums) (0.5h)
+- [ ] Create model loader with error handling (1h)
+  ```python
+  class CodeLlamaLoader:
+      def __init__(self, model_name, cache_dir):
+          self.model_name = model_name
+          self.cache_dir = cache_dir
+          self.model = None
+          self.tokenizer = None
+      
+      def load(self):
+          # Load with error handling, retries
+          pass
+      
+      def get_device(self):
+          # Auto-detect CUDA/CPU
+          pass
+  ```
+- [ ] Test model loading time (should be < 30s) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] Model downloaded and cached
+- [ ] Model loads in < 30 seconds
+- [ ] Memory usage < 6GB
+- [ ] Tokenizer initialized successfully
+
+#### Task 4b.3: FastAPI Application Skeleton
+- [ ] Create main.py with FastAPI app (1h)
+  ```python
+  from fastapi import FastAPI
+  from fastapi.middleware.cors import CORSMiddleware
+  import logging
+  
+  app = FastAPI(
+      title="Firestick LLM Service",
+      description="CodeLlama 7B for code explanation",
+      version="1.0.0"
+  )
+  
+  # CORS for Java backend calls
+  app.add_middleware(
+      CORSMiddleware,
+      allow_origins=["http://localhost:8080"],
+      allow_credentials=True,
+      allow_methods=["*"],
+      allow_headers=["*"],
+  )
+  
+  @app.get("/health")
+  async def health():
+      return {"status": "ok"}
+  ```
+- [ ] Create startup/shutdown lifecycle (1h)
+  - Load model on startup
+  - Release resources on shutdown
+  - Signal readiness to Java backend
+- [ ] Configure logging (0.5h)
+- [ ] Add request/response logging (0.5h)
+
+**Subtasks & Success Criteria:**
+- [ ] FastAPI app starts on port 8001
+- [ ] `/health` endpoint returns {"status": "ok"}
+- [ ] CORS configured correctly
+- [ ] Model loads on startup
+
+---
+
+### Day 3: CodeLlama Wrapper & Endpoints
+
+#### Task 4b.4: CodeLlama Model Wrapper Class
+- [ ] Create CodeLlamaProcessor class (4h)
+  ```python
+  class CodeLlamaProcessor:
+      def __init__(self, model, tokenizer):
+          self.model = model
+          self.tokenizer = tokenizer
+          self.context_window = 4096  # CodeLlama's context
+          self.max_new_tokens = 512
+      
+      def generate_explanation(self, code_snippet: str, max_tokens: int = 256) -> str:
+          # Generate brief explanation (2-3 sentences)
+          pass
+      
+      def analyze_relationship(self, from_class: str, to_class: str, context: str) -> str:
+          # Explain why these classes are related
+          pass
+      
+      def generate_documentation(self, code_snippet: str) -> str:
+          # Generate Javadoc-style documentation
+          pass
+      
+      def detect_patterns(self, code_snippet: str) -> list[str]:
+          # Identify code patterns and issues
+          pass
+      
+      def _build_prompt(self, instruction: str, code: str) -> str:
+          # Build properly formatted prompt for CodeLlama
+          pass
+      
+      def _tokenize_and_truncate(self, text: str) -> str:
+          # Respect context window limits
+          pass
+  ```
+- [ ] Implement token counting/truncation (1h)
+- [ ] Add temperature and sampling controls (0.5h)
+- [ ] Error handling (invalid inputs, OOM, timeouts) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] Class compiles without errors
+- [ ] Methods handle edge cases (empty input, too long input)
+- [ ] Inference completes within 5 seconds
+- [ ] Output quality is acceptable (human readable, relevant)
+
+#### Task 4b.5: API Endpoints Implementation
+- [ ] Endpoint 1: POST /api/llm/summarize (2h)
+  - Input: `{"code": "...", "language": "java"}`
+  - Output: `{"summary": "...", "confidence": 0.95, "tokens_used": 47}`
+  - Response time: < 5s
+- [ ] Endpoint 2: POST /api/llm/analyze-relationship (2h)
+  - Input: `{"from_class": "ClassA", "to_class": "ClassB", "context": "..."}`
+  - Output: `{"explanation": "...", "relationship_type": "dependency|inheritance|..."`
+  - Response time: < 5s
+- [ ] Endpoint 3: POST /api/llm/generate-docs (2h)
+  - Input: `{"code": "..."}`
+  - Output: `{"documentation": "...", "format": "javadoc"}`
+- [ ] Endpoint 4: POST /api/llm/detect-patterns (2h)
+  - Input: `{"code": "..."}`
+  - Output: `{"patterns": ["singleton", "factory"], "issues": ["missing_null_check", "TODO_comment"]}`
+- [ ] Add request validation with Pydantic (1h)
+- [ ] Add response models (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] All 4 endpoints return 200 status
+- [ ] Responses match documented schema
+- [ ] Input validation rejects invalid data with 400
+- [ ] Response times < 5 seconds for all endpoints
+
+#### Task 4b.6: Rate Limiting & Caching
+- [ ] Implement in-memory response cache (2h)
+  ```python
+  from functools import lru_cache
+  import hashlib
+  
+  class ResponseCache:
+      def __init__(self, max_size: int = 1000):
+          self.cache = {}  # {hash(input): output}
+          self.max_size = max_size
+      
+      def get(self, key: str):
+          return self.cache.get(hashlib.md5(key.encode()).hexdigest())
+      
+      def set(self, key: str, value):
+          # Simple LRU eviction
+          pass
+  ```
+- [ ] Add rate limiting middleware (1h)
+  - Max 10 requests/second per IP
+  - Max 1000 requests/hour per IP
+- [ ] Test cache hit rate (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] Repeated identical requests hit cache
+- [ ] Rate limit returns 429 when exceeded
+- [ ] Cache reduces response time from 4s to <100ms
+
+#### Task 4b.7: Unit Tests for LLM Service
+- [ ] Test CodeLlamaProcessor.generate_explanation() (2h)
+  - Valid code input → non-empty explanation
+  - Empty input → error message
+  - Very long input → truncated gracefully
+- [ ] Test API endpoints with mock model (2h)
+  - POST /api/llm/summarize → 200 with valid response
+  - Invalid JSON → 422
+- [ ] Test timeout handling (1h)
+  - Request takes too long → 504 after 30s
+- [ ] Test error recovery (1h)
+  - Model OOM → graceful error response
+  - Model uninitialized → 503 Service Unavailable
+- [ ] Achieve > 80% code coverage (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] All tests pass (pytest)
+- [ ] Coverage > 80%
+- [ ] No warnings or linting errors
+
+---
+
+### Day 4-5: Java Integration & Testing
+
+#### Task 4b.8: Java RestTemplate Client for LLM Service
+- [ ] Create LLMServiceClient interface (1h)
+  ```java
+  public interface LLMServiceClient {
+      String explainCode(String code) throws LLMServiceException;
+      String analyzeRelationship(String fromClass, String toClass) throws LLMServiceException;
+      String generateDocumentation(String code) throws LLMServiceException;
+      List<String> detectPatterns(String code) throws LLMServiceException;
+      boolean isHealthy();
+  }
+  ```
+- [ ] Implement RestTemplateLLMServiceClient (2h)
+  - HTTP client with timeout (30s)
+  - Retry logic (3 retries with exponential backoff)
+  - Fallback behavior (return null or empty result if LLM service down)
+  - Circuit breaker pattern
+  ```java
+  @Component
+  @Slf4j
+  public class RestTemplateLLMServiceClient implements LLMServiceClient {
+      private final RestTemplate restTemplate;
+      private final String llmServiceUrl;
+      private volatile boolean healthy = true;
+      
+      public String explainCode(String code) {
+          if (!healthy) return null;  // Graceful degradation
+          try {
+              // POST to http://localhost:8001/api/llm/summarize
+              // Parse response
+          } catch (Exception e) {
+              healthy = false;
+              log.warn("LLM service unavailable", e);
+              return null;
+          }
+      }
+      
+      @Scheduled(fixedRate = 30000)
+      public void healthCheck() {
+          // Periodically check if LLM service is up
+      }
+  }
+  ```
+- [ ] Create request/response DTOs (1h)
+  ```java
+  @Data
+  class SummarizeRequest {
+      String code;
+      String language;
+  }
+  
+  @Data
+  class SummarizeResponse {
+      String summary;
+      double confidence;
+      int tokensUsed;
+  }
+  ```
+- [ ] Unit tests for client (2h)
+  - Mock RestTemplate
+  - Test successful call
+  - Test timeout retry
+  - Test LLM service down (graceful degradation)
+
+**Subtasks & Success Criteria:**
+- [ ] Client compiles without errors
+- [ ] Successfully calls mock Python service
+- [ ] Retries on timeout
+- [ ] Returns null when service unavailable (no error thrown)
+
+#### Task 4b.9: Spring Boot Controller Integration
+- [ ] Create LLMController with endpoints (2h)
+  ```java
+  @RestController
+  @RequestMapping("/api/explain")
+  @Slf4j
+  public class LLMController {
+      
+      @GetMapping("/search/{searchId}")
+      public ResponseEntity<CodeExplanationResponse> explainSearchResult(
+          @PathVariable String searchId) {
+          // Get search result from cache
+          // Call LLMServiceClient.explainCode()
+          // Return response
+      }
+      
+      @GetMapping("/dependencies/{fromClass}/{toClass}")
+      public ResponseEntity<DependencyExplanationResponse> explainDependency(
+          @PathVariable String fromClass,
+          @PathVariable String toClass) {
+          // Get context from dependency graph
+          // Call LLMServiceClient.analyzeRelationship()
+          // Return response
+      }
+      
+      @PostMapping("/methods/{methodId}/docs")
+      public ResponseEntity<DocumentationResponse> generateDocs(
+          @PathVariable String methodId) {
+          // Get method code from database
+          // Call LLMServiceClient.generateDocumentation()
+          // Return response
+      }
+  }
+  ```
+- [ ] Create response DTOs (1h)
+  ```java
+  @Data
+  class CodeExplanationResponse {
+      String codeId;
+      String explanation;
+      long generatedAt;
+      boolean fromCache;
+  }
+  ```
+- [ ] Add caching strategy (1h)
+  - Cache explanations in H2 (Code_Explanation table)
+  - 24-hour TTL
+  - Reuse if same code has been explained before
+- [ ] OpenAPI/Swagger documentation (1h)
+  - @Operation annotations
+  - Request/response examples
+- [ ] Controller tests (2h)
+  - Mock LLMServiceClient
+  - Test successful explanation
+  - Test LLM service down (should not throw, return empty/cached)
+  - Test error handling
+
+**Subtasks & Success Criteria:**
+- [ ] Controller compiles
+- [ ] Endpoints return 200 with valid responses
+- [ ] LLM service down → graceful response (cached or empty)
+- [ ] Swagger docs generated correctly
+
+#### Task 4b.10: Integration Tests (Java + Python)
+- [ ] Start Python LLM service (mocked) (1h)
+- [ ] Make HTTP calls from Java test (2h)
+  ```java
+  @SpringBootTest
+  class LLMIntegrationTest {
+      @Test
+      void testExplainCodeEndpoint() throws Exception {
+          // Mock Python service responses
+          mockServer.expect(requestTo("http://localhost:8001/api/llm/summarize"))
+              .andRespond(withSuccess(...));
+          
+          mockMvc.perform(get("/api/explain/search/1"))
+              .andExpect(status().isOk())
+              .andExpect(jsonPath("$.explanation").exists());
+      }
+  }
+  ```
+- [ ] Test graceful degradation (Python service down) (1h)
+- [ ] Test caching behavior (1h)
+- [ ] Performance test (response times) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] All integration tests pass
+- [ ] Code coverage > 85%
+- [ ] Response time < 6 seconds (4s model + 2s overhead)
+- [ ] Graceful degradation verified
+
+---
+
+### Day 5: Documentation & Final Testing
+
+#### Task 4b.11: Python Service Documentation
+- [ ] Create llm-service/README.md (2h)
+  - Setup instructions
+  - Model download & caching
+  - Running the service
+  - API endpoint reference
+  - Configuration options
+  - Troubleshooting
+- [ ] Create API documentation (Swagger/OpenAPI) (1h)
+  - Generate from Python endpoints
+  - Include examples
+- [ ] Create developer guide (1h)
+  - How to add new explanation type
+  - How to tune model parameters
+  - How to implement custom prompts
+
+#### Task 4b.12: Performance Benchmarking
+- [ ] Measure inference latency (1h)
+  - Test with various code sizes (100 chars, 1KB, 10KB)
+  - Record min/max/avg latencies
+  - Target: < 5 seconds per explanation
+- [ ] Measure memory usage under load (1h)
+  - Single concurrent request
+  - 5 concurrent requests
+  - Target: < 6GB total
+- [ ] Measure cache effectiveness (1h)
+  - Cache hit rate for repeated queries
+  - Impact on response time
+- [ ] Document results (0.5h)
+
+**Subtasks & Success Criteria:**
+- [ ] 95% of requests complete in < 5 seconds
+- [ ] Memory stays < 6GB under normal load
+- [ ] Cache hit rate > 60% for typical workload
+- [ ] Performance report created
+
+#### Task 4b.13: Graceful Degradation Tests
+- [ ] Test LLM service starting late (0.5h)
+- [ ] Test LLM service crashing mid-request (0.5h)
+- [ ] Test network timeout (0.5h)
+- [ ] Test invalid responses from LLM (0.5h)
+- [ ] Verify Java backend continues working (no cascade failure) (1h)
+
+**Subtasks & Success Criteria:**
+- [ ] No cascade failures
+- [ ] Search still works when LLM down
+- [ ] User sees sensible messages (not error codes)
+- [ ] Application logs include recovery details
+
+#### Task 4b.14: Complete OpenAPI/Swagger Docs
+- [ ] Java backend: Update SpringDoc (1h)
+  - New endpoints documented
+  - Examples provided
+  - Error responses documented
+- [ ] Python service: Generate OpenAPI schema (0.5h)
+  - Export as JSON
+  - Include in project documentation
+- [ ] Create integration guide (1h)
+  - How Java calls Python
+  - How to run both services
+  - How to verify integration
+
+**Subtasks & Success Criteria:**
+- [ ] Swagger UI includes all new endpoints
+- [ ] Examples show realistic requests/responses
+- [ ] Documentation generation is automated
+
+---
+
+## Phase 4b Success Criteria
+
+### Functional Requirements
+- [ ] Python LLM service starts in < 30 seconds
+- [ ] All 4 explanation endpoints return 200 status
+- [ ] Explanations are human-readable and relevant
+- [ ] Java RestTemplate client successfully calls Python service
+- [ ] Caching reduces response time for repeated requests
+- [ ] Cache persistence in H2 working
+
+### Performance Requirements
+- [ ] Model inference time: < 4 seconds per request
+- [ ] Total response time (HTTP overhead): < 5 seconds
+- [ ] Memory footprint: < 6GB
+- [ ] Cache hit rate: > 60% for typical usage
+- [ ] 95% of requests complete within SLA
+
+### Quality Requirements
+- [ ] Unit test coverage > 85% (Java), > 80% (Python)
+- [ ] No warnings in code linting (Python: flake8, Java: checkstyle)
+- [ ] All tests passing (pytest, JUnit 5)
+- [ ] OpenAPI documentation complete
+- [ ] Integration tests passing
+
+### Reliability Requirements
+- [ ] Graceful degradation when LLM service down
+- [ ] No cascade failures (Java continues working)
+- [ ] Proper error messages in logs
+- [ ] Health check endpoint responsive
+- [ ] Circuit breaker pattern implemented
+
+### Documentation Requirements
+- [ ] Python service README complete
+- [ ] Java client Javadoc complete
+- [ ] OpenAPI schema generated and included
+- [ ] Integration guide created
+- [ ] Setup instructions for Windows/macOS/Linux
+
+---
+
+## Phase 4b Completion Checklist
+
+**Code Deliverables:**
+- [ ] `llm-service/` directory with Python FastAPI app
+- [ ] `llm-service/requirements.txt` with pinned versions
+- [ ] `llm-service/main.py` with 4 explanation endpoints
+- [ ] `src/main/java/com/codetalker/firestick/llm/LLMServiceClient.java` interface
+- [ ] `src/main/java/com/codetalker/firestick/llm/RestTemplateLLMServiceClient.java` implementation
+- [ ] `src/main/java/com/codetalker/firestick/controller/LLMController.java`
+- [ ] `src/main/java/com/codetalker/firestick/dto/` - Request/Response DTOs
+
+**Test Deliverables:**
+- [ ] `llm-service/tests/test_llama.py` - Python unit tests
+- [ ] `src/test/java/com/codetalker/firestick/llm/` - Java unit tests
+- [ ] `src/test/java/com/codetalker/firestick/integration/` - Integration tests
+- [ ] Performance benchmark results
+
+**Documentation Deliverables:**
+- [ ] `llm-service/README.md` - Setup and usage guide
+- [ ] `llm-service/API.md` - API endpoint documentation
+- [ ] `docs/LLM_INTEGRATION.md` - Architecture and integration guide
+- [ ] Performance benchmarking report
+- [ ] OpenAPI/Swagger schema updated
+
+**Configuration Deliverables:**
+- [ ] `.env.example` for Python service
+- [ ] `application.properties` updates for Java backend
+- [ ] Docker setup (optional but recommended) for reproducible environment
+
+---
+
+## Phase 4b Risks & Mitigation
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|-----------|
+| Model too slow for UI | Medium | High | Implement caching; use 4-bit quantization |
+| Python/Java integration issues | Low | High | Start with HTTP mock tests; verify early |
+| Memory pressure on consumer hardware | Medium | Medium | Monitor; implement request queue if needed |
+| Model quality (poor explanations) | Low | Medium | Fine-tune prompts; test on real code first |
+| LLM service outages | Low | Medium | Graceful degradation; health checks |
+
+---
+
 ---
 
 # Phase 5: Web UI (Weeks 9-10)
@@ -8184,4 +8856,7 @@ Document what you learned:
 
 **Document Last Updated:** October 14, 2025  
 **Final Review:** January 11, 2026
+
+<!-- @SKIP-COUNT:END deferred -->
+
 

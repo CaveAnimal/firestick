@@ -1,0 +1,21 @@
+{
+  "query": "repository pattern",
+  "results": [
+    {
+      "file": "src/main/java/com/codetalker/firestick/repo/CodeRepository.java",
+      "line": 42,
+      "snippet": "public interface CodeRepository { /* ... */ }",
+      "score": 0.91,
+      "kind": "interface"
+    },
+    {
+      "file": "src/main/java/com/codetalker/firestick/service/CodeSearchService.java",
+      "line": 133,
+      "snippet": "results.addAll(lucene.search(query));",
+      "score": 0.84,
+      "kind": "code"
+    }
+  ],
+  "total": 2,
+  "tookMs": 18
+}

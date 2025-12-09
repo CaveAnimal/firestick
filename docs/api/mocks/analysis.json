@@ -1,0 +1,19 @@
+{
+  "file": "src/main/java/com/codetalker/firestick/service/CodeParserService.java",
+  "complexity": {
+    "average": 4.2,
+    "max": 17,
+    "histogram": {
+      "1-5": 38,
+      "6-10": 9,
+      "11-15": 3,
+      "16+": 1
+    }
+  },
+  "fanIn": 12,
+  "fanOut": 7,
+  "hotspots": [
+    { "symbol": "parse", "score": 0.78 },
+    { "symbol": "extractImports", "score": 0.66 }
+  ]
+}

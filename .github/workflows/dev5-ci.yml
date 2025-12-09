@@ -1,0 +1,44 @@
+name: Dev5 CI (smoke + e2e)
+
+on:
+  pull_request:
+    branches: [ main, fstk-001 ]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Run dev5 CI smoke (SSE server + quick Node check)
+        shell: bash
+        run: |
+          chmod +x tools/work/dev5/scripts/ci-smoke.ps1
+          pwsh -NoProfile -ExecutionPolicy Bypass -File tools/work/dev5/scripts/ci-smoke.ps1
+
+  e2e:
+    needs: smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install UI deps
+        working-directory: ui
+        run: |
+          npm ci
+          npx playwright install --with-deps
+      - name: Run Playwright synthetic SSE acceptance test
+        working-directory: ui
+        shell: bash
+        run: |
+          npx playwright test tests/synthetic-sse.spec.ts --reporter=list

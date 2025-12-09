@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    { "data": { "id": "A", "label": "ServiceA", "type": "service" } },
+    { "data": { "id": "B", "label": "ServiceB", "type": "service" } },
+    { "data": { "id": "C", "label": "UtilC", "type": "util" } }
+  ],
+  "edges": [
+    { "data": { "id": "A->B", "source": "A", "target": "B", "type": "calls" } },
+    { "data": { "id": "B->C", "source": "B", "target": "C", "type": "uses" } }
+  ]
+}

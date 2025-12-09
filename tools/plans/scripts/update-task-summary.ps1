@@ -47,28 +47,41 @@ Write-Host "Processing: $tasksFile" -ForegroundColor Gray
 # Read the file content
 $content = Get-Content $tasksFile -Raw
 
+# Pre-process: remove any explicitly skipped regions so they do not affect counts.
+# Usage in markdown:
+# <!-- @SKIP-COUNT:START optional-label -->
+#    - `[ ]` Some deferred task
+# <!-- @SKIP-COUNT:END optional-label -->
+# All task list items inside these markers are ignored for percent calculations.
+$skipPattern = '(?ms)<!--\s*@SKIP-COUNT:START[^>]*-->.*?<!--\s*@SKIP-COUNT:END[^>]*-->'
+$processedContent = [regex]::Replace($content, $skipPattern, '')
+
 # Count tasks using regex patterns
 Write-Host ""
 Write-Host "Counting tasks..." -ForegroundColor Yellow
 
-# Count all tasks (any status indicator)
-$allTasksPattern = '^\s*-\s*`\[[^\]]*\]`'
-$allTasksMatches = [regex]::Matches($content, $allTasksPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
+<#
+ We purposely exclude deferred/backlog markers `[>]` from the total task count so that
+ deferring large sections does not dilute current phase percent complete.
+ Negative lookahead (?!>) accomplishes this.
+#>
+${allTasksPattern} = '^\s*-\s*`?\[(?!>)[^\]]*\]`?'
+$allTasksMatches = [regex]::Matches($processedContent, ${allTasksPattern}, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $totalTasks = $allTasksMatches.Count
 
-# Count completed and tested tasks ([X] or [V])
-$completedPattern = '^\s*-\s*`\[[VX]\]`'
-$completedMatches = [regex]::Matches($content, $completedPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
+# Count completed and tested tasks ([X] or [V]) with or without backticks
+$completedPattern = '^\s*-\s*`?\[[VX]\]`?'
+$completedMatches = [regex]::Matches($processedContent, $completedPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $completedTasks = $completedMatches.Count
 
-# Count in-progress tasks ([-])
-$inProgressPattern = '^\s*-\s*`\[-\]`'
-$inProgressMatches = [regex]::Matches($content, $inProgressPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
+# Count in-progress tasks ([-]) with or without backticks
+$inProgressPattern = '^\s*-\s*`?\[-\]`?'
+$inProgressMatches = [regex]::Matches($processedContent, $inProgressPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $inProgressTasks = $inProgressMatches.Count
 
-# Count blocked tasks ([!])
-$blockedPattern = '^\s*-\s*`\[!\]`'
-$blockedMatches = [regex]::Matches($content, $blockedPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
+# Count blocked tasks ([!]) with or without backticks
+$blockedPattern = '^\s*-\s*`?\[!\]`?'
+$blockedMatches = [regex]::Matches($processedContent, $blockedPattern, [System.Text.RegularExpressions.RegexOptions]::Multiline)
 $blockedTasks = $blockedMatches.Count
 
 # Calculate percentage

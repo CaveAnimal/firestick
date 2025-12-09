@@ -32,6 +32,7 @@ Firestick is a standalone desktop Java web application designed to help develope
 - ✅ **Foundation Complete:** Spring Boot application with basic services (Phase 1)
 - 🎯 **Next Milestone:** Complete indexing engine by Week 4
 - 🎯 **Target Release:** Version 1.0 by Week 13 (Early January 2026)
+- 🆕 **Phase 2 Enhancement:** CodeLlama 7B LLM integration for code explanation (Weeks 7-8)
 
 ### 1.3 Critical Success Factors
 1. Successful offline embedding generation with acceptable performance
@@ -39,6 +40,7 @@ Firestick is a standalone desktop Java web application designed to help develope
 3. Hybrid search achieving <2s response time for 1M LOC
 4. Cross-platform packaging working on Windows, macOS, and Linux
 5. User-friendly interface requiring minimal training
+6. (**NEW**) CodeLlama 7B microservice integration for code summarization and explanation
 
 ---
 
@@ -52,9 +54,10 @@ Firestick is a standalone desktop Java web application designed to help develope
 | **M2: Indexing Engine** | Week 4 (Nov 10) | 📋 Planned | M1 |
 | **M3: Search Engine** | Week 6 (Nov 24) | 📋 Planned | M2 |
 | **M4: Analysis Features** | Week 8 (Dec 8) | 📋 Planned | M2, M3 |
-| **M5: Web UI** | Week 10 (Dec 22) | 📋 Planned | M3, M4 |
-| **M6: Desktop Packaging** | Week 12 (Jan 5) | 📋 Planned | M5 |
-| **M7: Release 1.0** | Week 13 (Jan 12) | 📋 Planned | M6 |
+| **M5: LLM Integration** | Week 8 (Dec 8) | 🆕 **NEW** | M3 |
+| **M6: Web UI** | Week 10 (Dec 22) | 📋 Planned | M3, M4, M5 |
+| **M7: Desktop Packaging** | Week 12 (Jan 5) | 📋 Planned | M6 |
+| **M8: Release 1.0** | Week 13 (Jan 12) | 📋 Planned | M7 |
 
 ### 2.2 Gantt Chart Overview
 
@@ -82,7 +85,8 @@ Documentation:        [continuous throughout all phases]
 | **Sprint 2** | Nov 4-17 | Indexing Part 2 | Embeddings, Graph building, Incremental indexing |
 | **Sprint 3** | Nov 18-Dec 1 | Search Engine | Hybrid search, Ranking, Symbol table |
 | **Sprint 4** | Dec 2-15 | Analysis & UI Start | Analysis features, UI foundation |
-| **Sprint 5** | Dec 16-29 | UI Development | Complete web interface |
+| **Sprint 4b** | Dec 2-8 | **LLM Integration (NEW)** | **CodeLlama 7B microservice, Python FastAPI wrapper** |
+| **Sprint 5** | Dec 16-29 | UI Development & LLM Integration | Complete web interface, LLM explanation UI |
 | **Sprint 6** | Dec 30-Jan 12 | Packaging & Release | Desktop packaging, Documentation, Release |
 
 ---
@@ -200,6 +204,17 @@ Based on project scope, this appears to be a small team project. Adjust assignme
 - [ ] Implement error handling and exception management
 - [ ] Expand test coverage to >70%
 - [ ] Add configuration properties management
+
+### 4.5 Recent Progress (Nov 3, 2025)
+
+- File discovery defaults have been externalized into `IndexingConfig` (Spring `@ConfigurationProperties` with prefix `indexing`).
+  - Preserved prior scanning semantics; tests validate default behavior and exclusion handling.
+  - Added commented examples in `src/main/resources/application.properties` to optionally override:
+    - `indexing.file-extensions`
+    - `indexing.exclude-directories`
+    - `indexing.exclude-patterns`
+- Minor docs update: README now includes a brief section on tuning `indexing.*` properties and the corrected H2 JDBC URL.
+
 
 ---
 
@@ -561,6 +576,92 @@ Based on project scope, this appears to be a small team project. Adjust assignme
 - [ ] Pattern detection
 - [ ] Analysis reports
 - [ ] Dashboard data API
+
+---
+
+### Phase 4b: CodeLlama 7B LLM Integration ⭐ **NEW**
+
+**Duration:** Week 7-8 (Dec 2 - Dec 8, 2025)  
+**Status:** 📋 Not Started  
+**Team:** Backend Developer, DevOps (Python setup)
+**Rationale:** Enhance code understanding with AI-powered explanations, summaries, and pattern detection
+
+#### Overview
+
+Integrate a local CodeLlama 7B LLM as a Python microservice to provide:
+- Code summarization for search results
+- Method/class explanation generation
+- Dependency relationship explanations
+- Dead code detection assistance
+- Documentation auto-generation
+
+#### Sprint 4b (Dec 2 - Dec 8): CodeLlama Integration
+
+**Day 1-2: Python Microservice Foundation**
+- [ ] Set up Python FastAPI project structure (4h)
+  - Create `/llm-service` directory
+  - Initialize Python venv with Python 3.12
+  - Install dependencies: fastapi, uvicorn, transformers, torch, onnx-runtime
+  - Create requirements.txt (pinned versions)
+- [ ] Download and cache CodeLlama 7B model (2h)
+  - Verify model compatibility with target hardware
+  - Test model loading and memory footprint
+- [ ] Implement basic API endpoints skeleton (2h)
+
+**Day 3: LLM Service Implementation**
+- [ ] Create CodeLlama wrapper service (6h)
+  - Model initialization and caching
+  - Token limit management (context window: 4K)
+  - Temperature/sampling configuration
+  - Error handling and timeouts
+- [ ] Implement core endpoints (8h)
+  - `POST /api/llm/summarize` – Code snippet explanation
+  - `POST /api/llm/analyze-relationship` – Dependency explanation
+  - `POST /api/llm/generate-docs` – Auto-generate documentation
+  - `POST /api/llm/detect-patterns` – Code pattern analysis
+- [ ] Add rate limiting and caching (2h)
+- [ ] Unit tests (4h)
+
+**Day 4-5: Java-Python Integration**
+- [ ] Create Java RestTemplate client for LLM service (4h)
+  - LLMServiceClient interface
+  - Timeout and retry logic
+  - Fallback behavior (graceful degradation)
+- [ ] Add LLM controller endpoints to Spring Boot (4h)
+  - `GET /api/search/{id}/explain` – Get explanation for search result
+  - `GET /api/dependencies/{fromClass}/{toClass}/explain` – Explain relationship
+- [ ] Create DTOs for request/response (2h)
+- [ ] Integration tests (4h)
+- [ ] Documentation (OpenAPI specs) (2h)
+
+**Day 5: Testing & Performance Tuning**
+- [ ] Performance benchmarking (4h)
+  - Measure inference latency (target: <5s for explanations)
+  - Memory consumption under load
+  - Concurrent request handling
+- [ ] Load testing (2h)
+  - Multiple simultaneous explanation requests
+  - Queue management if needed
+- [ ] Graceful degradation tests (2h)
+  - LLM service down scenarios
+  - Fall back to structural explanations
+- [ ] Documentation completion (2h)
+
+#### Resources Required
+
+- **Hardware:** 6GB RAM minimum (CodeLlama 7B 4-bit: ~4-5GB)
+- **Python:** 3.12 with transformers, torch, fastapi
+- **Model:** CodeLlama 7B (4-bit quantized, ~3.5GB download)
+- **Time:** ~5-6 days (40-48 hours)
+
+#### Success Criteria
+
+- [ ] CodeLlama service starts successfully in < 30 seconds
+- [ ] Explanation generation completes in < 5 seconds
+- [ ] Java service calls Python service correctly
+- [ ] Graceful degradation when LLM service is unavailable
+- [ ] Unit tests pass (95%+ coverage for new code)
+- [ ] OpenAPI documentation complete
 
 ---
 
@@ -1239,3 +1340,78 @@ mvn spring-boot:run
 ---
 
 *End of Planning Document*
+
+---
+
+## 11. Auto-Derived App Names & Multi-Application Support (November 13, 2025 Update)
+
+### 11.1 Feature Overview
+Multi-application support with automatic app name derivation from folder names. Users can override auto-derived names, rename applications, and filter search results by application. Complete data isolation maintained across H2 and Chroma databases.
+
+### 11.2 Implementation Phases
+
+#### Phase 1: Auto-Derivation & UI Editing (Week 1)
+**Duration:** 2-3 days
+
+**Deliverables:**
+- ✅ `deriveAppNameFromPath()` method implemented (COMPLETE Nov 13)
+- [ ] App name editing UI in Indexing.tsx
+- [ ] Auto-derived names in H2 and Chroma
+- [ ] Unit tests for name derivation
+
+#### Phase 2: App Rename Endpoint (Week 1-2)
+**Duration:** 2-3 days
+
+**Deliverables:**
+- [ ] `POST /api/indexing/apps/{oldName}/rename` endpoint
+- [ ] AppRenameService with database updates
+- [ ] Transactional consistency for H2 and Chroma
+- [ ] Integration tests
+
+#### Phase 3: App Selection & Filtering (Week 2)
+**Duration:** 1-2 days
+
+**Deliverables:**
+- [ ] `GET /api/indexing/apps` endpoint
+- [ ] Search filtering by app
+- [ ] App dropdown UI in Search.tsx
+
+### 11.3 Key Development Tasks
+
+| Task | Status | Est. Duration | Owner |
+|------|--------|---------------|-------|
+| Implement deriveAppNameFromPath() | ✅ COMPLETE | - | Dev |
+| App name UI field (Indexing.tsx) | [ ] TODO | 1 day | Dev |
+| AppRenameService | [ ] TODO | 2-3 days | Dev |
+| Rename endpoint | [ ] TODO | 1 day | Dev |
+| App list endpoint | [ ] TODO | 0.5 days | Dev |
+| Search filtering | [ ] TODO | 1-2 days | Dev |
+| App dropdown UI (Search.tsx) | [ ] TODO | 1-2 days | Dev |
+| Integration testing | [ ] TODO | 1 day | QA |
+| Manual testing | [ ] TODO | 1 day | Dev |
+
+### 11.4 Testing Checklist
+
+- [ ] Auto-derived names work for Windows and Unix paths
+- [ ] App names properly sanitized
+- [ ] Rename updates all H2 records (CodeFile, CodeChunk, IndexingJob)
+- [ ] Chroma collections renamed correctly
+- [ ] Cross-app data isolation verified
+- [ ] App dropdown shows correct list
+- [ ] Search filters by app
+- [ ] Edge cases handled (special chars, conflicts, null values)
+
+### 11.5 Data Impact
+
+**H2 Database:**
+- CodeFile table: app_name column (already exists)
+- CodeChunk table: app_name column (already exists)
+- IndexingJob table: app_name column (already exists)
+
+**Chroma:**
+- Collections: code_{appname} naming convention
+- Rename: create new, copy data, delete old (transactional)
+
+---
+
+*Updated November 13, 2025 - App Names Feature Planning*

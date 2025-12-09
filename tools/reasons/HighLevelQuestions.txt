@@ -1,0 +1,14 @@
+Here are 10 high-level conceptual queries that would be valuable for understanding a large legacy Java application:
+
+Architecture and System Boundaries - "What are the major architectural layers or modules in this system, and how do they communicate with each other?"
+Data Flow and Transformations - "How does data move through the system from input to output, and where are the key transformation points?"
+Business Logic Hotspots - "Where are the core business rules implemented, and which components contain the most complex decision-making logic?"
+Integration Points and Dependencies - "What external systems, databases, or services does this application integrate with, and where are those integration boundaries?"
+Error Handling and Recovery Patterns - "How does the system handle failures, what are the common error handling strategies, and where are critical recovery mechanisms?"
+State Management - "How is application state managed throughout the system, and where are the stateful components versus stateless ones?"
+Security and Authorization Model - "How does authentication and authorization work, and where are security-critical operations enforced?"
+Performance Bottlenecks and Optimization Areas - "Which parts of the codebase are performance-sensitive, and where might bottlenecks exist based on complexity or resource usage?"
+Configuration and Customization Points - "Where can the system's behavior be configured or customized, and what are the extension points for adding new functionality?"
+Technical Debt and Code Quality Patterns - "What are the recurring anti-patterns, deprecated approaches, or areas of high coupling that might need refactoring?"
+
+These queries help developers and users understand the why and how of the system rather than just the what, making it easier to maintain, extend, and use the application effectively.

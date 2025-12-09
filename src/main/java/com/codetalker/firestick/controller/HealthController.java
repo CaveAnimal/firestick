@@ -1,32 +1,34 @@
 package com.codetalker.firestick.controller;
 
+import java.util.Map;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.codetalker.firestick.exception.ErrorResponse;
 /**
- * REST controller for health check and basic information.
+ * Simple health endpoint for uptime checks and smoke testing.
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping(path = "/api/health", produces = MediaType.APPLICATION_JSON_VALUE)
 public class HealthController {
 
-    @GetMapping("/health")
-    public Map<String, Object> health() {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", "UP");
-        response.put("service", "firestick");
-        response.put("features", new String[]{
-            "JavaParser - Code parsing & AST analysis",
-            "JGraphT - Dependency graph analysis",
-            "Apache Lucene - Code search",
-            "H2 Database - Embedded SQL",
-            "ONNX Runtime - Embeddings",
-            "DJL - Deep Java Library"
-        });
-        return response;
+    @GetMapping
+    @Operation(summary = "Health check")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "500", description = "Server error",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    public Map<String, String> health() {
+        return Map.of("status", "OK");
     }
 }

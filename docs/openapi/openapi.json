@@ -1,0 +1,286 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Firestick API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": {
+          "200": { "description": "OK" },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/search": {
+      "get": {
+        "summary": "Search code",
+        "parameters": [
+          { "name": "q", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1, "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 200 } },
+          { "name": "path", "in": "query", "schema": { "type": "string" } },
+          { "name": "lang", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer" },
+                    "results": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/SearchResult" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/indexing/run": {
+      "get": {
+        "summary": "Trigger indexing run",
+        "parameters": [
+          { "name": "root", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1 } },
+          { "name": "excludeDirs", "in": "query", "schema": { "type": "string" } },
+          { "name": "excludeGlobs", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Indexing started", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndexingReport" } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      },
+      "post": {
+        "summary": "Trigger indexing run (JSON)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/IndexingRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Indexing started", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndexingReport" } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/indexing/jobs": {
+      "get": {
+        "summary": "List recent jobs",
+        "parameters": [ { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 100 } } ],
+        "responses": { "200": { "description": "Recent jobs", "content": { "application/json": { "schema": { "type": "array", "items": { "$ref": "#/components/schemas/IndexingJob" } } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/indexing/jobs/latest": {
+      "get": {
+        "summary": "Get latest job",
+        "responses": { "200": { "description": "Latest job", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndexingJob" } } } }, "404": { "description": "No job" }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/indexing/jobs/{id}": {
+      "get": {
+        "summary": "Get job by id",
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } } ],
+        "responses": { "200": { "description": "Job", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndexingJob" } } } }, "404": { "description": "Not found" }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/indexing/stream": {
+      "get": {
+        "summary": "Job progress stream",
+        "parameters": [ { "name": "jobId", "in": "query", "schema": { "type": "integer", "minimum": 1 } } ],
+        "responses": { "200": { "description": "SSE stream" }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/indexing/cancel": {
+      "post": {
+        "summary": "Request cancellation of an indexing job",
+        "parameters": [
+          { "name": "jobId", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1 }, "description": "If omitted, cancels the latest RUNNING job" }
+        ],
+        "responses": {
+          "202": { "description": "Cancellation requested" },
+          "404": { "description": "Job not found", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "409": { "description": "No running job to cancel", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } },
+          "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }
+        }
+      }
+    },
+    "/api/code/file": {
+      "get": {
+        "summary": "Get full file content",
+        "parameters": [ { "name": "path", "in": "query", "required": true, "schema": { "type": "string" } } ],
+        "responses": { "200": { "description": "File content", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileContent" } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/code/chunk": {
+      "get": {
+        "summary": "Get file chunk by document id",
+        "parameters": [ { "name": "docId", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1 }, "description": "Format: <path>#<type>:<start>-<end>" } ],
+        "responses": { "200": { "description": "Chunk content", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/FileChunk" } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/graph/basic": {
+      "get": {
+        "summary": "Basic graph",
+        "parameters": [ { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1 } } ],
+        "responses": { "200": { "description": "Graph data", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GraphResponse" } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/graph/enriched": {
+      "get": {
+        "summary": "Enriched graph",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "include", "in": "query", "schema": { "type": "string" }, "description": "comma list: containment,imports,calls,inheritance" },
+          { "name": "nodeTypes", "in": "query", "schema": { "type": "string" }, "description": "comma list: F,C,M,I" }
+        ],
+        "responses": { "200": { "description": "Graph data", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GraphResponse" } } } }, "400": { "description": "Bad request", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    },
+    "/api/dashboard/summary": {
+      "get": {
+        "summary": "Dashboard summary",
+        "responses": { "200": { "description": "Summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/DashboardSummary" } } } }, "500": { "description": "Server error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ErrorResponse" } } } } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "IndexingRequest": {
+        "type": "object",
+        "required": ["rootPath"],
+        "properties": {
+          "rootPath": { "type": "string", "minLength": 1 },
+          "excludeDirNames": { "type": "array", "items": { "type": "string" } },
+          "excludeGlobPatterns": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "timestamp": { "type": "string", "format": "date-time" },
+          "path": { "type": "string" },
+          "requestId": { "type": "string", "description": "Correlation id; also returned in X-Request-Id header" },
+          "status": { "type": "integer" },
+          "error": { "type": "string" },
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": { "type": "string" },
+                "message": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "filePath": { "type": "string" },
+          "line": { "type": "integer" },
+          "snippet": { "type": "string" }
+        }
+      },
+      "FileContent": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" }
+        }
+      },
+      "FileChunk": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "startLine": { "type": "integer" },
+          "endLine": { "type": "integer" },
+          "content": { "type": "string" }
+        }
+      },
+      "IndexingJob": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "status": { "type": "string" },
+          "startedAt": { "type": "string" },
+          "endedAt": { "type": "string" },
+          "progress": { "type": "number" }
+        }
+      },
+      "IndexingReport": {
+        "type": "object",
+        "properties": {
+          "jobId": { "type": "integer" },
+          "status": { "type": "string" }
+        }
+      },
+      "GraphResponse": {
+        "type": "object",
+        "properties": {
+          "nodes": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/GraphNode" }
+          },
+          "edges": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/GraphEdge" }
+          },
+          "metadata": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "GraphNode": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "type": { "type": "string", "enum": ["F", "C", "M", "I"] }
+        }
+      },
+      "GraphEdge": {
+        "type": "object",
+        "properties": {
+          "source": { "type": "string" },
+          "target": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      },
+      "DashboardSummary": {
+        "type": "object",
+        "properties": {
+          "stats": {
+            "type": "object",
+            "properties": {
+              "totalFiles": { "type": "integer" },
+              "totalClasses": { "type": "integer" },
+              "totalMethods": { "type": "integer" },
+              "hotspotCount": { "type": "integer" }
+            }
+          },
+          "chart": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "value": { "type": "number" } } } },
+          "hotspots": { "type": "array", "items": { "type": "object", "properties": { "name": { "type": "string" }, "count": { "type": "number" } } } },
+          "recentJobs": { "type": "array", "items": { "type": "object", "properties": { "id": { "type": "string" }, "status": { "type": "string" }, "startedAt": { "type": "string" }, "endedAt": { "type": "string" } } } }
+        }
+      }
+    }
+  }
+}

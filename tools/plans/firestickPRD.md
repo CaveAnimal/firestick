@@ -771,12 +771,47 @@ The following features are explicitly **not included** in version 1.0:
 - **Real-time collaboration:** Single-user application
 - **Code editing:** Read-only code viewing (no IDE features)
 - **Version control integration:** No Git integration
-- **LLM-based Q&A:** No natural language generation (answers are structural, not conversational)
+- ~~**LLM-based Q&A:** No natural language generation (answers are structural, not conversational)~~ **[REVISED - See Section 11.1 below]**
 - **Remote indexing:** Must index local codebases only
 - **Plugin system:** No extensibility via plugins
 - **Custom analyzers:** Limited to built-in analysis features
 
 These may be considered for future versions based on user feedback.
+
+---
+
+## 11.1 LLM Integration (Added: Phase 2 Enhancement)
+
+### Rationale for LLM Addition
+
+After architecture review, incorporating a local LLM provides significant value:
+
+1. **Code Explanation & Documentation** – Generate brief human-readable explanations of complex methods and dependencies, leveraging already-indexed code
+2. **Dead Code Analysis** – Assist in identifying unused code by understanding intent and usage patterns
+3. **Documentation Generation** – Auto-generate Javadoc-style comments from code analysis
+4. **Dependency Explanation** – Provide natural language summaries of why classes/methods are related
+
+### Implementation Approach
+
+- **Model:** CodeLlama 7B (quantized, CPU-only, ~3-5GB RAM)
+- **Deployment:** Python microservice (FastAPI) running alongside Java backend
+- **Integration:** REST API calls from Spring Boot to Python service for enrichment
+- **Scope:** Optional enhancement to search results and analysis features, not core functionality
+
+### Key Features Enabled
+
+- Code summarization in search results
+- Automated explanation generation for dependency graphs
+- Pattern detection and anti-pattern alerts
+- Code quality insights
+
+### Technical Stack Addition
+
+- **Python 3.12** microservice runtime
+- **CodeLlama 7B** model (open-source, offline)
+- **FastAPI** for Python service endpoints
+- **ONNX Runtime optimization** for inference
+- **Inter-process communication:** REST/gRPC between Java and Python services
 
 ---
 
@@ -832,6 +867,233 @@ Version 1.0 will be released when:
 ---
 
 **Approvals:**
+
+---
+
+## 15. Auto-Derived App Names & Multi-Application Support (November 13, 2025)
+
+### 15.1 Problem Statement
+To enable Firestick to work with multiple legacy applications simultaneously, each with complete data isolation, the system needs a reliable way to distinguish one application from another. Currently, app names must be provided manually during indexing, which is error-prone and cumbersome.
+
+### 15.2 Solution: Auto-Derived Application Names
+The application name should be automatically derived from the folder name containing the source code. For example:
+- Folder: `E:\MyProjects\MyApp` → App Name: `myapp`
+- Folder: `/home/dev/legacy-system` → App Name: `legacy_system`
+- Folder: `C:\workspace\App-2025` → App Name: `app_2025`
+
+This provides:
+1. **Zero-configuration defaults** - App names auto-populate from folder structure
+2. **Human-readable identifiers** - Derived from actual project folder names
+3. **Override capability** - Users can edit names if folder names are cryptic
+4. **Complete data isolation** - Each app has separate data across all backends
+
+### 15.3 Implementation Plan
+
+#### Phase 1: Auto-Derivation & UI Editing
+**Objective:** Enable automatic app name derivation and allow users to override before indexing
+
+**Tasks:**
+1. ✅ Implement `deriveAppNameFromPath()` method in IndexingService
+   - Extract folder name from path (Windows & Unix paths)
+   - Sanitize name: lowercase, replace non-alphanumeric with underscore, collapse repeats
+   - Return sanitized name or "default" if derivation fails
+
+2. Modify `IndexingRequest` to support optional appName override
+   - Keep existing appName field
+   - Support null/blank/"default" to trigger auto-derivation
+   - Send auto-derived name to frontend
+
+3. Add app name input field in Indexing.tsx UI
+   - Display auto-derived app name in read-only field
+   - Add editable text input below with "Edit" button
+   - Allow user to override auto-derived name before starting indexing
+   - Pass appName to startIndexing() API call
+
+**Database Impacts:** None - no changes to existing data
+
+**API Changes:**
+```
+POST /api/indexing/start
+Request body now includes optional appName override
+Response includes auto-derived appName for UI feedback
+```
+
+#### Phase 2: App Management & Renaming
+**Objective:** Allow users to rename applications and update all related data
+
+**Tasks:**
+1. Create `AppRenameRequest` DTO
+   ```
+   {
+     "oldAppName": "myapp",
+     "newAppName": "my_legacy_app"
+   }
+   ```
+
+2. Implement rename endpoint in IndexingController
+   ```
+   POST /api/indexing/apps/{oldName}/rename
+   ```
+   
+3. Implement app rename service with batch updates:
+   - **H2 Database:** Update app_name column in code_file, code_chunk, indexing_job tables
+   - **Chroma:** Create new collection, copy embeddings, delete old collection
+   - **Transaction:** All-or-nothing atomicity for data consistency
+   - **Validation:** Check if old app exists, new name doesn't exist
+   - **Response:** Return affected record counts
+
+4. Add rename UI in Indexing.tsx
+   - Show list of indexed applications
+   - Add "Rename" button next to each app
+   - Modal dialog with old/new name inputs
+   - Confirmation dialog before renaming
+   - Toast notification on success/failure
+
+**Database Impacts:**
+- H2: UPDATE statements for code_file, code_chunk, indexing_job (app_name column)
+- Chroma: New collection creation and data migration
+
+#### Phase 3: App Selection & Filtering
+**Objective:** Enable users to select and filter results by application
+
+**Tasks:**
+1. Create app list endpoint in IndexingController
+   ```
+   GET /api/indexing/apps
+   Response: { "apps": ["myapp", "legacy_system", "..."] }
+   ```
+
+2. Modify search service to accept app filter
+   - Update SearchService to filter by app_name in both H2 and Chroma queries
+   - If app filter provided, only search within that app's data
+   - If no filter, search across all apps (current behavior)
+
+3. Add app selection dropdown to Search.tsx
+   - Fetch available apps on page load
+   - Add dropdown for app selection
+   - Pass selected app to search API
+   - Display selected app in search context
+
+4. Update search endpoints to accept app parameter
+   ```
+   POST /api/search
+   Body: { "query": "...", "appName": "myapp", ... }
+   ```
+
+**Database Impacts:** Query filtering only - no schema changes
+
+### 15.4 Data Consistency Strategy
+
+**Multi-Tenant Isolation:**
+- Each app has isolated data: H2 records with app_name column, Chroma collections with app-specific naming
+- TenantContext ensures queries respect app boundaries
+- TenantFilter extracts app parameter from requests
+
+**Rename Operation Safety:**
+1. Validate: Check old app exists, new name doesn't conflict
+2. Begin transaction
+3. Update H2: CodeFile, CodeChunk, IndexingJob records
+4. Update Chroma: Create new collection, copy embeddings
+5. Delete old Chroma collection
+6. Commit transaction
+7. If any step fails, rollback all changes
+
+**App Deletion (Future):**
+- Would require cleanup of all related records in H2 and Chroma
+- Implement in Phase 4 if needed
+
+### 15.5 Configuration & Defaults
+
+**Sanitization Rules (consistent with ChromaUtil):**
+```
+1. Convert to lowercase: MyApp → myapp
+2. Replace non-alphanumeric with underscore: MyApp-2025 → myapp_2025
+3. Collapse multiple underscores: my__app → my_app
+4. Trim leading/trailing underscores: _myapp_ → myapp
+5. If result is empty, return "default"
+```
+
+**UI Default Behavior:**
+- Auto-derived name shown on load
+- User can edit or confirm without changes
+- Selected app persists during session
+- App selection remembered in browser localStorage
+
+### 15.6 Testing Strategy
+
+**Unit Tests:**
+- Test deriveAppNameFromPath() with various path formats
+- Test sanitization with edge cases (special chars, unicode, etc.)
+- Test rename validation (conflicts, non-existent apps)
+
+**Integration Tests:**
+- Index with auto-derived name, verify app_name in database
+- Rename app, verify all records updated in H2 and Chroma
+- Search with app filter, verify results isolated to selected app
+- Verify cross-app data isolation (app A can't access app B data)
+
+**Manual Testing:**
+- Index sample project, verify auto-derived name
+- Edit app name, verify change reflected in UI
+- Index second project with different name
+- Verify both projects appear in app dropdown
+- Search within specific app, verify results isolated
+- Rename app and verify data integrity
+
+### 15.7 User Workflow
+
+**Scenario 1: Index New Application (Auto-Derived Name)**
+```
+1. User clicks "Browse" and selects folder: /projects/customers_db
+2. Frontend auto-derives app name: "customers_db"
+3. UI displays: "App Name: customers_db (editable)"
+4. User clicks "Start Indexing"
+5. Backend stores data with app_name="customers_db"
+6. Indexing complete, app available in dropdown
+```
+
+**Scenario 2: Index with Custom Name**
+```
+1. User selects folder: /projects/legacy-auth-v2.3
+2. Frontend auto-derives: "legacy_auth_v2_3"
+3. User clicks "Edit" and changes to: "legacy_auth"
+4. User clicks "Start Indexing"
+5. Backend stores data with app_name="legacy_auth"
+```
+
+**Scenario 3: Rename Application**
+```
+1. User sees list of apps: ["myapp", "legacy_system"]
+2. Clicks "Rename" next to "legacy_system"
+3. Modal shows: Old: "legacy_system", New: (empty)
+4. User types: "ecommerce_platform"
+5. Clicks "Confirm" with warning: "This will update X files and Y chunks"
+6. Rename completes, app dropdown updates
+```
+
+**Scenario 4: Search Specific Application**
+```
+1. User opens Search page
+2. App dropdown shows: ["myapp", "legacy_system", "ecommerce_platform"]
+3. User selects: "ecommerce_platform"
+4. User searches: "payment processing"
+5. Results filtered to only ecommerce_platform data
+6. Results show: file paths, code snippets, all from selected app
+```
+
+### 15.8 Success Criteria
+
+✅ **Completion Checklist:**
+- [ ] Auto-derived name calculation working correctly
+- [ ] App name editing UI implemented and functional
+- [ ] App name persisted correctly in H2 and Chroma
+- [ ] App rename endpoint created and tested
+- [ ] Rename operation updates H2 and Chroma atomically
+- [ ] App list endpoint returns all indexed applications
+- [ ] Search filtering by app working end-to-end
+- [ ] Cross-app data isolation verified (manual test)
+- [ ] UI properly displays selected app context
+- [ ] Edge cases handled (special chars, unicode, conflicts)
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|
