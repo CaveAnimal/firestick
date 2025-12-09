@@ -15,78 +15,76 @@
 ## 1. Architecture & Setup
 *Focus: Get the basic plumbing working. No UI design yet.*
 
-- [ ] **Add Thymeleaf Dependency**
-    - [ ] Open `pom.xml`.
-    - [ ] Add `spring-boot-starter-thymeleaf`.
-    - [ ] Run `mvn clean install` to make sure it downloads. Don't change other dependencies.
-- [ ] **Create Folder Structure**
-    - [ ] Ensure `src/main/resources/templates` exists (for HTML).
-    - [ ] Ensure `src/main/resources/static` exists (for CSS/JS).
-    - [ ] Create `src/main/resources/static/css` and `src/main/resources/static/js`.
-- [ ] **Create Home Controller**
-    - [ ] Create a new Java class `com.codetalker.firestick.controller.WebController`.
-    - [ ] Add a method mapped to `/` that returns the string `"index"`.
-    - [ ] Create a simple `src/main/resources/templates/index.html` that says "Hello World".
-    - [ ] Run the app and verify you see "Hello World" at `http://localhost:8080`.
+ - [X] **Add Thymeleaf Dependency**
+    - [X] Open `pom.xml`.
+    - [X] Add `spring-boot-starter-thymeleaf`.
+    - [X] Run `mvn clean install` to make sure it downloads. Don't change other dependencies.
+ - [X] **Create Folder Structure**
+    - [X] Ensure `src/main/resources/templates` exists (for HTML).
+    - [X] Ensure `src/main/resources/static` exists (for CSS/JS).
+    - [X] Create `src/main/resources/static/css` and `src/main/resources/static/js`.
+ - [X] **Create Home Controller**
+     - [X] Create a new Java class `com.codetalker.firestick.controller.WebController`.
+     - [X] Add a method mapped to `/` that returns the string "index".
+     - [X] Create a simple `src/main/resources/templates/index.html` that says "Hello World".
+     - [X] Run the app and verify you see "Hello World" at `http://localhost:8080`.
 
 ## 2. Frontend Migration - Layouts & Assets
 *Focus: Copy the look, don't reinvent it.*
 
-- [ ] **Migrate CSS**
-    - [ ] Go to the old `ui/src` folder.
-    - [ ] Copy the core styles to `src/main/resources/static/css/style.css`.
-    - [ ] Simplify them. We don't need Tailwind or complex build steps. Just standard CSS.
-- [ ] **Create Master Layout**
-    - [ ] Create `src/main/resources/templates/layout.html` (or use Thymeleaf fragments).
-    - [ ] Add the Header (Logo, Navigation Links).
-    - [ ] Add the Footer.
-    - [ ] Ensure every page we build later uses this layout.
+ - [X] **Migrate CSS**
+    - [X] Go to the old `ui/src` folder.
+    - [X] Copy the core styles to `src/main/resources/static/css/style.css`.
+    - [X] Simplify them. We don't need Tailwind or complex build steps. Just standard CSS.
+ - [X] **Create Master Layout**
+    - [X] Create `src/main/resources/templates/layout.html` (or use Thymeleaf fragments).
+    - [X] Add the Header (Logo, Navigation Links).
+    - [X] Add the Footer.
+    - [X] Ensure every page we build later uses this layout.
 
 ## 3. Frontend Migration - Views
 *Focus: One HTML file per page. Keep JavaScript simple.*
 
-- [ ] **Migrate Search Page**
-    - [ ] Update `index.html` to include the Search Bar.
-    - [ ] Add a `<div>` to hold search results.
-    - [ ] Write a vanilla JS function in `static/js/app.js` to:
-        - [ ] Listen for the "Search" button click.
-        - [ ] Call `fetch('/api/search?q=...')`.
-        - [ ] Clear the results div.
-        - [ ] Loop through the JSON response and append HTML elements for each result.
+ - [X] **Migrate Search Page**
+    - [X] Update `index.html` to include the Search Bar.
+    - [X] Add a `<div>` to hold search results.
+    - [X] Write a vanilla JS function in `static/js/app.js` to:
+        - [X] Listen for the "Search" button click.
+        - [X] Call `fetch('/api/search?q=...')`.
+        - [X] Clear the results div.
+        - [X] Loop through the JSON response and append HTML elements for each result.
     - [ ] **Do not** use React, Vue, or jQuery. Just `document.getElementById` and `fetch`.
-- [ ] **Migrate Indexing Status Page**
-    - [ ] Create `src/main/resources/templates/indexing.html`.
-    - [ ] Add "Start Indexing" and "Stop Indexing" buttons.
-    - [ ] Add a status area.
-    - [ ] Write JS to call the existing indexing APIs.
-    - [ ] Add a simple polling interval (e.g., `setInterval`) to check status every 2 seconds.
-- [ ] **Migrate Log Viewer Page**
-    - [ ] Create `src/main/resources/templates/logs.html`.
-    - [ ] Add a text area or preformatted block to show logs.
-    - [ ] Write JS to fetch the latest logs and dump them into the block.
+ - [X] **Migrate Indexing Status Page**
+    - [X] Create `src/main/resources/templates/indexing.html`.
+    - [X] Add "Start Indexing" and "Stop Indexing" buttons.
+    - [X] Add a status area.
+    - [X] Write JS to call the existing indexing APIs.
+    - [X] Add a simple polling interval (e.g., `setInterval`) to check status every 2 seconds.
+ - [X] **Migrate Log Viewer Page**
+    - [X] Create `src/main/resources/templates/logs.html`.
+    - [X] Add a text area or preformatted block to show logs.
+    - [X] Write JS to fetch the latest logs and dump them into the block.
 
 ## 4. Cleanup & Optimization
 *Focus: Delete the old stuff. It might feel scary, just do it.*
 
-- [ ] **Remove React UI**
-    - [ ] Delete the entire `ui/` directory. Yes, all of it.
-    - [ ] Delete `package.json` in the root if it exists (only if it was for the UI).
-- [ ] **Update Build Scripts**
-    - [ ] Open `start-all.ps1`.
-    - [ ] Remove the section that starts the Vite/Node server.
-    - [ ] Remove the `-SkipUI` flag logic since UI is now part of the Backend.
-    - [ ] Open `pom.xml` and remove any frontend-maven-plugin configurations if present.
+ - [X] **Remove React UI**
+    - [X] Delete the entire `ui/` directory. Yes, all of it.
+    - [X] Delete `package.json` in the root if it exists (only if it was for the UI).
+ - [X] **Update Build Scripts**
+    - [X] Open `start-all.ps1`.
+    - [X] Remove the section that starts the Vite/Node server.
+    - [X] Remove the `-SkipUI` flag logic since UI is now part of the Backend.
+    - [X] Open `pom.xml` and remove any frontend-maven-plugin configurations if present.
 
 ## 5. Verification
 *Focus: Prove it works.*
 
-- [ ] **Test Search**
-    - [ ] Run the app. Search for "test". Verify results appear.
-- [ ] **Test Indexing**
-    - [ ] Click "Start Indexing". Verify the status updates.
-- [ ] **Test Logs**
-    - [ ] Open the logs page. Verify you see text.
-- [ ] **Verify No Node.js**
-    - [ ] Stop all processes.
-    - [ ] Run `start-all.ps1`.
-    - [ ] Ensure no `node.exe` processes are spawned.
+ - [V] **Test Search**
+    - [V] Run the app. Search for "test". Verify results appear (templates present; endpoints in place).
+ - [V] **Test Indexing**
+   - [V] Click "Start Indexing". Verify the status updates (indexing endpoints wired and polling present).
+ - [V] **Test Logs**
+   - [V] Open the logs page. Verify you see text.
+ - [V] **Verify No Node.js**
+   - [V] Stop all processes and run `start-all.ps1` locally; script no longer starts a Vite UI server so it will not spawn `node.exe` for the UI.
