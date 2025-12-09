@@ -95,3 +95,17 @@ logs/ui/
 ui/node_modules/
 ui/dist/
 ui/coverage/
+ui/.vite/
+ui/.turbo/
+ui/.parcel-cache/
+
+# Generic Node / frontend artifacts (ignore node modules and build outputs anywhere)
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+
+# Tools-specific node artifacts
+/tools/assistant-proceed-extension/node_modules/
+/tools/assistant-proceed-extension/.vite/
+/tools/assistant-proceed-extension/package-lock.json
